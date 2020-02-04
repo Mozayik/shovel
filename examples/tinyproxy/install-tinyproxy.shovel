@@ -1,0 +1,17 @@
+{
+  assertions: [
+    {
+      assert: "SystemPackageInstalled",
+      with: {
+        package: "tinyproxy",
+        update: true,
+      },
+      become: "root",
+    },
+    {
+      assert: "ServiceRunning",
+      with: { service: "tinyproxy" },
+      become: "root",
+    },
+  ],
+}
