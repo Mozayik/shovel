@@ -1,0 +1,38 @@
+{
+  settings: {
+    description: "Install Strongswan packages",
+  },
+  vars: {
+    doTheThing: false,
+  },
+  assertions: [
+    {
+      assert: "SystemPackageInstalled",
+      with: {
+        package: "strongswan",
+      },
+      become: "root",
+    },
+    {
+      assert: "SystemPackageInstalled",
+      with: {
+        package: "strongswan-pki",
+      },
+      become: "root",
+    },
+    {
+      assert: "SystemPackageInstalled",
+      with: {
+        package: "libcharon-extra-plugins",
+      },
+      become: "root",
+      when: "{vars.doTheThing}",
+    },
+    {
+      assert: "ServiceRunning",
+      with: {
+        service: "strongswan",
+      },
+    },
+  ],
+}

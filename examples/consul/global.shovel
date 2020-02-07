@@ -1,0 +1,6 @@
+{
+  vars: {
+    version: "1.4.4",
+    downloadDir: "/opt/consul",
+  },
+}

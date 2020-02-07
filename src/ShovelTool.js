@@ -101,9 +101,9 @@ export class ShovelTool {
 
     await sftp.putContent(remoteTempFilePath, installNodeScript)
 
+    this.log.info(`Running Node.js install script; this could take a while`)
     this.log.startSpinner("Installing")
 
-    this.log.info(`Running Node.js install script; this could take a while`)
     result = await ssh.run(`bash ${remoteTempFilePath}`, {
       sudo: true,
       noThrow: true,
@@ -393,6 +393,7 @@ export class ShovelTool {
       path: {
         join: (...paths) => path.join(...paths),
         dirname: (filename) => path.dirname(filename),
+        // TODO: Add path.basename
       },
       results: [],
     })

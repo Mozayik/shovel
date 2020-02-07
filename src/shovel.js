@@ -18,9 +18,9 @@ class Log {
 
   output(line) {
     this.stopSpinner()
-    if (line.startsWith("{rectified:") || line.startsWith("{wouldRectify")) {
+    if (line.startsWith("{rectified") || line.startsWith("{wouldRectify")) {
       console.log(chalk.yellow(line))
-    } else if (line.startsWith("{asserted:")) {
+    } else if (line.startsWith("{asserted")) {
       console.log(chalk.green(line))
     } else {
       console.log(chalk.blueBright(line))
@@ -62,7 +62,7 @@ class Log {
   }
 
   stopSpinner() {
-    if (this.spinner) {
+    if (this.spinner && this.spinner.isSpinning) {
       this.spinner.stop()
     }
   }

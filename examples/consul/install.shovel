@@ -1,0 +1,51 @@
+{
+  includes: ["global.shovel"],
+  vars: {
+    zipFile: "{`consul_${vars.version}_linux_amd64.zip`}",
+    // TODO: Use path.basename(vars.zipFile, ''.zip') when available
+    unzipDir: "{path.join(vars.downloadDir, `consul_${vars.version}_linux_amd64`)}",
+  },
+  assertions: [
+    {
+      assert: "DirectoryExists",
+      with: {
+        directory: "{vars.downloadDir}",
+        owner: {
+          user: "root",
+          group: "root",
+        },
+        mode: {
+          user: "rwx",
+          group: "rwx",
+          other: "r-x",
+        },
+      },
+      become: "root",
+    },
+    {
+      assert: "UrlDownloaded",
+      with: {
+        url: "{`https://releases.hashicorp.com/consul/${vars.version}/${vars.zipFile}`}",
+        digest: "d3bdf9817c7de9d83426d8c421eb3f37bf82c03c97860ef78fb56e148c4a9765",
+        file: "{path.join(vars.downloadDir, vars.zipFile)}",
+      },
+      become: "root",
+    },
+    {
+      assert: "ZipFileUnzipped",
+      with: {
+        file: "{path.join(vars.downloadDir, vars.zipFile)}",
+        toDirectory: "{vars.unzipDir}",
+      },
+      became: "root",
+    },
+    {
+      assert: "FileCopied",
+      with: {
+        fromFile: "{path.join(unzipDir, 'consul'}",
+        toFile: "/usr/local/bin/consul",
+      },
+      become: "root",
+    },
+  ],
+}

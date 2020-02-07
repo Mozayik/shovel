@@ -23,6 +23,8 @@ export class ZipFileUnzipped {
       )
     }
 
+    // TODO: Make this optional and use the basename of the zip file
+
     if (!toDirectoryNode || toDirectoryNode.type !== "string") {
       throw new ScriptError(
         "'toDirectory' must be supplied and be a string",
@@ -39,6 +41,8 @@ export class ZipFileUnzipped {
         fileNode
       )
     }
+
+    // TODO: Document what permissions the expandedToPath gets if not present
 
     if ((await this.util.pathInfo(this.expandedToPath)).isMissing()) {
       if (
