@@ -106,6 +106,8 @@ export class UserExists {
   }
 
   async rectify() {
+    // TODO: Support system setting that checks /etc/login.defs and ensures GID is between SYS_GID_MIN and SYS_GID_MAX or 100 and 999 if not set
+
     const addArg = (arg, value, quote) =>
       value !== undefined
         ? " " + arg + " " + (quote ? "'" + value + "'" : value)

@@ -22,3 +22,5 @@ export { UserExists } from "./UserExists"
 export { ZipFileUnzipped } from "./ZipFileUnzipped"
 
 // TODO: Add FileCopiedFromLocal which copies file from local to remote
+// TODO: Add EnsureFileCapality (getcap/setcap)
+// TODO: Support SystemDServiceEnabled/Disabled
