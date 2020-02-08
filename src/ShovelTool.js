@@ -387,13 +387,31 @@ export class ShovelTool {
       user: this.util.userInfo(),
       sys: {},
       fs: {
-        readFile: (fileName) =>
-          this.fs.readFileSync(fileName, { encoding: "utf8" }),
+        readFile(fileName) {
+          this.fs.readFileSync(fileName, { encoding: "utf8" })
+        },
       },
       path: {
-        join: (...paths) => path.join(...paths),
-        dirname: (filename) => path.dirname(filename),
-        // TODO: Add path.basename
+        join(...pathNames) {
+          path.join(...pathNames)
+        },
+        dirname(pathName) {
+          path.dirname(pathName)
+        },
+        basename(pathName, ext) {
+          path.basename(pathName, ext)
+        },
+        extname(pathName) {
+          path.extname(pathName)
+        },
+      },
+      dateTime: {
+        asLocal(dateTime) {
+          new Date(dateTime).toString()
+        },
+        asISO(dateTime) {
+          new Date(dateTime).toISOString()
+        },
       },
       results: [],
     })
@@ -421,32 +439,45 @@ export class ShovelTool {
   }
 
   updateRunContext(runContext, interpolator, scriptNode, options = {}) {
-    const flattenNodes = (node, withInterpolation) => {
-      if (node.value !== null && node.type === "object") {
-        const newValue = {}
-
-        Object.entries(node.value).map(([k, v]) => {
-          newValue[k] = flattenNodes(
+    const processObjectNode = (vars, node, withInterpolation) => {
+      Object.entries(node.value).forEach(([k, v]) => {
+        if (v.type === "object") {
+          if (!vars[k] || typeof vars[k] !== "object") {
+            vars[k] = {}
+          }
+          processObjectNode(
+            vars[k],
             v,
-            k === "local" ? true : withInterpolation
+            k === "local" && vars === runContext.vars ? true : withInterpolation
           )
-        })
-
-        return newValue
-      } else if (node.type === "array") {
-        return node.value.map((i) => flattenNodes(i, withInterpolation))
-      } else if (node.type === "string") {
-        if (withInterpolation) {
-          const newValue = interpolator(node)
-
-          node.value = newValue
-          return newValue
+        } else if (v.type === "array") {
+          if (!vars[k] || !Array.isArray(vars[k])) {
+            vars[k] = []
+          }
+          processArrayNode(vars[k], v, withInterpolation)
         } else {
-          return node.value
+          vars[k] =
+            v.type === "string" && withInterpolation ? interpolator(v) : v.value
         }
-      } else {
-        return node.value
-      }
+      })
+    }
+    const processArrayNode = (vars, node, withInterpolation) => {
+      node.value.forEach((v, i) => {
+        if (v.type === "object") {
+          if (!vars[i] || typeof vars[i] !== "object") {
+            vars[i] = {}
+          }
+          processObjectNode(vars[i], v, withInterpolation)
+        } else if (v.type === "array") {
+          if (!vars[i] || !Array.isArray(vars[i])) {
+            vars[i] = []
+          }
+          processArrayNode(vars[i], v, withInterpolation)
+        } else {
+          vars[i] =
+            v.type === "string" && withInterpolation ? interpolator(v) : v.value
+        }
+      })
     }
 
     Object.assign(runContext.sys, {
@@ -456,9 +487,11 @@ export class ShovelTool {
 
     const { vars: varsNode } = scriptNode.value
 
-    Object.assign(
+    // Process vars in a way that merges with existing and allows back references
+    processObjectNode(
       runContext.vars,
-      flattenNodes(varsNode, !!!options.interpolateOnlyLocalVars)
+      varsNode,
+      !!!options.interpolateOnlyLocalVars
     )
   }
 

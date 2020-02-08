@@ -1,9 +1,9 @@
 {
-  includes: ["global.shovel"],
   vars: {
+    version: "1.4.4",
+    downloadDir: "/opt/consul",
     zipFile: "{`consul_${vars.version}_linux_amd64.zip`}",
-    // TODO: Use path.basename(vars.zipFile, ''.zip') when available
-    unzipDir: "{path.join(vars.downloadDir, `consul_${vars.version}_linux_amd64`)}",
+    unzipDir: "{path.join(vars.downloadDir, path.basename(vars.zipFile, '.zip')}",
   },
   assertions: [
     {

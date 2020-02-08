@@ -460,6 +460,9 @@ test("updateRunContext", async () => {
     x: null,
     b: true,
     a: [1, 2, 3],
+    b: [{}, { x: 10 }, { x: 11 }],
+    c: ["1", "2", "{vars.n}"],
+    d: [[1, 2], [3], [4]],
     o: { s: "a", n: 2 },
     local: { s: "c" },
   })

@@ -1,9 +1,9 @@
 export const createNode = (filename, value) => {
   const innerCreateNode = (v) => {
-    let t = typeof v
+    let t = v === null ? "null" : typeof v
     let nv
 
-    if (v !== null && t === "object") {
+    if (t === "object") {
       if (Array.isArray(v)) {
         t = "array"
         nv = v.map((i) => innerCreateNode(i))
