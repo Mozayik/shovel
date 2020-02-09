@@ -1,0 +1,23 @@
+{
+  vars: {
+    local: {
+      contents: "{util.moustache(fs.readFile(path.join(sys.scriptDir, 'templates/moustache-template.txt')))}",
+    },
+  },
+  assertions: [
+    {
+      assert: "FileExists",
+      with: {
+        file: "scratch/moustached.txt",
+      },
+    },
+    {
+      assert: "FileContains",
+      with: {
+        file: "scratch/moustached.txt",
+        contents: "{vars.local.contents}",
+        position: "all",
+      },
+    },
+  ],
+}

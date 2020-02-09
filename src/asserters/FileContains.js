@@ -89,7 +89,7 @@ export class FileContains {
 
     if (!pathInfo.getAccess().isReadWrite()) {
       throw new ScriptError(
-        `${this.expandedPath} cannot be read and written`,
+        `${this.expandedPath} does not exist or is not readable & writable`,
         fileNode
       )
     }

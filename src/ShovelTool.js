@@ -397,8 +397,20 @@ export class ShovelTool {
         extname: (pathName) => path.extname(pathName),
       },
       dateTime: {
-        asLocal: (dateTime) => new Date(dateTime).toString(),
-        asISO: (dateTime) => new Date(dateTime).toISOString(),
+        asLocal: (dateTime) =>
+          (dateTime ? new Date(dateTime) : new Date()).toString(),
+        asISO: (dateTime) =>
+          (dateTime ? new Date(dateTime) : new Date()).toISOString(),
+      },
+      util: {
+        moustache: (s) =>
+          s.replace(/\{\{.*\}\}/gm, (m, offset) => {
+            try {
+              return new vm.Script(m).runInContext(runContext).toString()
+            } catch (e) {
+              throw new Error(`Bad script at offset ${offset}. ${e.message}`)
+            }
+          }),
       },
       results: [],
     })
