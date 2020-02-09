@@ -221,10 +221,8 @@ export class Utility {
   }
 
   async getUsers() {
-    // TODO: Add /etc/shadow for disabled users?
     const passwd = await this.fs.readFile("/etc/passwd", { encoding: "utf8" })
-
-    return passwd
+    const users = passwd
       .split("\n")
       .filter((user) => user.length > 0 && user[0] !== "#")
       .map((user) => {
@@ -239,6 +237,24 @@ export class Utility {
           shell: fields[6],
         }
       })
+
+    if (this.runningAsRoot()) {
+      const shadow = await this.fs.readFile("/etc/shadow", { encoding: "utf8" })
+
+      shadow
+        .split("\n")
+        .filter((user) => user.length > 0 && user[0] != "#")
+        .forEach((shadowUser) => {
+          const fields = shadowUser.split(":")
+          const user = users[fields[0]]
+
+          if (user) {
+            user.disabled = fields[1] === "*"
+          }
+        })
+    }
+
+    return users
   }
 
   async getGroups() {
