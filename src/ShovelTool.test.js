@@ -408,6 +408,8 @@ test("createRunContext", async () => {
   expect(result).not.toBe(null)
   expect(result.interpolator).not.toBe(null)
 
+  result.runContext.results.push({ a: 1, b: 2 })
+
   // fs functions
   expect(
     result.interpolator(
@@ -426,6 +428,41 @@ test("createRunContext", async () => {
       testUtil.createNode(scriptNode.filename, "{path.dirname('foo/bar')}")
     )
   ).toBe("foo")
+  expect(
+    result.interpolator(
+      testUtil.createNode(scriptNode.filename, "{path.basename('foo/bar.zip')}")
+    )
+  ).toBe("bar.zip")
+  expect(
+    result.interpolator(
+      testUtil.createNode(scriptNode.filename, "{path.extname('foo/bar.zip')}")
+    )
+  ).toBe(".zip")
+
+  // dateTime functions
+  expect(
+    result.interpolator(
+      testUtil.createNode(
+        scriptNode.filename,
+        "{dateTime.asLocal('2020-02-09T00:28:31.710Z')}"
+      )
+    )
+  ).toBe("Sat Feb 08 2020 16:28:31 GMT-0800 (Pacific Standard Time)")
+  expect(
+    result.interpolator(
+      testUtil.createNode(
+        scriptNode.filename,
+        "{dateTime.asISO('Sat Feb 08 2020 16:28:31 GMT-0800 (Pacific Standard Time)')}"
+      )
+    )
+  ).toBe("2020-02-09T00:28:31.000Z")
+
+  // results
+  expect(
+    result.interpolator(
+      testUtil.createNode(scriptNode.filename, "{results.last()}")
+    )
+  ).toEqual({ a: 1, b: 2 })
 
   // Interpolation with vars
   result = await tool.createRunContext(scriptNode)

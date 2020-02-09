@@ -387,31 +387,18 @@ export class ShovelTool {
       user: this.util.userInfo(),
       sys: {},
       fs: {
-        readFile(fileName) {
-          this.fs.readFileSync(fileName, { encoding: "utf8" })
-        },
+        readFile: (fileName) =>
+          this.fs.readFileSync(fileName, { encoding: "utf8" }),
       },
       path: {
-        join(...pathNames) {
-          path.join(...pathNames)
-        },
-        dirname(pathName) {
-          path.dirname(pathName)
-        },
-        basename(pathName, ext) {
-          path.basename(pathName, ext)
-        },
-        extname(pathName) {
-          path.extname(pathName)
-        },
+        join: (...pathNames) => path.join(...pathNames),
+        dirname: (pathName) => path.dirname(pathName),
+        basename: (pathName, ext) => path.basename(pathName, ext),
+        extname: (pathName) => path.extname(pathName),
       },
       dateTime: {
-        asLocal(dateTime) {
-          new Date(dateTime).toString()
-        },
-        asISO(dateTime) {
-          new Date(dateTime).toISOString()
-        },
+        asLocal: (dateTime) => new Date(dateTime).toString(),
+        asISO: (dateTime) => new Date(dateTime).toISOString(),
       },
       results: [],
     })
