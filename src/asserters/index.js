@@ -7,6 +7,7 @@ export { DirectoryZipped } from "./DirectoryZipped"
 export { FileContains } from "./FileContains"
 export { FileCopied } from "./FileCopied"
 export { FileExists } from "./FileExists"
+export { FileHasCapability } from "./FileHasCapability"
 export { FilesDeleted } from "./FilesDeleted"
 export { GroupDeleted } from "./GroupDeleted"
 export { GroupExists } from "./GroupExists"
@@ -22,5 +23,5 @@ export { UserExists } from "./UserExists"
 export { ZipFileUnzipped } from "./ZipFileUnzipped"
 
 // TODO: Add FileCopiedFromLocal which copies file from local to remote
-// TODO: Add EnsureFileCapality (getcap/setcap)
 // TODO: Support SystemDServiceEnabled/Disabled
+// TODO: Rename SystemDServiceRunning/Stopped
