@@ -72,5 +72,8 @@ test("result", () => {
 
   asserter.expandedServiceName = "otherService"
 
-  expect(asserter.result()).toEqual({ service: asserter.expandedServiceName })
+  expect(asserter.result()).toEqual({
+    service: asserter.expandedServiceName,
+    enabled: true,
+  })
 })

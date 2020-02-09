@@ -49,6 +49,6 @@ export class ServiceEnabled {
   }
 
   result() {
-    return { service: this.expandedServiceName }
+    return { service: this.expandedServiceName, enabled: true }
   }
 }

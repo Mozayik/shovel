@@ -24,19 +24,19 @@ export class ServiceDisabled {
 
     this.expandedServiceName = this.interpolator(serviceNode)
 
-    let ok = true
+    let ok = false
 
     try {
       await this.childProcess.exec(
-        `systemctl is-active ${this.expandedServiceName}`
+        `systemctl is-enabled ${this.expandedServiceName}`
       )
     } catch {
-      ok = false
+      ok = true
     }
 
     if (!ok && !this.util.runningAsRoot()) {
       throw new ScriptError(
-        "Must be running as root to start services",
+        "Must be running as root to disable services",
         withNode
       )
     }
@@ -46,30 +46,11 @@ export class ServiceDisabled {
 
   async rectify() {
     await this.childProcess.exec(
-      `systemctl restart ${this.expandedServiceName}`
+      `systemctl disable ${this.expandedServiceName}`
     )
-
-    let numTries = 0
-
-    do {
-      try {
-        await this.childProcess.exec(
-          `systemctl is-active ${this.expandedServiceName}`
-        )
-
-        return
-      } catch {
-        // Wait and try again
-      }
-
-      await new this.Timeout().set(1000)
-      numTries += 1
-    } while (numTries < 10)
-
-    throw new Error("Service failed to start")
   }
 
   result() {
-    return { service: this.expandedServiceName }
+    return { service: this.expandedServiceName, enabled: false }
   }
 }

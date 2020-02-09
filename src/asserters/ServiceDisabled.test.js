@@ -7,7 +7,16 @@ let container = null
 test("assert", async () => {
   const container = {
     interpolator: (node) => node.value,
-    childProcess: {},
+    childProcess: {
+      exec: async (command) => {
+        switch (command) {
+          case "systemctl is-enabled service":
+            return { stdout: "enabled" }
+          case "systemctl is-enabled otherService":
+            throw new Error()
+        }
+      },
+    },
     util: {
       runningAsRoot: jest.fn(() => true),
     },
@@ -23,60 +32,39 @@ test("assert", async () => {
     asserter.assert(createAssertNode(asserter, { service: 1 }))
   ).rejects.toThrow(ScriptError)
 
-  // With service active
-  container.childProcess.exec = async () => ({ stdout: "active" })
+  // Happy path
   await expect(
-    asserter.assert(createAssertNode(asserter, { service: "service" }))
+    asserter.assert(createAssertNode(asserter, { service: "otherService" }))
   ).resolves.toBe(true)
 
-  // With service inactive
-  container.childProcess.exec = async () => {
-    throw new Error()
-  }
+  // With service enabled
   await expect(
-    asserter.assert(createAssertNode(asserter, { service: "otherService" }))
+    asserter.assert(createAssertNode(asserter, { service: "service" }))
   ).resolves.toBe(false)
 
-  // With service inactive not root
+  // With service enabled and not root
   container.util.runningAsRoot = () => false
   await expect(
-    asserter.assert(createAssertNode(asserter, { service: "otherService" }))
+    asserter.assert(createAssertNode(asserter, { service: "service" }))
   ).rejects.toThrow(ScriptError)
 })
 
 test("rectify", async () => {
   const container = {
-    Timeout: class Timeout {
-      set() {
-        return Promise.resolve()
-      }
-    },
     childProcess: {
       exec: async (command) => {
-        if (command.includes("is-active")) {
-          return { stdout: "active" }
-        } else {
-          return { stdout: "" }
+        switch (command) {
+          case "systemctl is-enabled otherService":
+            throw new Error()
         }
       },
     },
   }
   const asserter = new ServiceDisabled(container)
 
-  asserter.expandedServiceName = "service"
+  asserter.expandedServiceName = "otherService"
 
   await expect(asserter.rectify()).resolves.toBeUndefined()
-
-  // With service that doesn't start
-  container.childProcess.exec = async (command) => {
-    if (command.includes("is-active")) {
-      throw new Error()
-    } else {
-      return {}
-    }
-  }
-
-  await expect(asserter.rectify()).rejects.toThrow(Error)
 })
 
 test("result", () => {
@@ -84,5 +72,8 @@ test("result", () => {
 
   asserter.expandedServiceName = "otherService"
 
-  expect(asserter.result()).toEqual({ service: asserter.expandedServiceName })
+  expect(asserter.result()).toEqual({
+    service: asserter.expandedServiceName,
+    enabled: false,
+  })
 })
