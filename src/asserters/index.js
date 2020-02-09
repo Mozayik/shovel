@@ -12,6 +12,8 @@ export { FilesDeleted } from "./FilesDeleted"
 export { GroupDeleted } from "./GroupDeleted"
 export { GroupExists } from "./GroupExists"
 export { UrlDownloaded } from "./UrlDownloaded"
+export { ServiceDisabled } from "./ServiceDisabled"
+export { ServiceEnabled } from "./ServiceEnabled"
 export { ServiceRunning } from "./ServiceRunning"
 export { ServiceStopped } from "./ServiceStopped"
 export { SystemPackageInstalled } from "./SystemPackageInstalled"
@@ -23,5 +25,3 @@ export { UserExists } from "./UserExists"
 export { ZipFileUnzipped } from "./ZipFileUnzipped"
 
 // TODO: Add FileCopiedFromLocal which copies file from local to remote
-// TODO: Support SystemDServiceEnabled/Disabled
-// TODO: Rename SystemDServiceRunning/Stopped
