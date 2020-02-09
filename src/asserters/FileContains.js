@@ -85,9 +85,9 @@ export class FileContains {
 
     this.expandedContents = this.interpolator(contentsNode)
 
-    const pathInfo = await this.util.pathInfo(this.expandedPath)
-
-    if (!pathInfo.getAccess().isReadWrite()) {
+    if (
+      !(await this.util.pathInfo(this.expandedPath)).getAccess().isReadWrite()
+    ) {
       throw new ScriptError(
         `${this.expandedPath} does not exist or is not readable & writable`,
         fileNode
