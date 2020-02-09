@@ -158,7 +158,7 @@ test("assert", async () => {
         toDirectory: "./notthere",
       })
     )
-  ).resolves.toBe(false)
+  ).rejects.toThrow(ScriptError)
 
   // With a file missing
   await expect(

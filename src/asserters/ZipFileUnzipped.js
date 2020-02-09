@@ -42,21 +42,13 @@ export class ZipFileUnzipped {
       )
     }
 
-    // TODO: Document what permissions the expandedToPath gets if not present
-
-    if ((await this.util.pathInfo(this.expandedToPath)).isMissing()) {
-      if (
-        !(await this.util.pathInfo(path.dirname(this.expandedFilePath)))
-          .getAccess()
-          .isWriteable()
-      ) {
-        throw new ScriptError(
-          `Parent directory of ${this.expandedFilePath} is not writeable`,
-          fileNode
-        )
-      }
-
-      return false
+    if (
+      !(await this.util.pathInfo(this.expandedToPath)).getAccess().isReadWrite()
+    ) {
+      throw new ScriptError(
+        `${this.expandedToPath} directory does not exist or is not readable & writable`,
+        fileNode
+      )
     }
 
     let zipFile
