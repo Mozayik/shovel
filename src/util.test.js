@@ -252,7 +252,7 @@ ntp:x:111:113::/nonexistent:/usr/sbin/nologin`
 test("getGroups", async () => {
   const util = new Utility({
     fs: {
-      readFile: jest.fn((path, options) => {
+      readFile: jest.fn(async (path, options) => {
         return `root:x:0:
 daemon:x:1:
 bin:x:2:
@@ -278,6 +278,24 @@ sudo:x:27:someuser`
     password: "x",
     gid: 4,
     users: ["syslog", "someuser"],
+  })
+})
+
+test("getLoginDefs", async () => {
+  const util = new Utility({
+    fs: {
+      readFile: jest.fn(async (path) => {
+        return `#
+# /etc/login.defs - Configuration control definitions for the login package.
+   # REQUIRED for useradd/userdel/usermod
+MAIL_DIR        /var/mail
+#MAIL_FILE      .mail`
+      }),
+    },
+  })
+
+  await expect(util.getLoginDefs()).resolves.toEqual({
+    MAIL_DIR: "/var/mail",
   })
 })
 

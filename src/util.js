@@ -224,6 +224,7 @@ export class Utility {
     const passwd = await this.fs.readFile("/etc/passwd", { encoding: "utf8" })
     const users = passwd
       .split("\n")
+      .map((user) => user.trim())
       .filter((user) => user.length > 0 && user[0] !== "#")
       .map((user) => {
         const fields = user.split(":")
@@ -243,6 +244,7 @@ export class Utility {
 
       shadow
         .split("\n")
+        .map((user) => user.trim())
         .filter((user) => user.length > 0 && user[0] != "#")
         .forEach((shadowUser) => {
           const fields = shadowUser.split(":")
@@ -262,9 +264,10 @@ export class Utility {
 
     return groups
       .split("\n")
-      .filter((user) => user.length > 0 && user[0] !== "#")
-      .map((user) => {
-        const fields = user.split(":")
+      .map((group) => group.trim())
+      .filter((group) => group.length > 0 && group[0] !== "#")
+      .map((group) => {
+        const fields = group.split(":")
         return {
           name: fields[0],
           password: fields[1],
@@ -272,6 +275,22 @@ export class Utility {
           users: fields[3] ? fields[3].split(",") : [],
         }
       })
+  }
+
+  async getLoginDefs() {
+    const loginDefs = await this.fs.readFile("/etc/login.defs", {
+      encoding: "utf8",
+    })
+
+    return loginDefs
+      .split("\n")
+      .map((def) => def.trim())
+      .filter((def) => def.length > 0 && def[0] !== "#")
+      .reduce((acc, def) => {
+        const [key, value] = def.split(/[ \t]+/)
+        acc[key] = value
+        return acc
+      }, {})
   }
 
   parseOwnerNode(ownerNode, users, groups) {

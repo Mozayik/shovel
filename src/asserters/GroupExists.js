@@ -15,12 +15,23 @@ export class GroupExists {
 
   async assert(assertNode) {
     const withNode = assertNode.value.with
-    const { group: groupNode, gid: gidNode } = withNode.value
+    const {
+      group: groupNode,
+      gid: gidNode,
+      system: systemNode,
+    } = withNode.value
 
     if (!groupNode || groupNode.type !== "string") {
       throw new ScriptError(
         "'group' must be supplied and be a string",
         groupNode || withNode
+      )
+    }
+
+    if (gidNode && systemNode) {
+      throw new ScriptError(
+        "You cannot specify both 'gid' and 'system'",
+        withNode
       )
     }
 
@@ -32,6 +43,14 @@ export class GroupExists {
       this.gid = gidNode.value
     }
 
+    if (systemNode) {
+      if (systemNode.type !== "boolean") {
+        throw new ScriptError("'system' must be a boolean", systemNode)
+      }
+
+      this.system = systemNode.vaue
+    }
+
     this.expandedGroupName = this.interpolator(groupNode)
 
     const group = (await this.util.getGroups()).find(
@@ -40,8 +59,24 @@ export class GroupExists {
 
     const runningAsRoot = this.util.runningAsRoot()
 
+    // TODO: Get this range from a /etc/login.defs
+    const gidRange = [100, 999]
+
+    this.modify = false
+
     if (group) {
+      // This group exists
       if (this.gid === undefined) {
+        if (
+          this.system &&
+          (group.gid < gidRange[0] || group.gid > gidRange[1])
+        ) {
+          throw new ScriptError(
+            `Existing group GID is outside system range ${gidRange[0]} to ${gidRange[1]}`,
+            assertNode
+          )
+        }
+        // Keep the same GID
         this.gid = group.gid
       }
 
@@ -56,6 +91,7 @@ export class GroupExists {
         return true
       }
     } else {
+      // This group does not exist
       if (!runningAsRoot) {
         throw new ScriptError("Only root user can add groups", assertNode)
       }
@@ -65,11 +101,10 @@ export class GroupExists {
   }
 
   async rectify() {
-    // TODO: Support system setting that checks /etc/login.defs and ensures GID is between SYS_GID_MIN and SYS_GID_MAX or 100 and 999 if not set
-
     const command =
       (this.modify ? "groupmod" : "groupadd") +
       (this.gid ? " -g " + this.gid : "") +
+      (this.system ? " -r " : "") +
       " " +
       this.expandedGroupName
 
