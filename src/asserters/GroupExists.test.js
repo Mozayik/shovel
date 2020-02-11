@@ -6,7 +6,8 @@ test("assert", async () => {
   const container = {
     interpolator: (node) => node.value,
     util: {
-      runningAsRoot: jest.fn(() => true),
+      runningAsRoot: () => true,
+      getLoginDefs: async () => ({ SYS_GID_MIN: 100, SYS_GID_MAX: 999 }),
     },
     _groups: [
       { name: "mail", password: "", gid: 10, users: ["mail"] },

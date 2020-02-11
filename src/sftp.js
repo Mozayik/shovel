@@ -210,9 +210,6 @@ export class SFTP {
       promises.push(timer.set(options.timeout))
     }
 
-    // TODO: Add recursive copy
-    // TODO: Add copying of mode and owners
-
     this.pty.write(`put ${localFile} ${remoteFile}\n`)
 
     try {

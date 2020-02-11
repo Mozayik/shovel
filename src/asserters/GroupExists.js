@@ -58,9 +58,11 @@ export class GroupExists {
     )
 
     const runningAsRoot = this.util.runningAsRoot()
-
-    // TODO: Get this range from a /etc/login.defs
-    const gidRange = [100, 999]
+    const loginDefs = await this.util.getLoginDefs()
+    const gidRange = [
+      loginDefs["SYS_GID_MIN"] ?? 100,
+      loginDefs["SYS_GID_MAX"] ?? 999,
+    ]
 
     this.modify = false
 
