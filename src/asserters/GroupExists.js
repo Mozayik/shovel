@@ -48,7 +48,7 @@ export class GroupExists {
         throw new ScriptError("'system' must be a boolean", systemNode)
       }
 
-      this.system = systemNode.vaue
+      this.system = systemNode.value
     }
 
     this.expandedGroupName = this.interpolator(groupNode)
@@ -56,7 +56,6 @@ export class GroupExists {
     const group = (await this.util.getGroups()).find(
       (group) => group.name === this.expandedGroupName
     )
-
     const runningAsRoot = this.util.runningAsRoot()
     const loginDefs = await this.util.getLoginDefs()
     const gidRange = [
@@ -67,18 +66,14 @@ export class GroupExists {
     this.modify = false
 
     if (group) {
-      // This group exists
+      if (this.system && (group.gid < gidRange[0] || group.gid > gidRange[1])) {
+        throw new ScriptError(
+          `Existing GID is outside system range ${gidRange[0]} to ${gidRange[1]}`,
+          assertNode
+        )
+      }
+
       if (this.gid === undefined) {
-        if (
-          this.system &&
-          (group.gid < gidRange[0] || group.gid > gidRange[1])
-        ) {
-          throw new ScriptError(
-            `Existing group GID is outside system range ${gidRange[0]} to ${gidRange[1]}`,
-            assertNode
-          )
-        }
-        // Keep the same GID
         this.gid = group.gid
       }
 
@@ -103,10 +98,24 @@ export class GroupExists {
   }
 
   async rectify() {
+    const addArg = (arg, value) => {
+      switch (typeof value) {
+        case "undefined":
+          return ""
+        case "boolean":
+          return value ? arg : ""
+        case "string":
+          return value.includes(" ") ? "'" + value + "'" : value
+        case "number":
+          return value.toString()
+        default:
+          return ""
+      }
+    }
     const command =
       (this.modify ? "groupmod" : "groupadd") +
-      (this.gid ? " -g " + this.gid : "") +
-      (this.system ? " -r " : "") +
+      addArg("-g", this.gid) +
+      addArg("--system", !!this.system) +
       " " +
       this.expandedGroupName
 
@@ -118,7 +127,7 @@ export class GroupExists {
 
     if (!group) {
       throw new Error(
-        `Group ${this.expandedGroupName} not present in /etc/groups`
+        `Group ${this.expandedGroupName} not present in /etc/groups after update`
       )
     }
 

@@ -17,6 +17,7 @@ export class UserExists {
       user: userNode,
       uid: uidNode,
       gid: gidNode,
+      system: systemNode,
       shell: shellNode,
       homeDir: homeDirNode,
       comment: commentNode,
@@ -29,14 +30,27 @@ export class UserExists {
       )
     }
 
-    this.user = {}
+    if (uidNode && systemNode) {
+      throw new ScriptError(
+        "You cannot specify both 'uid' and 'system'",
+        withNode
+      )
+    }
 
     if (uidNode) {
       if (uidNode.type !== "number") {
         throw new ScriptError("'uid' must be a number", uidNode)
       }
 
-      this.user.uid = uidNode.value
+      this.uid = uidNode.value
+    }
+
+    if (systemNode) {
+      if (systemNode.type !== "boolean") {
+        throw new ScriptError("'system' must be a boolean", systemNode)
+      }
+
+      this.system = systemNode.value
     }
 
     if (gidNode) {
@@ -44,7 +58,7 @@ export class UserExists {
         throw new ScriptError("'gid' must be a number", gidNode)
       }
 
-      this.user.gid = gidNode.value
+      this.gid = gidNode.value
     }
 
     if (shellNode) {
@@ -52,7 +66,7 @@ export class UserExists {
         throw new ScriptError("'shell' must be a string", shellNode)
       }
 
-      this.user.shell = shellNode.value
+      this.shell = shellNode.value
     }
 
     if (homeDirNode) {
@@ -60,7 +74,7 @@ export class UserExists {
         throw new ScriptError("'homeDir' must be a string", homeDirNode)
       }
 
-      this.user.homeDir = homeDirNode.value
+      this.homeDir = homeDirNode.value
     }
 
     if (commentNode) {
@@ -68,7 +82,7 @@ export class UserExists {
         throw new ScriptError("'comment' must be a string", commentNode)
       }
 
-      this.user.comment = commentNode.value
+      this.comment = commentNode.value
     }
 
     this.expandedName = this.interpolator(userNode)
@@ -77,15 +91,30 @@ export class UserExists {
       (user) => user.name === this.expandedName
     )
     const runningAsRoot = this.util.runningAsRoot()
+    const loginDefs = await this.util.getLoginDefs()
+    const uidRange = [
+      loginDefs["SYS_UID_MIN"] ?? 100,
+      loginDefs["SYS_UID_MAX"] ?? 999,
+    ]
 
     if (user) {
+      if (this.system && (user.uid < uidRange[0] || user.uid > uidRange[1])) {
+        throw new ScriptError(
+          `Existing UID is outside system range ${uidRange[0]} to ${uidRange[1]}`,
+          assertNode
+        )
+      }
+
+      if (this.uid === undefined) {
+        this.uid = user.uid
+      }
+
       if (
-        (this.user.uid !== undefined && this.user.uid !== user.uid) ||
-        (this.user.gid !== undefined && this.user.gid !== user.gid) ||
-        (this.user.shell !== undefined && this.user.shell !== user.shell) ||
-        (this.user.homeDir !== undefined &&
-          this.user.homeDir !== user.homeDir) ||
-        (this.user.comment !== undefined && this.user.comment !== user.comment)
+        (this.uid !== undefined && this.uid !== user.uid) ||
+        (this.gid !== undefined && this.gid !== user.gid) ||
+        (this.shell !== undefined && this.shell !== user.shell) ||
+        (this.homeDir !== undefined && this.homeDir !== user.homeDir) ||
+        (this.comment !== undefined && this.comment !== user.comment)
       ) {
         if (!runningAsRoot) {
           throw new ScriptError("Only root user can modify users", assertNode)
@@ -106,19 +135,28 @@ export class UserExists {
   }
 
   async rectify() {
-    // TODO: Support system setting that checks /etc/login.defs and ensures GID is between SYS_GID_MIN and SYS_GID_MAX or 100 and 999 if not set
-
-    const addArg = (arg, value, quote) =>
-      value !== undefined
-        ? " " + arg + " " + (quote ? "'" + value + "'" : value)
-        : ""
+    const addArg = (arg, value) => {
+      switch (typeof value) {
+        case "undefined":
+          return ""
+        case "boolean":
+          return value ? arg : ""
+        case "string":
+          return value.includes(" ") ? "'" + value + "'" : value
+        case "number":
+          return value.toString()
+        default:
+          return ""
+      }
+    }
     const command =
       (this.modify ? "usermod" : "useradd") +
-      addArg("-u", this.user.uid) +
-      addArg("-g", this.user.gid) +
-      addArg("-s", this.user.shell) +
-      addArg("-h", this.user.homeDir) +
-      addArg("-c", this.user.comment, true) +
+      addArg("-u", this.uid) +
+      addArg("--system", !!this.system) +
+      addArg("-g", this.gid) +
+      addArg("-s", this.shell) +
+      addArg("-h", this.homeDir) +
+      addArg("-c", this.comment) +
       " " +
       this.expandedName
 
@@ -129,14 +167,17 @@ export class UserExists {
     )
 
     if (!user) {
-      throw new Error(`User ${this.expandedName} not present in /etc/passwd`)
+      throw new Error(
+        `User ${this.expandedName} not present in /etc/passwd after update`
+      )
     }
 
-    this.user = user
+    Object.assign(this, user)
   }
 
   result() {
-    const { name, uid, gid, shell, homeDir, comment } = this.user
+    const { name, uid, gid, shell, homeDir, comment } = this
+
     return {
       name,
       uid,

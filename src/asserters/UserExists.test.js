@@ -9,6 +9,7 @@ test("assert", async () => {
     interpolator: (node) => node.value,
     util: {
       runningAsRoot: () => true,
+      getLoginDefs: async () => ({ SYS_UID_MIN: 100, SYS_UID_MAX: 999 }),
       getUsers: async () => [
         {
           name: "user1",
@@ -157,8 +158,7 @@ test("rectify", async () => {
 
 test("result", () => {
   const asserter = new UserExists({})
-
-  asserter.user = {
+  const user = {
     name: "user1",
     gid: 12,
     uid: 12,
@@ -167,5 +167,7 @@ test("result", () => {
     comment: "",
   }
 
-  expect(asserter.result()).toEqual(asserter.user)
+  Object.assign(asserter, user)
+
+  expect(asserter.result()).toEqual(user)
 })
