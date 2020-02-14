@@ -177,47 +177,52 @@ export class SFTP {
     }
 
     const localFile = tempy.file()
-    const promises = []
-
-    await this.fs.writeFile(localFile, contents)
-
-    promises.push(
-      new Promise((resolve, reject) => {
-        const dataHandler = ({ errorLines, ready }) => {
-          if (errorLines.length > 0) {
-            if (options.logError) {
-              errorLines.forEach((line) => options.logError(line))
-            }
-            disposable.dispose()
-            reject(new Error(`Unable to upload ${remoteFile}`))
-          }
-
-          if (ready) {
-            disposable.dispose()
-            resolve()
-          }
-        }
-        const disposable = this.pty.onData((data) => {
-          dataHandler(SFTP.parseLines(data))
-        })
-      })
-    )
-
-    let timer = null
-
-    if (options.timeout) {
-      timer = new this.Timeout()
-      promises.push(timer.set(options.timeout))
-    }
-
-    this.pty.write(`put ${localFile} ${remoteFile}\n`)
 
     try {
-      await Promise.race(promises)
-    } finally {
-      if (timer) {
-        timer.clear()
+      const promises = []
+
+      await this.fs.writeFile(localFile, contents)
+
+      promises.push(
+        new Promise((resolve, reject) => {
+          const dataHandler = ({ errorLines, ready }) => {
+            if (errorLines.length > 0) {
+              if (options.logError) {
+                errorLines.forEach((line) => options.logError(line))
+              }
+              disposable.dispose()
+              reject(new Error(`Unable to upload ${remoteFile}`))
+            }
+
+            if (ready) {
+              disposable.dispose()
+              resolve()
+            }
+          }
+          const disposable = this.pty.onData((data) => {
+            dataHandler(SFTP.parseLines(data))
+          })
+        })
+      )
+
+      let timer = null
+
+      if (options.timeout) {
+        timer = new this.Timeout()
+        promises.push(timer.set(options.timeout))
       }
+
+      this.pty.write(`put ${localFile} ${remoteFile}\n`)
+
+      try {
+        await Promise.race(promises)
+      } finally {
+        if (timer) {
+          timer.clear()
+        }
+      }
+    } finally {
+      await this.fs.remove(localFile)
     }
   }
 
