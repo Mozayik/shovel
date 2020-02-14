@@ -100,7 +100,9 @@ test("parseLines", async () => {
 
   expect(result).toEqual({
     errorLines: ["error:"],
+    infoLines: undefined,
     ready: true,
+    notFound: false,
     permissionDenied: true,
     loginPasswordPrompt: "fred@localhost's password:",
   })
@@ -153,6 +155,7 @@ test("putContent", async () => {
     console: { log: () => null },
     fs: {
       writeFile: async () => undefined,
+      remove: async () => undefined,
     },
   }
   let sftp = new SFTP(container)
@@ -184,6 +187,60 @@ test("putContent", async () => {
     pty.emit("data", "error: xyz\nsftp>")
   })
   await expect(sftp.putContent("/x/y", "something")).rejects.toThrow(Error)
+})
+
+test("getInfo", async () => {
+  class PsuedoTerm extends EventEmitter {
+    write() {}
+    destroy() {
+      this.emit("exit", null)
+    }
+    onData(cb) {
+      this.on("data", cb)
+      return { dispose: () => undefined }
+    }
+  }
+
+  const pty = new PsuedoTerm()
+  const container = {
+    process: { stdin: {}, stdout: {}, exit: () => null },
+  }
+  let sftp = new SFTP(container)
+
+  // No terminal
+  await expect(sftp.getInfo()).rejects.toThrow("No terminal")
+
+  // Happy path
+  sftp.pty = pty
+  setImmediate(() => {
+    pty.emit("data", "-rwxrwxrwx  ? 1000  1000  9999\n")
+    pty.emit("data", "sftp>")
+  })
+  await expect(
+    sftp.getInfo("/x/y", {
+      timeout: 10000,
+    })
+  ).resolves.toEqual({ gid: 1000, mode: 511, size: 9999, uid: 1000 })
+
+  // Not found
+  sftp.pty = pty
+  setImmediate(() => {
+    pty.emit("data", "/x/y was not found\n")
+    pty.emit("data", "sftp>")
+  })
+  await expect(
+    sftp.getInfo("/x/y", {
+      timeout: 10000,
+    })
+  ).rejects.toThrow("not found")
+
+  // No timeout and bad output
+  sftp.pty = pty
+  setImmediate(() => {
+    pty.emit("data", "-rwxrwxrwx something unexpected\n")
+    pty.emit("data", "sftp>")
+  })
+  await expect(sftp.getInfo("/x/y")).rejects.toThrow("Unexpected")
 })
 
 test("close", () => {

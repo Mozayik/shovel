@@ -21,8 +21,10 @@ test("parseLines", async () => {
     exitCode: 0,
     ready: false,
     permissionDenied: true,
+    passphraseRequired: false,
     loginPasswordPrompt: "fred@localhost's password:",
     sudoPasswordPrompt: "[sudo] password for",
+    verificationPrompt: undefined,
   })
 })
 

@@ -115,11 +115,13 @@ export class SFTP {
 
   static parseLines(data) {
     const stripAnsiEscapes = (s) => s.replace(ansiEscapeRegex, "")
-    const errorLines = []
+    let errorLines = undefined
     let ready = false
     let loginPasswordPrompt = undefined
     let lines = stripAnsiEscapes(data.toString()).match(/^.*((\r\n|\n|\r)|$)/gm)
     let permissionDenied = false
+    let notFound = false
+    let infoLines = undefined
 
     lines = lines.map((line) => line.trim())
 
@@ -130,11 +132,23 @@ export class SFTP {
       if (!line) {
         continue
       } else if (line.startsWith("error:") || line.startsWith("warning:")) {
-        errorLines.push(line)
+        if (errorLines === undefined) {
+          errorLines = [line]
+        } else {
+          errorLines.push(line)
+        }
       } else if (/^.+@.+'s password:/.test(line)) {
         loginPasswordPrompt = line
       } else if (/^.+@.+: Permission denied/.test(line)) {
         permissionDenied = true
+      } else if (line.endsWith("not found")) {
+        notFound = true
+      } else if (/^[dl-]{1}[rwx-]{9}/.test(line)) {
+        if (infoLines === undefined) {
+          infoLines = [line]
+        } else {
+          infoLines.push(line)
+        }
       }
     }
 
@@ -145,10 +159,12 @@ export class SFTP {
     }
 
     return {
+      infoLines,
       errorLines,
       ready,
       loginPasswordPrompt,
       permissionDenied,
+      notFound,
     }
   }
 
@@ -180,14 +196,12 @@ export class SFTP {
     const localFile = tempy.file()
 
     try {
-      const promises = []
-
       await this.fs.writeFile(localFile, contents)
 
-      promises.push(
+      const promises = [
         new Promise((resolve, reject) => {
           const dataHandler = ({ errorLines, ready }) => {
-            if (errorLines.length > 0) {
+            if (errorLines && errorLines.length > 0) {
               if (options.logError) {
                 errorLines.forEach((line) => options.logError(line))
               }
@@ -203,8 +217,8 @@ export class SFTP {
           const disposable = this.pty.onData((data) => {
             dataHandler(SFTP.parseLines(data))
           })
-        })
-      )
+        }),
+      ]
 
       let timer = null
 
@@ -225,6 +239,86 @@ export class SFTP {
     } finally {
       await this.fs.remove(localFile)
     }
+  }
+
+  async getInfo(remoteFile, options = {}) {
+    if (!this.pty) {
+      throw new Error("No terminal is connected")
+    }
+
+    const parsePerms = (s) => {
+      return (
+        (s[1] === "r" ? 0o400 : 0) |
+        (s[2] === "w" ? 0o200 : 0) |
+        (s[3] === "x" ? 0o100 : 0) |
+        (s[4] === "r" ? 0o40 : 0) |
+        (s[5] === "w" ? 0o20 : 0) |
+        (s[6] === "x" ? 0o10 : 0) |
+        (s[7] === "r" ? 0o4 : 0) |
+        (s[8] === "w" ? 0o2 : 0) |
+        (s[9] === "x" ? 0o1 : 0)
+      )
+    }
+
+    const promises = [
+      new Promise((resolve, reject) => {
+        let info = null
+
+        const dataHandler = ({ infoLines, notFound, ready }) => {
+          if (notFound) {
+            disposable.dispose()
+            reject(new Error(`File '${remoteFile}' not found on remote`))
+          }
+          if (infoLines) {
+            const match = infoLines[0].match(
+              /^([dl-]{1}[rwx-]{9})\s+\?\s+(\d+)\s+(\d+)\s+(\d+)/
+            )
+
+            if (match !== null) {
+              info = {
+                mode: parsePerms(match[1]),
+                uid: parseInt(match[2]),
+                gid: parseInt(match[3]),
+                size: parseInt(match[4]),
+              }
+            }
+          }
+          if (ready) {
+            disposable.dispose()
+
+            if (info === null) {
+              reject(new Error("Unexpected remote output"))
+            } else {
+              resolve(info)
+            }
+          }
+        }
+        const disposable = this.pty.onData((data) => {
+          dataHandler(SFTP.parseLines(data))
+        })
+      }),
+    ]
+
+    let timer = null
+
+    if (options.timeout) {
+      timer = new this.Timeout()
+      promises.push(timer.set(options.timeout))
+    }
+
+    this.pty.write(`ls -l ${remoteFile}\n`)
+
+    let info = null
+
+    try {
+      info = await Promise.race(promises)
+    } finally {
+      if (timer) {
+        timer.clear()
+      }
+    }
+
+    return info
   }
 
   close() {
