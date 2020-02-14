@@ -32,8 +32,6 @@ export class SFTP {
       throw new Error("Host must be specified")
     }
 
-    this.options = Object.assign({}, options)
-
     if (options.user) {
       args.push(`${options.user}@${options.host}`)
     } else {
@@ -75,10 +73,14 @@ export class SFTP {
           disposable.dispose()
           reject(
             new Error(
-              `Unable to connect to ${this.options.host}; bad password or key`
+              `Unable to connect to ${options.host}; bad password or key`
             )
           )
         } else if (loginPasswordPrompt) {
+          if (options.noPrompts) {
+            reject(new Error("Remote displayed a login prompt"))
+          }
+
           if (!this.loginPasswordPrompts) {
             this.loginPasswordPrompts = new Map(options.loginPasswordPrompts)
           }
@@ -106,7 +108,6 @@ export class SFTP {
         }
 
         this.loginPasswordPrompts = null
-        this.options = undefined
         this.promptDisplayed = false
       })
     })
