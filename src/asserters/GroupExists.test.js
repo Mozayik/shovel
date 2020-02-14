@@ -8,59 +8,76 @@ test("assert", async () => {
     util: {
       runningAsRoot: () => true,
       getLoginDefs: async () => ({ SYS_GID_MIN: 100, SYS_GID_MAX: 999 }),
+      getGroups: () => [
+        { name: "mail", password: "", gid: 100, users: ["mail"] },
+        { name: "other", password: "", gid: 5000, users: ["other"] },
+      ],
     },
-    _groups: [
-      { name: "mail", password: "", gid: 10, users: ["mail"] },
-      { name: "nfs", password: "", gid: 1, users: ["nfs"] },
-    ],
   }
   const asserter = new GroupExists(container)
 
-  // // Bad group
-  // await expect(asserter.assert(createAssertNode(asserter, {}))).rejects.toThrow(
-  //   ScriptError
-  // )
-  // await expect(
-  //   asserter.assert(createAssertNode(asserter, { group: 1, gid: 10 }))
-  // ).rejects.toThrow(ScriptError)
+  // Bad arguments
+  await expect(asserter.assert(createAssertNode(asserter, {}))).rejects.toThrow(
+    ScriptError
+  )
+  await expect(
+    asserter.assert(createAssertNode(asserter, { group: 1, gid: 10 }))
+  ).rejects.toThrow(ScriptError)
+  await expect(
+    asserter.assert(
+      createAssertNode(asserter, { group: "mail", gid: 10, system: true })
+    )
+  ).rejects.toThrow(ScriptError)
+  await expect(
+    asserter.assert(createAssertNode(asserter, { group: "mail", system: 1 }))
+  ).rejects.toThrow(ScriptError)
 
-  // // Bad gid
-  // await expect(
-  //   asserter.assert(createAssertNode(asserter, { group: "mail", gid: "10" }))
-  // ).rejects.toThrow(ScriptError)
+  // Bad gid
+  await expect(
+    asserter.assert(createAssertNode(asserter, { group: "mail", gid: "10" }))
+  ).rejects.toThrow(ScriptError)
 
-  // // With group absent
-  // container.util.getGroups = jest.fn(async (fs) => [])
-  // await expect(
-  //   asserter.assert(createAssertNode(asserter, { group: "notthere" }))
-  // ).resolves.toBe(false)
-
-  // With group existing
-  container.util.getGroups = jest.fn(async (fs) => [{ name: "mail", gid: 10 }])
+  // Happy path
   await expect(
     asserter.assert(createAssertNode(asserter, { group: "mail" }))
   ).resolves.toBe(true)
 
-  // With group existing with same name and gid
-  container.util.getGroups = jest.fn(async (fs) => [{ name: "mail", gid: 10 }])
+  // With group absent
   await expect(
-    asserter.assert(createAssertNode(asserter, { group: "mail", gid: 10 }))
+    asserter.assert(createAssertNode(asserter, { group: "notthere" }))
+  ).resolves.toBe(false)
+
+  // With group existing with same name and gid
+  await expect(
+    asserter.assert(createAssertNode(asserter, { group: "mail", gid: 100 }))
   ).resolves.toBe(true)
 
-  // With group exists with different gid
-  container.util.getGroups = jest.fn(async (fs) => [{ name: "nfs", gid: 10 }])
+  // With group existing and system flag and gid in range
   await expect(
-    asserter.assert(createAssertNode(asserter, { group: "nfs", gid: 11 }))
+    asserter.assert(createAssertNode(asserter, { group: "mail", system: true }))
+  ).resolves.toBe(true)
+
+  // With group existing with different gid
+  await expect(
+    asserter.assert(createAssertNode(asserter, { group: "mail", gid: 110 }))
   ).resolves.toBe(false)
+
+  // With group existing with outside system range
+  await expect(
+    asserter.assert(
+      createAssertNode(asserter, { group: "other", system: true })
+    )
+  ).rejects.toThrow(ScriptError)
 
   // With group present with different gid and not root
   container.util.runningAsRoot = jest.fn(() => false)
   await expect(
-    asserter.assert(createAssertNode(asserter, { group: "nfs", gid: 11 }))
+    asserter.assert(createAssertNode(asserter, { group: "mail", gid: 110 }))
   ).rejects.toThrow(ScriptError)
 
-  // With group absent and not root
-  container.util.getGroups = jest.fn(async (fs) => [])
+  // With group absent and not root, no system login.defs
+  container.util.getLoginDefs = async () => ({})
+  container.util.getGroups = async (fs) => []
   await expect(
     asserter.assert(createAssertNode(asserter, { group: "notthere" }))
   ).rejects.toThrow(ScriptError)
@@ -81,10 +98,12 @@ test("rectify", async () => {
   asserter.modify = false
   asserter.gid = undefined
 
-  // Add
+  // Add & system
+  asserter.system = true
   await expect(asserter.rectify()).resolves.toBeUndefined()
 
   // Modify
+  asserter.system = false
   asserter.modify = true
   await expect(asserter.rectify()).resolves.toBeUndefined()
 

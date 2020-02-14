@@ -104,12 +104,8 @@ export class GroupExists {
           return ""
         case "boolean":
           return value ? arg : ""
-        case "string":
-          return value.includes(" ") ? "'" + value + "'" : value
         case "number":
           return value.toString()
-        default:
-          return ""
       }
     }
     const command =
