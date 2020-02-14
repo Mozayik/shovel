@@ -8,11 +8,17 @@ export class FileCopied {
     this.fs = container.fs || fs
     this.util = container.util || util
     this.interpolator = container.interpolator
+    this.getLocalFileDigest = container.getLocalFileDigest
+    this.uploadLocalFile = container.uploadLocalFile
   }
 
   async assert(assertNode) {
     const withNode = assertNode.value.with
-    const { fromFile: fromFileNode, toFile: toFileNode } = withNode.value
+    const {
+      fromFile: fromFileNode,
+      toFile: toFileNode,
+      fromLocal: fromLocalNode,
+    } = withNode.value
 
     if (!fromFileNode || fromFileNode.type !== "string") {
       throw new ScriptError(
@@ -31,11 +37,14 @@ export class FileCopied {
     this.expandedToFile = this.interpolator(toFileNode)
     this.expandedFromFile = this.interpolator(fromFileNode)
 
-    if (!(await this.util.pathInfo(this.expandedFromFile)).isFile()) {
-      throw new ScriptError(
-        `File ${this.expandedFromFile} does not exist`,
-        fromFileNode
-      )
+    if (fromLocalNode) {
+      if (fromLocalNode.type !== "boolean") {
+        throw new ScriptError("'fromLocal' must be a boolean", fromLocalNode)
+      }
+
+      this.fromLocal = fromLocalNode.value
+    } else {
+      this.fromLocal = false
     }
 
     if (!(await this.util.pathInfo(this.expandedToFile)).isFile()) {
@@ -53,9 +62,28 @@ export class FileCopied {
       return false
     }
 
-    const fromFileDigest = await this.util.generateDigestFromFile(
-      this.expandedFromFile
-    )
+    let fromFileDigest
+
+    if (this.fromLocal) {
+      // TODO: Get the file digest from the local file system
+      fromFileDigest = this.getLocalFileDigest(this.expandedFromFile)
+    } else {
+      if (
+        !(await this.util.pathInfo(this.expandedFromFile))
+          .getAccess()
+          .isReadable()
+      ) {
+        throw new ScriptError(
+          `File ${this.expandedFromFile} does not exist or is not readable`,
+          fromFileNode
+        )
+      }
+
+      fromFileDigest = await this.util.generateDigestFromFile(
+        this.expandedFromFile
+      )
+    }
+
     const toFileDigest = await this.util.generateDigestFromFile(
       this.expandedToFile
     )
@@ -64,10 +92,18 @@ export class FileCopied {
   }
 
   async rectify() {
-    await this.fs.copy(this.expandedFromFile, this.expandedToFile)
+    if (this.fromLocal) {
+      await this.uploadLocalFile(this.expandedFromFile, this.expandedToFile)
+    } else {
+      await this.fs.copy(this.expandedFromFile, this.expandedToFile)
+    }
   }
 
   result() {
-    return { fromFile: this.expandedFromFile, toFile: this.expandedToFile }
+    return {
+      fromFile: this.expandedFromFile,
+      fromLocal: this.fromLocal,
+      toFile: this.expandedToFile,
+    }
   }
 }

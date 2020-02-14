@@ -25,5 +25,3 @@ export { UserDeleted } from "./UserDeleted"
 export { UserDisabled } from "./UserDisabled"
 export { UserExists } from "./UserExists"
 export { ZipFileUnzipped } from "./ZipFileUnzipped"
-
-// TODO: Add FileUploadedFromLocal which copies a file from local to remote using sftp with mode and owner
