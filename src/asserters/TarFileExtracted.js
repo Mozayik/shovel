@@ -55,9 +55,9 @@ export class TarFileExtracted {
       )
     }
 
-    // TODO: Don't early exit; instead collect all the files that are different into result
+    this.differentFiles = []
 
-    const ok = await new Promise((resolve, reject) => {
+    await new Promise((resolve, reject) => {
       const readable = this.fs.createReadStream(this.expandedFile)
       const writeable = new this.tar.Parse()
 
@@ -68,11 +68,9 @@ export class TarFileExtracted {
           .pathInfo(fullPath)
           .then((info) => {
             if (info.size !== entry.size) {
-              resolve(false)
-              readable.destroy()
-            } else {
-              entry.resume()
+              this.differentFiles.push(fullPath)
             }
+            entry.resume()
           })
           .catch((error) => {
             reject(
@@ -86,11 +84,11 @@ export class TarFileExtracted {
       readable.on("end", () => {
         readable.destroy()
       })
-      readable.on("close", () => resolve(true))
+      readable.on("close", () => resolve())
       readable.pipe(writeable)
     })
 
-    return ok
+    return this.differentFiles.length === 0
   }
 
   async rectify() {
@@ -98,6 +96,10 @@ export class TarFileExtracted {
   }
 
   result() {
-    return { file: this.expandedFile, toDirectory: this.expandedDirectory }
+    return {
+      file: this.expandedFile,
+      toDirectory: this.expandedDirectory,
+      differentFiles: this.differentFiles,
+    }
   }
 }

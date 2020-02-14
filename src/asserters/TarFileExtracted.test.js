@@ -61,8 +61,10 @@ test("assert", async () => {
           switch (entry) {
             case "entry1":
               this.emit("entry", { path: "file1.txt", size: 100 }) // Same as disk
+              break
             case "entry2":
               this.emit("entry", { path: "file2.txt", size: 50 }) // Different from disk
+              break
           }
 
           callback()
