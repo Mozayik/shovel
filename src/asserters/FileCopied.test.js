@@ -3,8 +3,6 @@ import { createAssertNode } from "../testUtil"
 import { ScriptError } from "../ScriptError"
 import { PathInfo } from "../util"
 
-let container = null
-
 test("assert", async () => {
   const container = {
     interpolator: (node) => node.value,
