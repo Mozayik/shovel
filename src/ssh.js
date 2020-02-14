@@ -28,6 +28,7 @@ export class SSH {
     let exitCode = undefined
     let ready = false
     let permissionDenied = false
+    let passphraseRequired = false
     let loginPasswordPrompt = undefined
     let sudoPasswordPrompt = undefined
     let verificationPrompt = undefined
@@ -37,8 +38,6 @@ export class SSH {
 
     // NOTE: Keep for debugging
     // console.log(lines)
-
-    // TODO: Support 'Enter passphrase for key...' for ssh-add (throw error)
 
     for (const line of lines) {
       if (!line) {
@@ -65,6 +64,8 @@ export class SSH {
         permissionDenied = true
       } else if (line.startsWith("Verification code:")) {
         verificationPrompt = line
+      } else if (line.startsWith("Enter passphrase for")) {
+        passphraseRequired = true
       }
     }
 
@@ -82,6 +83,7 @@ export class SSH {
       exitCode,
       ready,
       permissionDenied,
+      passphraseRequired,
       loginPasswordPrompt,
       sudoPasswordPrompt,
       verificationPrompt,
@@ -136,6 +138,7 @@ export class SSH {
       const dataHandler = ({
         ready,
         permissionDenied,
+        passphraseRequired,
         loginPasswordPrompt,
         verificationPrompt,
       }) => {
@@ -149,6 +152,8 @@ export class SSH {
               `Unable to connect to ${this.options.host}; bad password or key`
             )
           )
+        } else if (passphraseRequired) {
+          reject(new Error("Use of SSH key requires a passphrase"))
         } else if (loginPasswordPrompt) {
           if (!this.loginPasswordPrompts) {
             this.loginPasswordPrompts = new Map(options.loginPasswordPrompts)
