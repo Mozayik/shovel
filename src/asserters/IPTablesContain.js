@@ -49,8 +49,6 @@ export class IPTablesContain {
 
     this.expandedContents = this.interpolator(contentsNode)
 
-    console.log(parseTables(this.expandedContents))
-
     const ignoredTables = {}
 
     if (ignoreNode) {
