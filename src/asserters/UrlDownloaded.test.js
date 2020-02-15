@@ -30,7 +30,11 @@ test("assert", async () => {
       parseOwnerNode: util.parseOwnerNode,
       parseModeNode: util.parseModeNode,
       pathInfo: async (path) => {
-        if (path === "/dir/somefile" || path === "/dir/badfile") {
+        if (
+          path === "/dir/somefile" ||
+          path === "/dir/badfile" ||
+          path === "/noaccess/badfile"
+        ) {
           return new PathInfo(
             {
               isFile: () => true,
@@ -54,12 +58,24 @@ test("assert", async () => {
             },
             container
           )
+        } else if (path === "/noaccess") {
+          return new PathInfo(
+            {
+              isFile: () => false,
+              isDirectory: () => true,
+              size: 0,
+              uid: 1,
+              gid: 1,
+              mode: 0o555,
+            },
+            container
+          )
         } else {
           return new PathInfo()
         }
       },
       generateDigestFromFile: async (path) => {
-        if (path === "/dir/badfile") {
+        if (path === "/dir/badfile" || path === "/noaccess/badfile") {
           return "0987654321"
         } else {
           return "1234567890"
@@ -118,7 +134,7 @@ test("assert", async () => {
     )
   ).resolves.toBe(false)
 
-  // With bad checksum
+  // Bad checksum
   await expect(
     asserter.assert(
       createAssertNode(asserter, {
@@ -128,6 +144,36 @@ test("assert", async () => {
       })
     )
   ).resolves.toBe(false)
+
+  // Bad checksum and no access to target dir
+  await expect(
+    asserter.assert(
+      createAssertNode(asserter, {
+        url: testUrl,
+        digest: "1234567890",
+        file: "/noaccess/badfile",
+      })
+    )
+  ).rejects.toThrow(ScriptError)
+
+  // With correct file, different uid, not running as root
+  container.os.userInfo = () => ({
+    uid: 1000,
+    gid: 1000,
+  })
+  await expect(
+    asserter.assert(
+      createAssertNode(asserter, {
+        url: testUrl,
+        digest: "1234567890",
+        file: "/dir/somefile",
+        owner: {
+          user: 0,
+          group: 0,
+        },
+      })
+    )
+  ).rejects.toThrow(ScriptError)
 })
 
 test("rectify", async () => {
@@ -143,6 +189,8 @@ test("rectify", async () => {
     runContext: {
       env: {},
     },
+    HttpProxyAgent: class {},
+    HttpsProxyAgent: class {},
   }
   const asserter = new UrlDownloaded(container)
 
@@ -150,11 +198,18 @@ test("rectify", async () => {
   asserter.expandedFile = "/foo/bar.txt"
   asserter.expandedUrl = "http://something.com"
   asserter.owner = { uid: 1, gid: 1 }
-
   await expect(asserter.rectify()).resolves.toBeUndefined()
 
-  asserter.toFileExists = true
+  asserter.expandedUrl = "https://something.com"
+  await expect(asserter.rectify()).resolves.toBeUndefined()
 
+  asserter.runContext = {
+    env: { http_proxy: "http://proxy", https_proxy: "http://proxy" },
+  }
+  asserter.expandedUrl = "http://something.com"
+  await expect(asserter.rectify()).resolves.toBeUndefined()
+
+  asserter.expandedUrl = "https://something.com"
   await expect(asserter.rectify()).resolves.toBeUndefined()
 })
 
@@ -162,6 +217,11 @@ test("result", () => {
   const asserter = new UrlDownloaded({})
 
   asserter.expandedFile = "/somedir/somefile.txt"
-
   expect(asserter.result()).toEqual({ file: asserter.expandedFile })
+
+  asserter.proxy = "http://proxy"
+  expect(asserter.result()).toEqual({
+    file: asserter.expandedFile,
+    proxy: asserter.proxy,
+  })
 })
