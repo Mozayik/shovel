@@ -13,6 +13,7 @@ test("PathAccess", () => {
   expect(access.isReadWrite()).toBe(true)
   expect(access.isExecutable()).toBe(true)
   expect(access.isTraversable()).toBe(true)
+  expect(access.toString()).toBe("rwx")
 
   access = new PathAccess(0)
 
@@ -20,6 +21,7 @@ test("PathAccess", () => {
   expect(access.isReadWrite()).toBe(false)
   expect(access.isExecutable()).toBe(false)
   expect(access.isTraversable()).toBe(false)
+  expect(access.toString()).toBe("---")
 })
 
 test("PathInfo", async () => {
@@ -55,10 +57,7 @@ test("PathInfo", async () => {
     '{"type":1,"size":100,"uid":1,"gid":1,"mode":511}'
   )
   expect(info.modeString()).toBe("rwxrwxrwx")
-
-  let access = info.getAccess()
-
-  expect(access.isReadable()).toBe(true)
+  expect(info.getAccess().isReadable()).toBe(true)
 
   // Inaccessible directory
   info = new PathInfo(
@@ -81,8 +80,7 @@ test("PathInfo", async () => {
   })
   expect(info.isDirectory()).toBe(true)
   expect(info.modeString()).toBe("---------")
-  access = info.getAccess()
-  expect(access.isWriteable()).toBe(false)
+  expect(info.getAccess().isWriteable()).toBe(false)
 
   // Other
   info = new PathInfo(
@@ -104,8 +102,8 @@ test("PathInfo", async () => {
     size: 0,
   })
   expect(info.isOther()).toBe(true)
-  access = info.getAccess(1, [1, 2])
-  expect(access.isReadWrite()).toBe(true)
+  expect(info.getAccess(1, [1, 2]).isReadWrite()).toBe(true)
+  expect(info.getAccess(0, [0]).isReadWrite()).toBe(true)
 
   // Bad file
   info = await util.pathInfo("/noexist")
@@ -113,6 +111,7 @@ test("PathInfo", async () => {
     type: 0,
   })
   expect(info.isMissing()).toBe(true)
+  expect(info.toString()).toBe('{"type":0}')
 })
 
 test("generateDigestFromFile", async () => {
@@ -214,38 +213,53 @@ test("runningAsRoot", async () => {
 })
 
 test("getUsers", async () => {
-  const util = new Utility({
+  const container = {
+    os: { userInfo: () => ({ uid: 1000, gid: 1000 }) },
     fs: {
-      readFile: jest.fn((path, options) => {
-        return `root:x:0:0:root:/root:/bin/bash
+      readFile: async (path) => {
+        if (path === "/etc/passwd") {
+          return `root:x:0:0:root:/root:/bin/bash
 daemon:x:1:1:daemon:/usr/sbin:/usr/sbin/nologin
-bin:x:2:2:bin:/bin:/usr/sbin/nologin
-sys:x:3:3:sys:/dev:/usr/sbin/nologin
-sync:x:4:65534:sync:/bin:/bin/sync
-games:x:5:60:games:/usr/games:/usr/sbin/nologin
-man:x:6:12:man:/var/cache/man:/usr/sbin/nologin
-lp:x:7:7:lp:/var/spool/lpd:/usr/sbin/nologin
-mail:x:8:8:mail:/var/mail:/usr/sbin/nologin
-news:x:9:9:news:/var/spool/news:/usr/sbin/nologin
-uucp:x:10:10:uucp:/var/spool/uucp:/usr/sbin/nologin
 proxy:x:13:13:proxy:/bin:/usr/sbin/nologin
 www-data:x:33:33:www-data:/var/www:/usr/sbin/nologin
 someuser:x:1000:1000:Some User:/home/someuser:/bin/bash
 sshd:x:110:65534::/run/sshd:/usr/sbin/nologin
 ntp:x:111:113::/nonexistent:/usr/sbin/nologin`
-      }),
+        } else if (path === "/etc/shadow") {
+          return `root:*:17941:0:99999:7:::
+daemon:*:17941:0:99999:7:::
+extra:!:1234:0:99999:7:::
+proxy:!:18093::::::
+www-data:*:18267:0:99999:7:::
+someuser:$6$asthoeu08aeoust/:18010:0:99999:7:::
+sshd:*:18267:0:99999:7:::
+ntp:*:18267:0:99999:7:::`
+        }
+      },
     },
-  })
+  }
+  const util = new Utility(container)
 
   await expect(util.getUsers()).resolves.toContainEqual({
-    name: "mail",
-    password: "x",
-    uid: 8,
-    gid: 8,
-    name: "mail",
-    homeDir: "/var/mail",
+    name: "proxy",
+    uid: 13,
+    gid: 13,
+    homeDir: "/bin",
     shell: "/usr/sbin/nologin",
-    comment: "mail",
+    comment: "proxy",
+  })
+
+  container.os.userInfo = () => ({ uid: 0, gid: 0 })
+
+  await expect(util.getUsers()).resolves.toContainEqual({
+    name: "someuser",
+    password: "$6$asthoeu08aeoust/",
+    disabled: false,
+    uid: 1000,
+    gid: 1000,
+    homeDir: "/home/someuser",
+    shell: "/bin/bash",
+    comment: "Some User",
   })
 })
 

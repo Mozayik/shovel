@@ -230,7 +230,6 @@ export class Utility {
         const fields = user.split(":")
         return {
           name: fields[0],
-          password: fields[1],
           uid: parseInt(fields[2]),
           gid: parseInt(fields[3]),
           comment: fields[4],
@@ -248,10 +247,11 @@ export class Utility {
         .filter((user) => user.length > 0 && user[0] != "#")
         .forEach((shadowUser) => {
           const fields = shadowUser.split(":")
-          const user = users[fields[0]]
+          const user = users.find((user) => user.name === fields[0])
 
           if (user) {
             user.disabled = fields[1] === "*"
+            user.password = !user.disabled ? fields[1] : ""
           }
         })
     }
