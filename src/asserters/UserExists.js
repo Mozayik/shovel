@@ -66,7 +66,7 @@ export class UserExists {
         throw new ScriptError("'shell' must be a string", shellNode)
       }
 
-      this.shell = shellNode.value
+      this.shell = this.interpolator(shellNode)
     }
 
     if (homeDirNode) {
@@ -74,7 +74,7 @@ export class UserExists {
         throw new ScriptError("'homeDir' must be a string", homeDirNode)
       }
 
-      this.homeDir = homeDirNode.value
+      this.homeDir = this.interpolator(homeDirNode)
     }
 
     if (commentNode) {
@@ -82,13 +82,13 @@ export class UserExists {
         throw new ScriptError("'comment' must be a string", commentNode)
       }
 
-      this.comment = commentNode.value
+      this.comment = this.interpolator(commentNode)
     }
 
-    this.expandedName = this.interpolator(userNode)
+    this.name = this.interpolator(userNode)
 
     const user = (await this.util.getUsers(this.fs)).find(
-      (user) => user.name === this.expandedName
+      (user) => user.name === this.name
     )
     const runningAsRoot = this.util.runningAsRoot()
     const loginDefs = await this.util.getLoginDefs()
@@ -145,8 +145,6 @@ export class UserExists {
           return value.includes(" ") ? "'" + value + "'" : value
         case "number":
           return value.toString()
-        default:
-          return ""
       }
     }
     const command =
@@ -158,17 +156,17 @@ export class UserExists {
       addArg("-h", this.homeDir) +
       addArg("-c", this.comment) +
       " " +
-      this.expandedName
+      this.name
 
     await this.childProcess.exec(command)
 
     const user = (await this.util.getUsers()).find(
-      (user) => user.name === this.expandedName
+      (user) => user.name === this.name
     )
 
     if (!user) {
       throw new Error(
-        `User ${this.expandedName} not present in /etc/passwd after update`
+        `User ${this.name} not present in /etc/passwd after update`
       )
     }
 

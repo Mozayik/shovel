@@ -13,8 +13,8 @@ test("assert", async () => {
       getUsers: async () => [
         {
           name: "user1",
-          uid: 1,
-          gid: 1,
+          uid: 1000,
+          gid: 1000,
           shell: "/bin/sh",
           homeDir: "/users/user1",
           comment: "",
@@ -36,6 +36,14 @@ test("assert", async () => {
     asserter.assert(createAssertNode(asserter, { user: "x", uid: "1" }))
   ).rejects.toThrow(ScriptError)
   await expect(
+    asserter.assert(createAssertNode(asserter, { user: "x", system: 1 }))
+  ).rejects.toThrow(ScriptError)
+  await expect(
+    asserter.assert(
+      createAssertNode(asserter, { user: "x", uid: 1000, system: true })
+    )
+  ).rejects.toThrow(ScriptError)
+  await expect(
     asserter.assert(createAssertNode(asserter, { user: "x", gid: "1" }))
   ).rejects.toThrow(ScriptError)
   await expect(
@@ -48,7 +56,7 @@ test("assert", async () => {
     asserter.assert(createAssertNode(asserter, { user: "x", comment: 1 }))
   ).rejects.toThrow(ScriptError)
 
-  // With user existing
+  // Happy path
   await expect(
     asserter.assert(
       createAssertNode(asserter, {
@@ -57,23 +65,25 @@ test("assert", async () => {
     )
   ).resolves.toBe(true)
 
-  // With user existing with different stuff
+  // With user existing but with different stuff
   await expect(
     asserter.assert(
       createAssertNode(asserter, {
         user: "user1",
-        gid: 2,
+        gid: 2000,
       })
     )
   ).resolves.toBe(false)
+  asserter.gid = undefined
   await expect(
     asserter.assert(
       createAssertNode(asserter, {
         user: "user1",
-        uid: 2,
+        uid: 2000,
       })
     )
   ).resolves.toBe(false)
+  asserter.uid = undefined
   await expect(
     asserter.assert(
       createAssertNode(asserter, {
@@ -82,6 +92,7 @@ test("assert", async () => {
       })
     )
   ).resolves.toBe(false)
+  asserter.shell = undefined
   await expect(
     asserter.assert(
       createAssertNode(asserter, {
@@ -90,6 +101,7 @@ test("assert", async () => {
       })
     )
   ).resolves.toBe(false)
+  asserter.homeDir = undefined
   await expect(
     asserter.assert(
       createAssertNode(asserter, {
@@ -98,11 +110,33 @@ test("assert", async () => {
       })
     )
   ).resolves.toBe(false)
+  asserter.comment = undefined
+
+  // User existing outside system range
+  await expect(
+    asserter.assert(
+      createAssertNode(asserter, {
+        user: "user1",
+        system: true,
+      })
+    )
+  ).rejects.toThrow(ScriptError)
+  asserter.system = undefined
 
   // With user absent
+  container.util.getLoginDefs = async () => ({})
+
   await expect(
     asserter.assert(createAssertNode(asserter, { user: "notthere" }))
   ).resolves.toBe(false)
+
+  // User absent with system flag
+  await expect(
+    asserter.assert(
+      createAssertNode(asserter, { user: "notthere", system: true })
+    )
+  ).resolves.toBe(false)
+  asserter.system = undefined
 
   // With user absent and not root
   container.util.runningAsRoot = () => false
@@ -146,12 +180,17 @@ test("rectify", async () => {
   const asserter = new UserExists(container)
 
   asserter.modify = false
-  asserter.expandedName = "user1"
+  asserter.name = "user1"
+  asserter.system = true
   asserter.user = users[0]
   await expect(asserter.rectify()).resolves.toBeUndefined()
 
+  asserter.system = false
+  asserter.comment = "Comment with spaces"
+  await expect(asserter.rectify()).resolves.toBeUndefined()
+
   asserter.modify = true
-  asserter.expandedName = "badname"
+  asserter.name = "badname"
   asserter.user = users[1]
   await expect(asserter.rectify()).rejects.toThrow(Error)
 })
