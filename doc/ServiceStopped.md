@@ -1,14 +1,12 @@
-# `ServiceStopped`
-
-## Summary
+# ServiceStopped
 
 Asserts that a system service is stopped.
 
 ## Arguments
 
-### `service: string`
-
-The service to stop.
+| Name      | Type     | Default | Description              |
+| --------- | -------- | ------- | ------------------------ |
+| `service` | `string` |         | The name of the service. |
 
 ## Example
 

@@ -1,6 +1,6 @@
 # ServiceRunning
 
-Asserts that a system service is running.
+Asserts that a system service is enabled.
 
 ## Arguments
 
@@ -12,7 +12,7 @@ Asserts that a system service is running.
 
 ```json5
 {
-  assert: "ServiceRunning",
+  assert: "ServiceEnabled",
   with: {
     service: "ntp",
   }

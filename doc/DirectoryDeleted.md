@@ -2,13 +2,13 @@
 
 ## Summary
 
-Asserts that a directory is deleted (and all it's children) from the host.
+Asserts that a directory and any sub-directories and files are deleted.
 
 ## Arguments
 
-### `directory: String`
-
-The directory to delete.
+| Name        | Type     | Default | Description             |
+| ----------- | -------- | ------- | ----------------------- |
+| `directory` | `string` |         | The directory to delete |
 
 ## Example
 

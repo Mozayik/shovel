@@ -1,46 +1,22 @@
-# `CupsPrintQueueExists`
+# CupsPrintQueueExists
 
-## Summary
+Asserts that a CUPS printer queue exists on the host. Fails if CUPS is not installed.
 
-Asserts that a CUPS printer queue exists on the host. Fails if CUPS is not installed.  Requires that `DirtyCleanInterval` is set to zero (`0`) in the `/etc/cups/cupsd.conf` file.
+NOTE: Requires that `DirtyCleanInterval` is set to zero (`0`) in the `/etc/cups/cupsd.conf` file or subsequent assertions will not succeed after rectification.
 
 ## Arguments
 
-### `queue: string` (Required)
-
-The print queue name.
-
-### `deviceUri: string` (Required)
-
-The device URI for the printer, e.g. ipp://10.10.1.1:631/printer, serial:/
-
-### `errorPolicy: string` (Defaults to `stop-printer`)
-
-Printer error policy.  One of `abort-job`, `stop-printer`, `retry-job`, `retry-current-job`.
-
-### `accepting: boolean` (Defaults to `true`)
-
-If the print queue is enabled and accepting print jobs.
-
-### `shared: boolean` (Defaults to `false`)
-
-If the printer queue is shared on the network.
-
-### `location: string` (Defaults to empty)
-
-The printer location.
-
-### `info: string` (Defaults to empty)
-
-The printer information, typically the model number and other descriptive notes.
-
-### `ppdFile: string` (Defaults to empty)
-
-The file name of a [PPD](https://www.cups.org/doc/postscript-driver.html) file for the printer.
-
-### `ppdOptions: string` (Defaults to empty)
-
-The PPD options to use for this printer.  Not valid unless `ppdFile` is also set.
+| Name          | Type      | Default        | Description                                                                                     |
+| ------------- | --------- | -------------- | ----------------------------------------------------------------------------------------------- |
+| `queue`       | `string`  |                | The print queue name.                                                                           |
+| `deviceUri`   | `string`  |                | The device URI for the printer, e.g. ipp://10.10.1.1:631/printer, serial:/                      |
+| `errorPolicy` | `string`  | `stop-printer` | Printer error policy.  One of `abort-job`, `stop-printer`, `retry-job`, `retry-current-job`.    |
+| `accepting`   | `boolean` | `true`         | If the print queue is enabled and accepting print jobs.                                         |
+| `shared`      | `boolean` | `false`        | If the printer queue is shared on the network.                                                  |
+| `location`    | `string`  | `""`           | The printer location.                                                                           |
+| `info`        | `string`  | `""`           | The printer information, typically the model number and other descriptive notes.                |
+| `ppdFile`     | `string`  | `""`           | The file name of a [PPD](https://www.cups.org/doc/postscript-driver.html) file for the printer. |
+| `ppdOptions`  | `object`  | `{}`           | The PPD options to use for this printer.  Not valid unless `ppdFile` is also set.               |
 
 ## Example
 

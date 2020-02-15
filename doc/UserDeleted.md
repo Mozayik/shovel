@@ -1,14 +1,12 @@
-# `UserDeleted`
-
-## Summary
+# UserDeleted
 
 Asserts that a Linux user has been deleted.
 
 ## Arguments
 
-### `user: string`
-
-The name of the user.
+| Name   | Type     | Default | Description           |
+| ------ | -------- | ------- | --------------------- |
+| `user` | `string` |         | The name of the user. |
 
 ## Example
 

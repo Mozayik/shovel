@@ -1,14 +1,12 @@
-# `FilesDeleted`
-
-## Summary
+# FilesDeleted
 
 Asserts that one or more files are deleted from the host. If any of the files are present they are deleted.
 
 ## Arguments
 
-### `files: [string]`
-
-An array of files to delete.
+| Name    | Type       | Default | Description                  |
+| ------- | ---------- | ------- | ---------------------------- |
+| `files` | `[string]` |         | An array of files to delete. |
 
 ## Example
 

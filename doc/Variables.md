@@ -18,21 +18,30 @@ Use single quotes (`'`) in interpolated strings to easily avoid issues with JSON
 }
 ```
 
-## `vars`
+## vars
 
 Theses are all the variables evaluated in the `vars` section of the script.  `vars` is shared by all `includes` scripts, so as each script runs it can add too or modify existing `vars`.  Variables are evaluated in the order in which they are set in the script.
 
-### `vars.local`
+### vars.local
 
 Underneath `vars` is as special section of variables called _local variables_.  These are variables that are always evaluated locally on the originating host.  In other words, these variables will be evaluated using the local system even if the script is actually being run on one or more hosts.
 
 For `local` interpolated variables, the `env`, `os`, `sys` and `fs` objects all relate to the local machine.  What this means is that information about the local execution environment can be gathered before the script runs on the various hosts.  One example of how this can be used is to read files from the local system and store them in variables.  The data will be encoded and transferred to the host systems without the need for a separate assertion to copy the file from the local system.  This works well for text data, but not recommended for binary data.
 
-## `env`
+## dateTime
+
+Returns date/time information strings:
+
+| Property              | Description                                                                                                             |
+| --------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| `asLocal([dateTime])` | Returns a date/time string formatted for the current locale. If `dateTime` not provided uses the current date and time. |
+| `asISO([dateTime])`   | Returns a date/time string formatted in ISO 8601 format.  If `dateTime` not provided uses the current date and time.    |
+
+## env
 
 This are the environment variables that `shovel` was invoked with copied from `process.env`.
 
-## `sys`
+## sys
 
 This contains information about the `shovel` system, most usefully the currently executing script directory and file:
 
@@ -41,7 +50,7 @@ This contains information about the `shovel` system, most usefully the currently
 | `scriptDir`  | Currently executing script directory |
 | `scriptFile` | Currently executing script file name |
 
-## `os`
+## os
 
 This is information about the O/S that `shovel` is running on. Values are always lowercase and separated with underscores.
 
@@ -51,7 +60,7 @@ This is information about the O/S that `shovel` is running on. Values are always
 | `id`        | `fedora`, `debian`, `ubuntu`, etc.       |
 | `versionId` | `18.04`, `9`, etc..                      |
 
-## `user`
+## user
 
 Information about the user that invoked `shovel`.
 
@@ -63,27 +72,37 @@ Information about the user that invoked `shovel`.
 | `shell`   | User shell                   |
 | `homeDir` | Path of users home directory |
 
-## `fs`
+## fs
 
 File system functions.  All functions are synchronous; there is no concept of asynchronous functions in Shovel.
 
-| Function   | Description                         |
-| ---------- | ----------------------------------- |
-| `readFile` | Evaluates to the contents of a file |
+| Function         | Description                         |
+| ---------------- | ----------------------------------- |
+| `readFile(path)` | Evaluates to the contents of a file |
 
-## `path`
+## path
 
 File system path functions.
 
-| Function  | Description                               |
-| --------- | ----------------------------------------- |
-| `join`    | Joins to path sections together correctly |
-| `dirname` | Extracts the directory part of a path     |
+| Function                | Description                                                                                                                                                                                           |
+| ----------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `join(...)`             | Joins all the path sections together correctly                                                                                                                                                        |
+| `dirname(path)`         | Extracts the directory part of a path                                                                                                                                                                 |
+| `basename(path[, ext])` | The last part of the path, typically the file name. See [path.basename](https://nodejs.org/dist/latest-v12.x/docs/api/path.html#path_path_basename_path_ext) for an explanation of the `ext` argument |
+| `extname(path)`         | The extension of the last part of the path                                                                                                                                                            |
 
-## `results`
+## results
 
 An array of all the result objects from all the assertions that run.  Can be used to conditionally run assertions based on the result of a previous assertion.
 
 | Function | Description                                   |
 | -------- | --------------------------------------------- |
-| `last`   | Returns the last element of the results array |
+| `last()` | Returns the last element of the results array |
+
+## util
+
+An array of all the result objects from all the assertions that run.  Can be used to conditionally run assertions based on the result of a previous assertion.
+
+| Function            | Description                                                                     |
+| ------------------- | ------------------------------------------------------------------------------- |
+| `moustache(string)` | Takes a string with "moustache" blocks (`{{...}}`). Each block is interpolated. |

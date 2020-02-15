@@ -12,7 +12,7 @@ test("assert", async () => {
     },
     util: {
       pathInfo: async (path) => {
-        if (path === "/somedir") {
+        if (path === "/somedir" || path === "/noaccess/somedir") {
           return new PathInfo({
             isDirectory: () => true,
             isFile: () => false,
@@ -22,6 +22,12 @@ test("assert", async () => {
             isDirectory: () => true,
             isFile: () => false,
             mode: 0o777,
+          })
+        } else if (path === "/noaccess") {
+          return new PathInfo({
+            isDirectory: () => true,
+            isFile: () => false,
+            mode: 0o555,
           })
         } else if (path === "/somefile") {
           return new PathInfo({
@@ -45,19 +51,26 @@ test("assert", async () => {
     asserter.assert(createAssertNode(asserter, { directory: 1 }))
   ).rejects.toThrow(ScriptError)
 
-  // DirectoryDeleted with no dir or file existing
+  // Happy path
   await expect(
     asserter.assert(createAssertNode(asserter, { directory: "/notthere" }))
   ).resolves.toBe(true)
 
-  // DirectoryDeleted with dir existing
+  // Directory exists
   await expect(
     asserter.assert(createAssertNode(asserter, { directory: "/somedir" }))
   ).resolves.toBe(false)
 
-  // DirectoryDeleted with file instead of dir existing
+  // Directory is file
   await expect(
     asserter.assert(createAssertNode(asserter, { directory: "/somefile" }))
+  ).rejects.toThrow(ScriptError)
+
+  // Directory exists and parent not writeable
+  await expect(
+    asserter.assert(
+      createAssertNode(asserter, { directory: "/noaccess/somedir" })
+    )
   ).rejects.toThrow(ScriptError)
 })
 

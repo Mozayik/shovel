@@ -1,14 +1,12 @@
-# `FileDeleted`
-
-## Summary
+# FileDeleted
 
 Asserts that a file is deleted from the host.
 
 ## Arguments
 
-### `file: string`
-
-The file to deleted.
+| Name   | Type     | Default | Description         |
+| ------ | -------- | ------- | ------------------- |
+| `file` | `string` |         | The file to delete. |
 
 ## Example
 

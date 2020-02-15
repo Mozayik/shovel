@@ -1,18 +1,13 @@
-# `AutoToolProjectMade`
-
-## Summary
+# AutoToolProjectMade
 
 Asserts that a specified target of an [AutoTool](https://www.gnu.org/software/automake/manual/html_node/Autotools-Introduction.html) base project has been made with the `make` command.
 
 ## Arguments
 
-### `directory: String` (Required)
-
-The path to the project root directory.
-
-### `args: String` (Optional)
-
-Additional arguments for building the project.
+| Name        | Type     | Default | Description                                    |
+| ----------- | -------- | ------- | ---------------------------------------------- |
+| `directory` | `string` |         | The path to the project root directory.        |
+| `args`      | `string` | `""`    | Additional arguments for building the project. |
 
 ## Possible Errors
 

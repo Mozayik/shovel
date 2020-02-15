@@ -1,22 +1,14 @@
-# `DirectoryExists`
-
-## Summary
+# DirectoryExists
 
 Asserts that a directory is exists and has the specific owners and permissions. The parent directory must exist and be accessible by the user.
 
 ## Arguments
 
-### `directory: String`
-
-The directory.
-
-### `owner: String`
-
-The user and group owners for the directory. Defaults to current user and group.
-
-### `mode: String` (Defaults to `{ user: "rwx", group: "rwx", other: "rwx" }`)
-
-The permissions flags for the directory. See [Permission Flags](PermissionFlags.md)
+| Name        | Type     | Default                                       | Description                                                                         |
+| ----------- | -------- | --------------------------------------------- | ----------------------------------------------------------------------------------- |
+| `directory` | `string` |                                               | The directory.                                                                      |
+| `owner`     | `object` | `{ uid: $UID, gid: $GID }`                    | The user and group owners for the directory. Defaults to current user and group.    |
+| `mode`      | `string` | `{ user: "rwx", group: "rwx", other: "rwx" }` | The permissions flags for the directory. See [Permission Flags](PermissionFlags.md) |
 
 ## Example
 

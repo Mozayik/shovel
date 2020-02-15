@@ -1,14 +1,12 @@
-# `GroupDeleted`
-
-## Summary
+# GroupDeleted
 
 Asserts that a Unix security group is deleted from the host.
 
 ## Arguments
 
-### `group: string`
-
-The name of the group to delete
+| Name    | Type     | Default | Description                     |
+| ------- | -------- | ------- | ------------------------------- |
+| `group` | `string` |         | The name of the group to delete |
 
 ## Example
 

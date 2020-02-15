@@ -33,13 +33,11 @@ export class DirectoryDeleted {
         )
       }
 
-      if (
-        !(await this.util.pathInfo(path.dirname(this.expandedDirectory)))
-          .getAccess()
-          .isWriteable()
-      ) {
+      const parentDir = path.dirname(this.expandedDirectory)
+
+      if (!(await this.util.pathInfo(parentDir)).getAccess().isWriteable()) {
         throw new ScriptError(
-          `Parent directory of ${this.expandedDirectory} is not writable`,
+          `Parent directory ${parentDir} is not writable`,
           directoryNode
         )
       }

@@ -1,18 +1,13 @@
-# `SystemPackageInstalled`
-
-## Summary
+# SystemPackageInstalled
 
 Asserts that a system package is installed.
 
 ## Arguments
 
-### `package: string` (Required)
-
-Then name of the package to install.
-
-### `update: boolean` (Optional)
-
-Whether to update the package lists.  Only done if an install is actually needed.
+| Name      | Type      | Default | Description                                                                       |
+| --------- | --------- | ------- | --------------------------------------------------------------------------------- |
+| `package` | `string`  |         | Then name of the package to install.                                              |
+| `update`  | `boolean` | `false` | Whether to update the package lists.  Only done if an install is actually needed. |
 
 ## Example
 
@@ -21,6 +16,7 @@ Whether to update the package lists.  Only done if an install is actually needed
   assert: "SystemPackageInstalled",
   with: {
     package: "gzip",
+    update: false,
   }
 }
 ```
