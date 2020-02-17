@@ -28,28 +28,26 @@ export class FileCopied {
       )
     }
 
-    this.expandedToFile = this.interpolator(toFileNode)
-    this.expandedFromFile = this.interpolator(fromFileNode)
+    this.toFilePath = this.interpolator(toFileNode)
+    this.fromFilePath = this.interpolator(fromFileNode)
 
     if (
-      !(await this.util.pathInfo(this.expandedFromFile))
-        .getAccess()
-        .isReadable()
+      !(await this.util.pathInfo(this.fromFilePath)).getAccess().isReadable()
     ) {
       throw new ScriptError(
-        `File ${this.expandedFromFile} does not exist or is not readable`,
+        `File ${this.fromFilePath} does not exist or is not readable`,
         fromFileNode
       )
     }
 
-    if (!(await this.util.pathInfo(this.expandedToFile)).isFile()) {
+    if (!(await this.util.pathInfo(this.toFilePath)).isFile()) {
       if (
-        !(await this.util.pathInfo(path.dirname(this.expandedToFile)))
+        !(await this.util.pathInfo(path.dirname(this.toFilePath)))
           .getAccess()
           .isWriteable()
       ) {
         throw new ScriptError(
-          `Cannot write to parent directory of ${this.expandedToFile}`,
+          `Cannot write to parent directory of ${this.toFilePath}`,
           toFileNode
         )
       }
@@ -58,24 +56,22 @@ export class FileCopied {
     }
 
     const fromFileDigest = await this.util.generateDigestFromFile(
-      this.expandedFromFile
+      this.fromFilePath
     )
 
-    const toFileDigest = await this.util.generateDigestFromFile(
-      this.expandedToFile
-    )
+    const toFileDigest = await this.util.generateDigestFromFile(this.toFilePath)
 
     return fromFileDigest === toFileDigest
   }
 
   async rectify() {
-    await this.fs.copy(this.expandedFromFile, this.expandedToFile)
+    await this.fs.copy(this.fromFilePath, this.toFilePath)
   }
 
   result() {
     return {
-      fromFile: this.expandedFromFile,
-      toFile: this.expandedToFile,
+      fromFile: this.fromFilePath,
+      toFile: this.toFilePath,
     }
   }
 }
