@@ -34,18 +34,18 @@ export class FileExists {
       this.util.parseOwnerNode(ownerNode, users, groups)
     )
     this.mode = this.util.parseModeNode(modeNode)
-    this.expandedFile = this.interpolator(fileNode)
+    this.filePath = this.interpolator(fileNode)
 
-    let pathInfo = await this.util.pathInfo(this.expandedFile)
+    let pathInfo = await this.util.pathInfo(this.filePath)
 
     if (pathInfo.isMissing()) {
       if (
-        !(await this.util.pathInfo(path.dirname(this.expandedFile)))
+        !(await this.util.pathInfo(path.dirname(this.filePath)))
           .getAccess()
           .isWriteable()
       ) {
         throw new ScriptError(
-          `Cannot write to parent directory of ${this.expandedFile}`,
+          `Cannot write to parent directory of ${this.filePath}`,
           fileNode
         )
       }
@@ -55,7 +55,7 @@ export class FileExists {
 
     if (!pathInfo.isFile()) {
       throw new ScriptError(
-        `A non-file exists with the name '${this.expandedFile}'`,
+        `A non-file exists with the name '${this.filePath}'`,
         fileNode
       )
     }
@@ -88,14 +88,14 @@ export class FileExists {
   }
 
   async rectify() {
-    const fd = await this.fs.open(this.expandedFile, "a")
+    const fd = await this.fs.open(this.filePath, "a")
 
     await this.fs.close(fd)
-    await this.fs.chmod(this.expandedFile, this.mode)
-    await this.fs.chown(this.expandedFile, this.owner.uid, this.owner.gid)
+    await this.fs.chmod(this.filePath, this.mode)
+    await this.fs.chown(this.filePath, this.owner.uid, this.owner.gid)
   }
 
   result() {
-    return { file: this.expandedFile }
+    return { file: this.filePath }
   }
 }

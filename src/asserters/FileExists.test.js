@@ -24,38 +24,38 @@ test("assert", async () => {
           case "/":
           case "/bar":
             return new PathInfo({
-              isFile: () => true,
+              isFile: () => false,
               isDirectory: () => true,
               mode: 0o777,
             })
           case "/file1":
             return new PathInfo({
-              isDirectory: () => false,
               isFile: () => true,
+              isDirectory: () => false,
               mode: 0o644,
               uid: 0,
               gid: 0,
             })
           case "/file2":
             return new PathInfo({
-              isDirectory: () => false,
               isFile: () => true,
+              isDirectory: () => false,
               mode: 0o644,
               uid: 0,
               gid: 10,
             })
           case "/file3":
             return new PathInfo({
-              isDirectory: () => false,
               isFile: () => true,
+              isDirectory: () => false,
               mode: 0o111,
               uid: 0,
               gid: 0,
             })
           case "/file4":
             return new PathInfo({
-              isDirectory: jest.fn(() => false),
               isFile: jest.fn(() => true),
+              isDirectory: jest.fn(() => false),
               mode: 0o111,
               uid: 0,
               gid: 0,
@@ -88,8 +88,6 @@ test("assert", async () => {
   await expect(asserter.assert(createAssertNode(asserter, {}))).rejects.toThrow(
     ScriptError
   )
-
-  // Bad file
   await expect(
     asserter.assert(createAssertNode(asserter, { file: 1 }))
   ).rejects.toThrow(ScriptError)
@@ -115,6 +113,15 @@ test("assert", async () => {
       })
     )
   ).resolves.toBe(false)
+
+  // Directory exists instead
+  await expect(
+    asserter.assert(
+      createAssertNode(asserter, {
+        file: "/bar",
+      })
+    )
+  ).rejects.toThrow(ScriptError)
 
   // File exists with different group owner and not root user
   container.os.userInfo = jest.fn(() => ({
@@ -188,7 +195,7 @@ test("rectify", async () => {
   }
   const asserter = new FileExists(container)
 
-  asserter.expandedFile = "/notthere"
+  asserter.filePath = "/notthere"
   asserter.mode = 0o777
   asserter.owner = { uid: 0, gid: 0 }
 
@@ -198,7 +205,7 @@ test("rectify", async () => {
 test("result", () => {
   const asserter = new FileExists({})
 
-  asserter.expandedFile = "/notthere"
+  asserter.filePath = "/notthere"
 
-  expect(asserter.result()).toEqual({ file: asserter.expandedFile })
+  expect(asserter.result()).toEqual({ file: asserter.filePath })
 })
