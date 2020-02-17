@@ -27,6 +27,7 @@ test("assert", async () => {
               mode: 0o777,
             })
           case "outdir/dir/file.txt":
+          case "outdir/dirfile.txt/":
           case "./filesize.zip":
           case "./filedir.zip":
           case "./dirfile.zip":
@@ -84,6 +85,15 @@ test("assert", async () => {
               {
                 uncompressedSize: 50,
                 fileName: "filedir.txt",
+                openReadStream,
+              },
+            ]
+            break
+          case "./dirfile.zip": // Directory is a file
+            entries = [
+              {
+                uncompressedSize: 0,
+                fileName: "dirfile.txt/",
                 openReadStream,
               },
             ]
@@ -185,6 +195,16 @@ test("assert", async () => {
     asserter.assert(
       createAssertNode(asserter, {
         file: "./filedir.zip",
+        toDirectory: "./outdir",
+      })
+    )
+  ).rejects.toThrow(ScriptError)
+
+  // With a directory as a file
+  await expect(
+    asserter.assert(
+      createAssertNode(asserter, {
+        file: "./dirfile.zip",
         toDirectory: "./outdir",
       })
     )

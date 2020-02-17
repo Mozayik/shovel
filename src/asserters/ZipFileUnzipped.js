@@ -98,9 +98,7 @@ export class ZipFileUnzipped {
       const targetDir = entryIsDir ? targetPath : path.dirname(targetPath)
 
       if (entryIsDir) {
-        if ((await this.util.pathInfo(targetDir)).isMissing()) {
-          await this.fs.ensureDir(targetDir)
-        }
+        await this.fs.ensureDir(targetDir)
       } else {
         const readable = await entry.openReadStream()
         const writeable = await this.fs.createWriteStream(targetPath)
