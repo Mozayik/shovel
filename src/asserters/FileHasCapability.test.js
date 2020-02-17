@@ -17,6 +17,12 @@ test("assert", async () => {
             })
           case "/file2":
             return new PathInfo()
+          case "/file3":
+            return new PathInfo({
+              isFile: () => false,
+              isDirectory: () => true,
+              size: 0,
+            })
         }
       },
     },
@@ -27,17 +33,16 @@ test("assert", async () => {
 
   const asserter = new FileHasCapability(container)
 
-  // Missing args
+  // Bad args
   await expect(asserter.assert(createAssertNode(asserter, {}))).rejects.toThrow(
     ScriptError
   )
-
-  // Bad file
   await expect(
     asserter.assert(createAssertNode(asserter, { file: 1 }))
   ).rejects.toThrow(ScriptError)
-
-  // Bad capability
+  await expect(
+    asserter.assert(createAssertNode(asserter, { file: "file" }))
+  ).rejects.toThrow(ScriptError)
   await expect(
     asserter.assert(createAssertNode(asserter, { file: "file", capability: 1 }))
   ).rejects.toThrow(ScriptError)
@@ -67,6 +72,29 @@ test("assert", async () => {
     )
   ).rejects.toThrow(ScriptError)
 
+  // File not file
+  await expect(
+    asserter.assert(
+      createAssertNode(asserter, {
+        file: "/file3",
+        capability: "cap_audit_control",
+      })
+    )
+  ).rejects.toThrow(ScriptError)
+
+  // Exec fails
+  container.childProcess.exec = async () => {
+    throw new Error()
+  }
+  await expect(
+    asserter.assert(
+      createAssertNode(asserter, {
+        file: "/file1",
+        capability: "cap_audit_control",
+      })
+    )
+  ).resolves.toBe(false)
+
   // Not running as root
   container.util.runningAsRoot = () => false
   await expect(
@@ -87,7 +115,7 @@ test("rectify", async () => {
   }
   const asserter = new FileHasCapability(container)
 
-  asserter.expandedFile = "/notthere"
+  asserter.filePath = "/notthere"
   asserter.capability = "cap_net_bind_service"
 
   await expect(asserter.rectify()).resolves.toBeUndefined()
@@ -96,11 +124,11 @@ test("rectify", async () => {
 test("result", () => {
   const asserter = new FileHasCapability({})
 
-  asserter.expandedFile = "/notthere"
-  asserter.expandedCapability = "cap_net_bind_service"
+  asserter.filePath = "/notthere"
+  asserter.capability = "cap_net_bind_service"
 
   expect(asserter.result()).toEqual({
-    file: asserter.expandedFile,
-    capability: "cap_net_bind_service",
+    file: asserter.filePath,
+    capability: asserter.capability,
   })
 })

@@ -61,7 +61,7 @@ export class FileHasCapability {
       )
     }
 
-    this.expandedFile = this.interpolator(fileNode)
+    this.filePath = this.interpolator(fileNode)
 
     if (!capabilityNode || capabilityNode.type !== "string") {
       throw new ScriptError(
@@ -70,36 +70,33 @@ export class FileHasCapability {
       )
     }
 
-    this.expandedCapability = this.interpolator(capabilityNode).toLowerCase()
+    this.capability = this.interpolator(capabilityNode).toLowerCase()
 
-    if (!capabilities.includes(this.expandedCapability)) {
+    if (!capabilities.includes(this.capability)) {
       throw new ScriptError(
-        `Invalid capability ${this.expandedCapability}`,
+        `Invalid capability ${this.capability}`,
         capabilityNode
       )
     }
 
+    const pathInfo = await this.util.pathInfo(this.filePath)
+
+    if (pathInfo.isMissing()) {
+      throw new ScriptError(`File '${this.filePath}' does not exist`, fileNode)
+    }
+
+    if (!pathInfo.isFile()) {
+      throw new ScriptError(`'${this.filePath}' is not a file`, fileNode)
+    }
+
     if (!this.util.runningAsRoot()) {
       throw new ScriptError(
-        "Must be running as root to change file capabilities",
+        "Must be running as root to view or modify file capabilities",
         assertNode
       )
     }
 
-    const pathInfo = await this.util.pathInfo(this.expandedFile)
-
-    if (pathInfo.isMissing()) {
-      throw new ScriptError(
-        `File '${this.expandedFile}' does not exist`,
-        fileNode
-      )
-    }
-
-    if (!pathInfo.isFile()) {
-      throw new ScriptError(`'${this.expandedFile}' is not a file`, fileNode)
-    }
-
-    const command = `setcap -v ${this.expandedCapability} ${this.expandedFile}`
+    const command = `setcap -v ${this.capability} ${this.filePath}`
 
     try {
       await this.childProcess.exec(command)
@@ -111,15 +108,15 @@ export class FileHasCapability {
   }
 
   async rectify() {
-    const command = `setcap ${this.expandedCapability} ${this.expandedFile}`
+    const command = `setcap ${this.capability} ${this.filePath}`
 
     await this.childProcess.exec(command)
   }
 
   result() {
     return {
-      file: this.expandedFile,
-      capability: this.expandedCapability,
+      file: this.filePath,
+      capability: this.capability,
     }
   }
 }
