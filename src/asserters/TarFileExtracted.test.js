@@ -36,6 +36,7 @@ test("assert", async () => {
             }
           case "/xyz":
           case "/xyz/some.tar":
+          case "/xyz/other.tar":
             return {
               getAccess: () => ({
                 isReadWrite: () => true,
@@ -74,20 +75,28 @@ test("assert", async () => {
   }
   const asserter = new TarFileExtracted(container)
 
-  // With bad file path
+  // Bad arguments
   await expect(asserter.assert(createAssertNode(asserter, {}))).rejects.toThrow(
     ScriptError
   )
   await expect(
     asserter.assert(createAssertNode(asserter, { file: 1 }))
   ).rejects.toThrow(ScriptError)
-
-  // With bad directory
   await expect(
     asserter.assert(
       createAssertNode(asserter, { file: "/xyz/some.tar", toDirectory: 1 })
     )
   ).rejects.toThrow(ScriptError)
+
+  // Happy path
+  await expect(
+    asserter.assert(createAssertNode(asserter, { file: "/xyz/some.tar" }))
+  ).resolves.toBe(true)
+
+  // With a file different
+  await expect(
+    asserter.assert(createAssertNode(asserter, { file: "/xyz/other.tar" }))
+  ).resolves.toBe(false)
 
   // Unreadable tar
   await expect(
@@ -103,11 +112,6 @@ test("assert", async () => {
       })
     )
   ).rejects.toThrow(ScriptError)
-
-  // No changes
-  await expect(
-    asserter.assert(createAssertNode(asserter, { file: "/xyz/some.tar" }))
-  ).resolves.toBe(true)
 })
 
 test("rectify", async () => {
