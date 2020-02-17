@@ -20,16 +20,16 @@ test("assert", async () => {
       pathInfo: async (path) => {
         if (path === "/somedir") {
           return new PathInfo({
-            isDirectory: () => true,
             isFile: () => false,
+            isDirectory: () => true,
             mode: 0o754,
             uid: 10,
             gid: 10,
           })
         } else if (path === "/filethere") {
           return new PathInfo({
-            isDirectory: jest.fn(() => false),
             isFile: jest.fn(() => true),
+            isDirectory: jest.fn(() => false),
           })
         } else if (path === "/") {
           return new PathInfo({
@@ -38,6 +38,12 @@ test("assert", async () => {
             mode: 0o777,
             uid: 10,
             gid: 10,
+          })
+        } else if (path === "/noaccess") {
+          return new PathInfo({
+            isDirectory: () => false,
+            isFile: () => true,
+            mode: 0o555,
           })
         } else {
           return new PathInfo()
@@ -68,7 +74,7 @@ test("assert", async () => {
     asserter.assert(createAssertNode(asserter, { directory: 1 }))
   ).rejects.toThrow(ScriptError)
 
-  // Directory there with good owner and mode
+  // Happy path
   await expect(
     asserter.assert(
       createAssertNode(asserter, {
@@ -80,7 +86,7 @@ test("assert", async () => {
   ).resolves.toBe(true)
   expect(asserter.result()).toEqual({ directory: "/somedir" })
 
-  // Directory there with different owners when root
+  // Different owners
   await expect(
     asserter.assert(
       createAssertNode(asserter, {
@@ -91,7 +97,7 @@ test("assert", async () => {
     )
   ).resolves.toBe(false)
 
-  // Directory there with different mode when root
+  // Different modes
   await expect(
     asserter.assert(
       createAssertNode(asserter, {
@@ -102,7 +108,7 @@ test("assert", async () => {
     )
   ).resolves.toBe(false)
 
-  // Directory there with different owner when not root or owner
+  // Different owner, not root or owner
   container.os.userInfo = jest.fn(() => ({
     uid: 20,
     gid: 20,
@@ -117,7 +123,7 @@ test("assert", async () => {
     )
   ).rejects.toThrow(ScriptError)
 
-  // Directory there with different mode when not root but owner
+  // Different mode, not root but owner
   container.os.userInfo = jest.fn(() => ({
     uid: 10,
     gid: 10,
@@ -132,7 +138,7 @@ test("assert", async () => {
     )
   ).resolves.toBe(false)
 
-  // Directory there with different mode when not root or owner
+  // Different mode, not root or owner
   container.os.userInfo = jest.fn(() => ({
     uid: 20,
     gid: 20,
@@ -147,7 +153,7 @@ test("assert", async () => {
     )
   ).rejects.toThrow(ScriptError)
 
-  // Directory not there and no file with same name
+  // Directory not there
   container.os.userInfo = jest.fn(() => ({
     uid: 0,
     gid: 0,
@@ -156,9 +162,14 @@ test("assert", async () => {
     asserter.assert(createAssertNode(asserter, { directory: "/notthere" }))
   ).resolves.toBe(false)
 
-  // File with same name present
+  // File with same name
   await expect(
     asserter.assert(createAssertNode(asserter, { directory: "/filethere" }))
+  ).rejects.toThrow(ScriptError)
+
+  // Parent directory not accessible
+  await expect(
+    asserter.assert(createAssertNode(asserter, { directory: "/noaccess/file" }))
   ).rejects.toThrow(ScriptError)
 })
 
@@ -173,7 +184,7 @@ test("rectify", async () => {
 
   const asserter = new DirectoryExists(container)
 
-  asserter.expandedDirectory = "/somefile"
+  asserter.dirPath = "/somefile"
   asserter.mode = 0o777
   asserter.owner = { uid: 10, gid: 20 }
 
@@ -183,7 +194,7 @@ test("rectify", async () => {
 test("result", () => {
   const asserter = new DirectoryExists({})
 
-  asserter.expandedDirectory = "/somefile"
+  asserter.dirPath = "/somefile"
   asserter.mode = 0o777
   asserter.owner = { uid: 10, gid: 20 }
 

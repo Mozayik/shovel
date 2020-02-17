@@ -37,18 +37,18 @@ export class DirectoryExists {
       this.util.parseOwnerNode(ownerNode, users, groups)
     )
     this.mode = this.util.parseModeNode(modeNode, 0o777)
-    this.expandedDirectory = this.interpolator(directoryNode)
+    this.dirPath = this.interpolator(directoryNode)
 
-    let pathInfo = await this.util.pathInfo(this.expandedDirectory)
+    let pathInfo = await this.util.pathInfo(this.dirPath)
 
     if (pathInfo.isMissing()) {
+      const parentDirPath = path.dirname(this.dirPath)
+
       if (
-        !(await this.util.pathInfo(path.dirname(this.expandedDirectory)))
-          .getAccess()
-          .isWriteable()
+        !(await this.util.pathInfo(parentDirPath)).getAccess().isWriteable()
       ) {
         throw new ScriptError(
-          `Cannot write to parent directory of ${this.expandedDirectory}`,
+          `Cannot write to directory '${this.parentDirPath}'`,
           directoryNode
         )
       }
@@ -58,7 +58,7 @@ export class DirectoryExists {
 
     if (!pathInfo.isDirectory()) {
       throw new ScriptError(
-        `A non-directory with the name '${this.expandedDirectory}' exists`,
+        `A non-directory with the name '${this.dirPath}' exists`,
         directoryNode
       )
     }
@@ -91,12 +91,12 @@ export class DirectoryExists {
   }
 
   async rectify() {
-    await this.fs.ensureDir(this.expandedDirectory)
-    await this.fs.chmod(this.expandedDirectory, this.mode)
-    await this.fs.chown(this.expandedDirectory, this.owner.uid, this.owner.gid)
+    await this.fs.ensureDir(this.dirPath)
+    await this.fs.chmod(this.dirPath, this.mode)
+    await this.fs.chown(this.dirPath, this.owner.uid, this.owner.gid)
   }
 
   result() {
-    return { directory: this.expandedDirectory }
+    return { directory: this.dirPath }
   }
 }
