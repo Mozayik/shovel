@@ -22,58 +22,53 @@ export class FilesDeleted {
       )
     }
 
-    this.unlinkedFiles = []
-    this.expandedFiles = []
-
-    let ok = true
+    this.unlinkFilePaths = []
+    this.filePaths = []
 
     for (const fileNode of filesNode.value) {
       if (fileNode.type !== "string") {
         throw new ScriptError("All 'files' must be strings", fileNode)
       }
 
-      const expandedPath = this.interpolator(fileNode)
+      const filePath = this.interpolator(fileNode)
+      const pathInfo = await this.util.pathInfo(filePath)
 
-      this.expandedFiles.push(expandedPath)
+      this.filePaths.push(filePath)
 
-      const pathInfo = await this.util.pathInfo(expandedPath)
-
-      if (!pathInfo.isMissing()) {
-        if (!pathInfo.isFile()) {
-          throw new ScriptError(
-            `Not removing non-file with the name '${expandedPath}'`,
-            fileNode
-          )
-        }
-
-        if (
-          !(await this.util.pathInfo(path.dirname(expandedPath)))
-            .getAccess()
-            .isWriteable()
-        ) {
-          throw new ScriptError(
-            `Cannot write to directory of file ${expandedPath}`,
-            fileNode
-          )
-        }
-
-        ok = false
-        this.unlinkedFiles.push(expandedPath)
+      if (pathInfo.isMissing()) {
+        continue
       }
 
+      if (!pathInfo.isFile()) {
+        throw new ScriptError(
+          `Not removing non-file with the name '${filePath}'`,
+          fileNode
+        )
+      }
+
+      const parentPath = path.dirname(filePath)
+
+      if (!(await this.util.pathInfo(parentPath)).getAccess().isWriteable()) {
+        throw new ScriptError(
+          `Cannot write to directory '${parentPath}'`,
+          fileNode
+        )
+      }
+
+      this.unlinkFilePaths.push(filePath)
       // Keep going to get all files
     }
 
-    return ok
+    return this.unlinkFilePaths.length === 0
   }
 
   async rectify() {
-    for (const expandedPath of this.unlinkedFiles) {
-      await this.fs.unlink(expandedPath)
+    for (const filePath of this.unlinkFilePaths) {
+      await this.fs.unlink(filePath)
     }
   }
 
   result(rectified) {
-    return { files: rectified ? this.unlinkedFiles : this.expandedFiles }
+    return { files: rectified ? this.unlinkFilePaths : this.filePaths }
   }
 }

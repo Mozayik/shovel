@@ -14,19 +14,25 @@ test("assert", async () => {
       pathInfo: async (path) => {
         if (path === "/somedir") {
           return new PathInfo({
-            isDirectory: () => true,
             isFile: () => false,
+            isDirectory: () => true,
           })
-        } else if (path === "/somefile") {
+        } else if (path === "/somefile" || path === "/noaccess/file") {
           return new PathInfo({
-            isDirectory: () => false,
             isFile: () => true,
+            isDirectory: () => false,
           })
         } else if (path === "/") {
           return new PathInfo({
             isDirectory: () => true,
             isFile: () => false,
             mode: 0o777,
+          })
+        } else if (path === "/noaccess") {
+          return new PathInfo({
+            isDirectory: () => true,
+            isFile: () => false,
+            mode: 0o555,
           })
         } else {
           return new PathInfo()
@@ -48,7 +54,7 @@ test("assert", async () => {
     asserter.assert(createAssertNode(asserter, { files: [1] }))
   ).rejects.toThrow(ScriptError)
 
-  // FilesDeleted with no dir or files existing
+  // Happy path
   await expect(
     asserter.assert(
       createAssertNode(asserter, {
@@ -57,7 +63,7 @@ test("assert", async () => {
     )
   ).resolves.toBe(true)
 
-  // FilesDeleted with file existing
+  // File exists
   await expect(
     asserter.assert(
       createAssertNode(asserter, {
@@ -66,11 +72,20 @@ test("assert", async () => {
     )
   ).resolves.toBe(false)
 
-  // FilesDeleted with dir instead of file existing
+  // Directory instead of file existing
   await expect(
     asserter.assert(
       createAssertNode(asserter, {
         files: ["/nothere", "/somedir"],
+      })
+    )
+  ).rejects.toThrow(Error)
+
+  // Cannot write to parent dir
+  await expect(
+    asserter.assert(
+      createAssertNode(asserter, {
+        files: ["/noaccess/file"],
       })
     )
   ).rejects.toThrow(Error)
@@ -84,7 +99,7 @@ test("rectify", async () => {
   }
   const asserter = new FilesDeleted(container)
 
-  asserter.unlinkedFiles = ["blah"]
+  asserter.unlinkFilePaths = ["blah"]
 
   await expect(asserter.rectify()).resolves.toBeUndefined()
 })
@@ -92,11 +107,11 @@ test("rectify", async () => {
 test("result", () => {
   const asserter = new FilesDeleted({})
 
-  asserter.unlinkedFiles = ["blah"]
+  asserter.unlinkFilePaths = ["blah"]
 
-  expect(asserter.result(true)).toEqual({ files: asserter.unlinkedFiles })
+  expect(asserter.result(true)).toEqual({ files: asserter.unlinkFilePaths })
 
-  asserter.interpolator = ["blah"]
+  asserter.filePaths = ["blah"]
 
-  expect(asserter.result(false)).toEqual({ files: asserter.expandedFiles })
+  expect(asserter.result(false)).toEqual({ files: asserter.filePaths })
 })
