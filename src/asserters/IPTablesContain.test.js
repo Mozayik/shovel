@@ -44,29 +44,21 @@ COMMIT
 
   const asserter = new IPTablesContain(container)
 
-  // Missing contents
+  // Bad arguments
   await expect(asserter.assert(createAssertNode(asserter, {}))).rejects.toThrow(
     ScriptError
   )
-
-  // Bad contents type
   await expect(
     asserter.assert(createAssertNode(asserter, { file: 1 }))
   ).rejects.toThrow(ScriptError)
-
-  // Bad ignore type
   await expect(
     asserter.assert(createAssertNode(asserter, { contents: "", ignore: 1 }))
   ).rejects.toThrow(ScriptError)
-
-  // Bad ignore table type
   await expect(
     asserter.assert(
       createAssertNode(asserter, { contents: "", ignore: { x: 1 } })
     )
   ).rejects.toThrow(ScriptError)
-
-  // Bad ignore table rule type
   await expect(
     asserter.assert(
       createAssertNode(asserter, { contents: "", ignore: { x: [1] } })
@@ -98,6 +90,36 @@ COMMIT
       })
     )
   ).resolves.toBe(true)
+
+  // New has missing tables
+  await expect(
+    asserter.assert(
+      createAssertNode(asserter, {
+        contents: "#Bogus",
+      })
+    )
+  ).resolves.toBe(false)
+
+  // New has missing rules
+  await expect(
+    asserter.assert(
+      createAssertNode(asserter, {
+        contents: "*nat\nCOMMIT\n*filter\nCOMMIT",
+      })
+    )
+  ).resolves.toBe(false)
+
+  // No iptables installed
+  container.childProcess.exec = async () => {
+    throw Error()
+  }
+  await expect(
+    asserter.assert(
+      createAssertNode(asserter, {
+        contents: rules,
+      })
+    )
+  ).rejects.toThrow(ScriptError)
 })
 
 test("rectify", async () => {
