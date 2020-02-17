@@ -14,7 +14,7 @@ test("assert", async () => {
       runningAsRoot: () => true,
       osInfo: async () => ({
         platform: "linux",
-        id: "centos"
+        id: "centos",
       }),
       pathInfo: async (path) => {
         if (
@@ -199,7 +199,7 @@ Default cltx0`
     )
   ).rejects.toThrow(ScriptError)
 
-  // Print queue exists
+  // Happy path
   await expect(
     asserter.assert(
       createAssertNode(asserter, {
@@ -290,6 +290,31 @@ Default cltx0`
       })
     )
   ).rejects.toThrow(ScriptError)
+
+  // Bad /etc/cups/cupsd.confi
+  container.fs.readFile = async () => "#Bad file\n"
+  await expect(
+    asserter.assert(
+      createAssertNode(asserter, {
+        queue: "printer1",
+        deviceUri: "serial:/dev/usb/lp0",
+      })
+    )
+  ).rejects.toThrow(ScriptError)
+
+  // Wrong O/S
+  container.util.osInfo = async () => ({
+    platform: "linux",
+    id: "unknown",
+  })
+  await expect(
+    asserter.assert(
+      createAssertNode(asserter, {
+        queue: "printer1",
+        deviceUri: "serial:/dev/usb/lp0",
+      })
+    )
+  ).rejects.toThrow(ScriptError)
 })
 
 test("rectify", async () => {
@@ -311,6 +336,10 @@ test("rectify", async () => {
   asserter.accepting = true
   asserter.ppdFile = "/x/y"
   asserter.ppdOptions = { a: "b" }
+
+  await expect(asserter.rectify()).resolves.toBeUndefined()
+
+  asserter.accepting = false
 
   await expect(asserter.rectify()).resolves.toBeUndefined()
 })
@@ -336,6 +365,7 @@ test("result", () => {
   asserter.location = "y"
   asserter.ppdFile = "/x/y"
   asserter.ppdOptions = { a: "b" }
+  asserter.updateFlags = 0xff
 
   expect(asserter.result()).toEqual({
     queue: asserter.queueName,
@@ -347,5 +377,6 @@ test("result", () => {
     location: asserter.location,
     ppdFile: asserter.ppdFile,
     ppdOptions: asserter.ppdOptions,
+    updateFlags: asserter.updateFlags,
   })
 })

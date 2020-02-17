@@ -52,7 +52,8 @@ export class CupsPrintQueueExists {
 
     if (!dirtyCleanRegex.test(cupsdContent)) {
       throw new ScriptError(
-        "DirtyCleanInterval must be set to zero /etc/cups/cupsd.conf for this asserter", this.assertNode
+        "DirtyCleanInterval must be set to zero /etc/cups/cupsd.conf for this asserter",
+        assertNode
       )
     }
 
@@ -398,7 +399,7 @@ export class CupsPrintQueueExists {
     }
   }
 
-  result(rectified) {
+  result() {
     const result = {
       queue: this.queueName,
       deviceUri: this.deviceUri,
@@ -423,8 +424,8 @@ export class CupsPrintQueueExists {
       result.ppdOptions = this.ppdOptions
     }
 
-    if (rectified) {
-      result.updateFlags = this.updateFlags.toString(2)
+    if (this.updateFlags) {
+      result.updateFlags = parseInt(this.updateFlags)
     }
 
     return result
