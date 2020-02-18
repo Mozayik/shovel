@@ -136,7 +136,7 @@ test("rectify", async () => {
   }
   const asserter = new IPTablesContain(container)
 
-  asserter.expandedContents = "xyz\n"
+  asserter.contents = "xyz\n"
 
   await expect(asserter.rectify()).resolves.toBeUndefined()
 })
@@ -144,9 +144,9 @@ test("rectify", async () => {
 test("result", () => {
   const asserter = new IPTablesContain({})
 
-  asserter.expandedContents = "some contents"
+  asserter.contents = "some contents"
 
   expect(asserter.result()).toEqual({
-    contents: asserter.expandedContents,
+    contents: asserter.contents,
   })
 })

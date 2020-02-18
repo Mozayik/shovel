@@ -47,7 +47,7 @@ export class IPTablesContain {
       )
     }
 
-    this.expandedContents = this.interpolator(contentsNode)
+    this.contents = this.interpolator(contentsNode)
 
     const ignoredTables = {}
 
@@ -129,7 +129,7 @@ export class IPTablesContain {
 
     return compareTables(
       parseTables(child.stdout),
-      parseTables(this.expandedContents),
+      parseTables(this.contents),
       ignoredTables
     )
   }
@@ -138,7 +138,7 @@ export class IPTablesContain {
     const tmpFile = this.tempy.file()
 
     try {
-      await this.fs.writeFile(tmpFile, this.expandedContents)
+      await this.fs.writeFile(tmpFile, this.contents)
       await this.childProcess.exec(`iptables-restore < ${tmpFile}`)
     } finally {
       await fs.remove(tmpFile)
@@ -146,6 +146,6 @@ export class IPTablesContain {
   }
 
   result() {
-    return { contents: this.expandedContents }
+    return { contents: this.contents }
   }
 }

@@ -1,0 +1,11 @@
+{
+  assertions: [
+    {
+      assert: "IPTablesContain",
+      with: {
+        contents: "*filter\\n-A INPUT -j ACCEPT\\nCOMMIT\\n-A OUTPUT -j ACCEPT\\nCOMMIT\\n",
+      },
+      become: "root",
+    },
+  ],
+}
