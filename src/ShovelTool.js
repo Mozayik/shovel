@@ -310,8 +310,11 @@ export class ShovelTool {
         throw new ScriptError("'when' must be a string or boolean", whenNode)
       }
 
-      if (withNode && withNode.type !== "object") {
-        throw new ScriptError("'with' must be an object", withNode)
+      if (!withNode || withNode.type !== "object") {
+        throw new ScriptError(
+          "'with' must be present and of type 'object'",
+          assertionNode
+        )
       }
     }
 
@@ -408,7 +411,9 @@ export class ShovelTool {
             try {
               return new vm.Script(m).runInContext(runContext).toString()
             } catch (e) {
-              throw new Error(`Bad script at offset ${offset}. ${e.message}`)
+              throw new Error(
+                `Moustache expression at offset ${offset}. ${e.message}`
+              )
             }
           }),
       },
@@ -547,7 +552,7 @@ export class ShovelTool {
         if (
           whenNode &&
           ((whenNode.type === "boolean" && !whenNode.value) ||
-            (whenNode.type === "string" && !interpolator(whenNode)))
+            (whenNode.type === "string" && !!!interpolator(whenNode)))
         ) {
           this.log.info(
             `Not running '${scriptPath}' because settings.when is false`
@@ -590,16 +595,6 @@ export class ShovelTool {
         })
         let output = {}
         let rectified = false
-
-        if (
-          !assertionNode.value.with ||
-          assertionNode.value.with.type !== "object"
-        ) {
-          throw new ScriptError(
-            `Assertion must have a 'with' property of type object`,
-            assertionNode
-          )
-        }
 
         if (becomeNode && becomeNode.value) {
           this.process.setegid(0)

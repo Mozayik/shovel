@@ -228,111 +228,111 @@ test("loadScriptFile", async () => {
   const tool = new ShovelTool(container)
 
   // Bad empty script
-  await expect(tool.loadScriptFile("test.json5")).rejects.toThrow(ScriptError)
+  await expect(tool.loadScriptFile("test.shovel")).rejects.toThrow(ScriptError)
 
   // Empty script
   container.fs.readFile = async (path) => "{}"
-  await expect(tool.loadScriptFile("test.json5")).resolves.not.toBeNull()
+  await expect(tool.loadScriptFile("test.shovel")).resolves.not.toBeNull()
 
   // Clean script
   container.fs.readFile = async (path) =>
     `{
       settings: {},
-      includes: ["something.json5"],
+      includes: ["something.shovel"],
       vars: { a: 1, b: null, c: [1,2,3], d: { x: "x" }},
       assertions: [{assert: "Thing", with: {}}],
     }`
-  await expect(tool.loadScriptFile("test.json5")).resolves.not.toBeNull()
+  await expect(tool.loadScriptFile("test.shovel")).resolves.not.toBeNull()
 
   // Bad settings
   container.fs.readFile = async (path) =>
     `{
       settings: [],
     }`
-  await expect(tool.loadScriptFile("test.json5")).rejects.toThrow(ScriptError)
+  await expect(tool.loadScriptFile("test.shovel")).rejects.toThrow(ScriptError)
 
   // Bad description
   container.fs.readFile = async (path) =>
     `{
       settings: {description: 1},
     }`
-  await expect(tool.loadScriptFile("test.json5")).rejects.toThrow(ScriptError)
+  await expect(tool.loadScriptFile("test.shovel")).rejects.toThrow(ScriptError)
 
   // Bad includes
   container.fs.readFile = async (path) =>
     `{
       includes: {},
     }`
-  await expect(tool.loadScriptFile("test.json5")).rejects.toThrow(ScriptError)
+  await expect(tool.loadScriptFile("test.shovel")).rejects.toThrow(ScriptError)
 
   // Bad include type
   container.fs.readFile = async (path) =>
     `{
       includes: [1],
     }`
-  await expect(tool.loadScriptFile("test.json5")).rejects.toThrow(ScriptError)
+  await expect(tool.loadScriptFile("test.shovel")).rejects.toThrow(ScriptError)
 
   // Bad include absolute path
   container.fs.readFile = async (path) =>
     `{
       includes: ["/absolute/path"],
     }`
-  await expect(tool.loadScriptFile("test.json5")).rejects.toThrow(ScriptError)
+  await expect(tool.loadScriptFile("test.shovel")).rejects.toThrow(ScriptError)
 
   // Bad vars
   container.fs.readFile = async (path) =>
     `{
       vars: [],
     }`
-  await expect(tool.loadScriptFile("test.json5")).rejects.toThrow(ScriptError)
+  await expect(tool.loadScriptFile("test.shovel")).rejects.toThrow(ScriptError)
 
   // Bad assertions
   container.fs.readFile = async (path) =>
     `{
       assertions: {},
     }`
-  await expect(tool.loadScriptFile("test.json5")).rejects.toThrow(ScriptError)
+  await expect(tool.loadScriptFile("test.shovel")).rejects.toThrow(ScriptError)
 
   // Bad assertion
   container.fs.readFile = async (path) =>
     `{
       assertions: [1],
     }`
-  await expect(tool.loadScriptFile("test.json5")).rejects.toThrow(ScriptError)
+  await expect(tool.loadScriptFile("test.shovel")).rejects.toThrow(ScriptError)
 
   // Missing assertion name
   container.fs.readFile = async (path) =>
     `{
       assertions: [{}],
     }`
-  await expect(tool.loadScriptFile("test.json5")).rejects.toThrow(ScriptError)
+  await expect(tool.loadScriptFile("test.shovel")).rejects.toThrow(ScriptError)
 
   // Bad assertion name
   container.fs.readFile = async (path) =>
     `{
       assertions: [{ assert: 1 }],
     }`
-  await expect(tool.loadScriptFile("test.json5")).rejects.toThrow(ScriptError)
+  await expect(tool.loadScriptFile("test.shovel")).rejects.toThrow(ScriptError)
 
   // Bad assertion description
   container.fs.readFile = async (path) =>
     `{
       assertions: [{ assert: "Thing", description: 1 }],
     }`
-  await expect(tool.loadScriptFile("test.json5")).rejects.toThrow(ScriptError)
+  await expect(tool.loadScriptFile("test.shovel")).rejects.toThrow(ScriptError)
 
   // Bad assertion with
   container.fs.readFile = async (path) =>
     `{
       assertions: [{ assert: "Thing", with: 1 }],
     }`
-  await expect(tool.loadScriptFile("test.json5")).rejects.toThrow(ScriptError)
+  await expect(tool.loadScriptFile("test.shovel")).rejects.toThrow(ScriptError)
   // Bad assertion when
   container.fs.readFile = async (path) =>
     `{
       assertions: [{ assert: "Thing", when: 1 }],
     }`
-  await expect(tool.loadScriptFile("test.json5")).rejects.toThrow(ScriptError)
+  await expect(tool.loadScriptFile("test.shovel")).rejects.toThrow(ScriptError)
 })
 
 test("createScriptContext", async () => {
@@ -340,12 +340,12 @@ test("createScriptContext", async () => {
     fs: {
       readFile: (path) => {
         switch (path) {
-          case "/a/b.json5":
-            // Adding c.json5 twice is not a mistake
+          case "/a/b.shovel":
+            // Adding c.shovel twice is not a mistake
             return `{
           includes: [
-            "./c.json5",
-            "./c.json5",
+            "./c.shovel",
+            "./c.shovel",
           ],
           assertions: [
             {
@@ -355,14 +355,14 @@ test("createScriptContext", async () => {
             }
           ]
         }`
-          case "/a/c.json5":
+          case "/a/c.shovel":
             return `{
           assertions: []
           }`
-          case "/a/d.json5":
+          case "/a/d.shovel":
             return `{
             includes: [
-              "../e.json5",
+              "../e.shovel",
             ]
           }`
           default:
@@ -374,14 +374,14 @@ test("createScriptContext", async () => {
 
   const tool = new ShovelTool(container)
 
-  await expect(tool.createScriptContext("/a/b.json5")).resolves.toMatchObject({
+  await expect(tool.createScriptContext("/a/b.shovel")).resolves.toMatchObject({
     anyScriptHasBecomes: true,
     rootScriptDirPath: "/a",
     scriptNodes: expect.any(Map),
     scriptPaths: expect.any(Array),
   })
 
-  await expect(tool.createScriptContext("/a/d.json5")).rejects.toThrow(
+  await expect(tool.createScriptContext("/a/d.shovel")).rejects.toThrow(
     ScriptError
   )
 })
@@ -402,7 +402,7 @@ test("createRunContext", async () => {
   })
 
   const tool = new ShovelTool(container)
-  const scriptNode = testUtil.createScriptNode("a.json5")
+  const scriptNode = testUtil.createScriptNode("a.shovel")
   let result = await tool.createRunContext(scriptNode)
 
   expect(result).not.toBe(null)
@@ -450,12 +450,37 @@ test("createRunContext", async () => {
   ).toBe("Sat Feb 08 2020 16:28:31 GMT-0800 (Pacific Standard Time)")
   expect(
     result.interpolator(
+      testUtil.createNode(scriptNode.filename, "{dateTime.asLocal()}")
+    )
+  ).not.toBeNull()
+  expect(
+    result.interpolator(
       testUtil.createNode(
         scriptNode.filename,
         "{dateTime.asISO('Sat Feb 08 2020 16:28:31 GMT-0800 (Pacific Standard Time)')}"
       )
     )
   ).toBe("2020-02-09T00:28:31.000Z")
+  expect(
+    result.interpolator(
+      testUtil.createNode(scriptNode.filename, "{dateTime.asISO()}")
+    )
+  ).not.toBeNull()
+
+  // moustache
+  expect(
+    result.interpolator(
+      testUtil.createNode(
+        scriptNode.filename,
+        "{util.moustache('Is it that {{1 + 2}} === 3?')}"
+      )
+    )
+  ).toBe("Is it that 3 === 3?")
+  expect(() =>
+    result.interpolator(
+      testUtil.createNode(scriptNode.filename, "{util.moustache('{{_}}')}")
+    )
+  ).toThrow(ScriptError)
 
   // results
   expect(
@@ -488,7 +513,7 @@ test("updateRunContext", async () => {
     sys: {},
     vars: {},
   }
-  const scriptNode = testUtil.createScriptNode("a.json5")
+  const scriptNode = testUtil.createScriptNode("a.shovel")
 
   // Interpolation with vars
   scriptNode.value.vars = testUtil.createNode(scriptNode.filename, {
@@ -540,7 +565,7 @@ test("runScriptLocally", async () => {
     fs: {
       readFile: async (path) => {
         switch (path) {
-          case "/x/a.json5":
+          case "/x/a.shovel":
             return `{
               settings: {
                 description: "test",
@@ -567,7 +592,7 @@ test("runScriptLocally", async () => {
                 },
               ],
             }`
-          case "/x/b.json5":
+          case "/x/b.shovel":
             return `{
               assertions: [
                 {
@@ -576,7 +601,7 @@ test("runScriptLocally", async () => {
                 }
               ]
             }`
-          case "/x/c.json5":
+          case "/x/c.shovel":
             return `{
               assertions: [
                 {
@@ -584,6 +609,19 @@ test("runScriptLocally", async () => {
                   with: {}
                 }
               ]
+            }`
+          case "/x/d.shovel":
+            return `{
+              settings: {
+                description: "test",
+                when: false
+              }
+            }`
+          case "/x/e.shovel":
+            return `{
+              settings: {
+                when: "{}"
+              }
             }`
           default:
             throw new Error()
@@ -596,29 +634,37 @@ test("runScriptLocally", async () => {
 
   tool.createRunContext = jest.fn(async () => ({
     runContext: { vars: { a: 1 }, results: [] },
-    interpolator: jest.fn((s) => s),
+    interpolator: (s) => s,
   }))
   tool.updateRunContext = jest.fn()
 
   // Has becomes
   await expect(
-    tool.runScriptLocally("/x/a.json5", {
+    tool.runScriptLocally("/x/a.shovel", {
       noSpinner: true,
     })
   ).resolves.toBeUndefined()
 
   // Has becomes and not running as root
   container.util.runningAsRoot = () => false
-  await expect(tool.runScriptLocally("/x/a.json5")).rejects.toThrow(
+  await expect(tool.runScriptLocally("/x/a.shovel")).rejects.toThrow(
     "not running as root"
   )
 
-  // No becomes
+  // When says no
+  await expect(tool.runScriptLocally("/x/d.shovel")).resolves.toBeUndefined()
+  await expect(tool.runScriptLocally("/x/e.shovel")).resolves.toBeUndefined()
+
+  // No becomes and only asserts
   tool.debug = false
-  await expect(tool.runScriptLocally("/x/b.json5")).resolves.toBeUndefined()
+  await expect(
+    tool.runScriptLocally("/x/b.shovel", { assertOnly: true })
+  ).resolves.toBeUndefined()
 
   // Bad asserter
-  await expect(tool.runScriptLocally("/x/c.json5")).rejects.toThrow(ScriptError)
+  await expect(tool.runScriptLocally("/x/c.shovel")).rejects.toThrow(
+    ScriptError
+  )
 })
 
 test("runScriptRemotely", async () => {
@@ -640,19 +686,20 @@ test("runScriptRemotely", async () => {
     fs: {
       readFile: async (path) => {
         switch (path) {
-          case "/x/a.json5":
+          case "/x/a.shovel":
             return `{
               includes: [
-                "b.json5",
+                "b.shovel",
               ],
               assertions: [
                 {
                   assert: "Something",
+                  with: {},
                   become: "root",
                 }
               ],
             }`
-          case "/x/b.json5":
+          case "/x/b.shovel":
             return `{
               assertions: [],
             }`
@@ -672,13 +719,13 @@ test("runScriptRemotely", async () => {
   })
 
   // Happy path
-  await tool.runScriptRemotely("/x/a.json5", {
+  await tool.runScriptRemotely("/x/a.shovel", {
     user: "test",
     password: "test",
     host: "somehost",
   })
   await expect(
-    tool.runScriptRemotely("/x/b.json5", {
+    tool.runScriptRemotely("/x/b.shovel", {
       user: "test",
       password: "test",
       host: "somehost",
@@ -692,11 +739,12 @@ test("runScriptRemotely", async () => {
   tool.rectifyHasNode = async () => undefined
   tool.rectifyHasShovel = async () => undefined
   await expect(
-    tool.runScriptRemotely("/x/a.json5", {
+    tool.runScriptRemotely("/x/a.shovel", {
       user: "test",
       password: "test",
       host: "somehost",
       noSpinner: true,
+      assertOnly: true,
     })
   ).resolves.toBeUndefined()
 
@@ -708,7 +756,7 @@ test("runScriptRemotely", async () => {
     close: () => undefined,
   })
   await expect(
-    tool.runScriptRemotely("/x/b.json5", {
+    tool.runScriptRemotely("/x/b.shovel", {
       user: "test",
       password: "test",
       host: "somehost",
@@ -746,11 +794,11 @@ test("run", async () => {
   )
 
   // Running script directly
-  await expect(tool.run(["somescript.json5"])).resolves.toBeUndefined()
+  await expect(tool.run(["somescript.shovel"])).resolves.toBeUndefined()
 
   // Too many scripts
   await expect(
-    tool.run(["somescript.json5", "otherscript.json5"])
+    tool.run(["somescript.shovel", "otherscript.shovel"])
   ).rejects.toThrow(Error)
   expect(container.log.info.mock.calls[0][0]).toEqual(
     expect.stringMatching(/\d\.\d\.\d/)
@@ -758,30 +806,27 @@ test("run", async () => {
 
   // Missing host/hosts-file
   await expect(
-    tool.run(["--identity", "id_rsa", "otherscript.json5"])
+    tool.run(["--identity", "id_rsa", "otherscript.shovel"])
   ).rejects.toThrow(Error)
 
   // Running script
   await expect(
-    tool.run(["somescript.json5", "--host", "somehost"])
+    tool.run(["somescript.shovel", "--host", "somehost"])
   ).resolves.toBeUndefined()
 
   // Hosts file
-  await tool.run(["somescript.json5", "--hostFile", "hostfile.json5"])
-  // await expect(
-  //   tool.run(["somescript.json5", "--host-file", "hostfile.json5"])
-  // ).resolves.toBeUndefined()
+  await tool.run(["somescript.shovel", "--hostFile", "hostfile.shovel"])
 
   // Running remote script that fails
   tool.runScriptRemotely = async () => {
     throw new Error()
   }
   await expect(
-    tool.run(["somescript.json5", "--debug", "--host", "somehost"])
+    tool.run(["somescript.shovel", "--debug", "--host", "somehost"])
   ).rejects.toThrow("hosts")
 
   // Running remote script that fails (no debug)
   await expect(
-    tool.run(["somescript.json5", "--host", "somehost"])
+    tool.run(["somescript.shovel", "--host", "somehost"])
   ).rejects.toThrow(Error)
 })
