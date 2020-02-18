@@ -1,7 +1,6 @@
 import { ShovelTool } from "./ShovelTool"
 import * as testUtil from "./testUtil"
 import * as version from "./version"
-import stream from "stream"
 import { ScriptError } from "./ScriptError"
 
 let container = null
@@ -182,7 +181,7 @@ test("assertHasShovel", async () => {
 test("rectifyHasShovel", async () => {
   const ssh = {
     run: async (command, options) => {
-      if (command === "npm install -g @johnls/shovel") {
+      if (command === `npm install -g ${ShovelTool.npmPackageName}`) {
         return {
           exitCode: 0,
           output: [],

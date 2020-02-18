@@ -28,6 +28,7 @@ export class ShovelTool {
 
   static minNodeVersion = "v10.17.0"
   static ltsNodeVersion = "v12.14.0"
+  static npmPackageName = "@brownpapertickets/shovel"
 
   async assertHasNode(ssh) {
     let result = await ssh.run("node --version", {
@@ -147,10 +148,13 @@ export class ShovelTool {
     this.log.startSpinner("Installing")
 
     // NOTE: See https://github.com/nodejs/node-gyp/issues/454#issuecomment-58792114 for why "--unsafe-perm"
-    let result = await ssh.run("npm install -g --unsafe-perm @johnls/shovel", {
-      sudo: true,
-      noThrow: true,
-    })
+    let result = await ssh.run(
+      `npm install -g --unsafe-perm ${ShovelTool.npmPackageName}`,
+      {
+        sudo: true,
+        noThrow: true,
+      }
+    )
 
     this.log.stopSpinner()
 

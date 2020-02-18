@@ -7,14 +7,14 @@ Shovel is a tool for performing IT automation tasks.  It's written in Javascript
 Install the package globally:
 
 ```sh
-npm install -g @johnls/shovel
+npm install -g @brownpapertickets/shovel
 shovel --help
 ```
 
 Or use `npx` to run the latest version:
 
 ```sh
-npx @johnls/shovel --help
+npx @brownpapertickets/shovel --help
 ```
 
 ## Example

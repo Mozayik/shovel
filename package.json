@@ -1,5 +1,5 @@
 {
-  "name": "@johnls/shovel",
+  "name": "@brownpapertickets/shovel",
   "private": false,
   "version": "2.3.0",
   "description": "An SSH and Node.js based IT automation tool",
