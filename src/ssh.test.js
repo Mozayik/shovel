@@ -1,6 +1,21 @@
 import { SSH } from "./ssh"
 import EventEmitter from "events"
 
+class PsuedoTerm extends EventEmitter {
+  write() {}
+  destroy() {
+    this.emit("exit", null)
+  }
+  onData(cb) {
+    this.on("data", cb)
+    return { dispose: () => undefined }
+  }
+  onExit(cb) {
+    this.on("exit", cb)
+    return { dispose: () => undefined }
+  }
+}
+
 test("constructor", async () => {
   const ssh = new SSH()
 
@@ -10,7 +25,7 @@ test("constructor", async () => {
 test("parseLines", async () => {
   const ssh = new SSH()
   const result = SSH.parseLines(
-    "error:\nfred@localhost's password:\nfred@localhost: Permission denied\n[sudo] password for\nabc\n/x/y/z\nv1.2.3\n{}\n> start\n0\nPS1>\n"
+    "Enter passphrase for xxx\nVerification code:\nerror:\nfred@localhost's password:\nfred@localhost: Permission denied\n[sudo] password for\nabc\n/x/y/z\nv1.2.3\n{}\n> start\n0\nPS1>\n"
   )
 
   expect(result).toEqual({
@@ -21,29 +36,14 @@ test("parseLines", async () => {
     exitCode: 0,
     ready: false,
     permissionDenied: true,
-    passphraseRequired: false,
+    passphraseRequired: true,
     loginPasswordPrompt: "fred@localhost's password:",
     sudoPasswordPrompt: "[sudo] password for",
-    verificationPrompt: undefined,
+    verificationPrompt: "Verification code:",
   })
 })
 
 test("connect", async () => {
-  class PsuedoTerm extends EventEmitter {
-    write() {}
-    destroy() {
-      this.emit("exit", null)
-    }
-    onData(cb) {
-      this.on("data", cb)
-      return { dispose: () => undefined }
-    }
-    onExit(cb) {
-      this.on("exit", cb)
-      return { dispose: () => undefined }
-    }
-  }
-
   const pty = new PsuedoTerm()
   const container = {
     process: { stdin: {}, stdout: {}, exit: () => null },
@@ -93,6 +93,13 @@ test("connect", async () => {
     "Unable to connect"
   )
 
+  // Passphrase required
+  ssh.close()
+  setImmediate(() => {
+    pty.emit("data", "Enter passphrase for xxx")
+  })
+  await expect(ssh.connect({ host: "host" })).rejects.toThrow("passphrase")
+
   // All options
   ssh.close()
   await expect(
@@ -107,6 +114,19 @@ test("connect", async () => {
   // Already connected
   await expect(ssh.connect({ host: "xyz" })).rejects.toThrow(
     "Already connected"
+  )
+
+  // No prompts
+  ssh.close()
+  setImmediate(() => {
+    pty.emit("data", "x@y's password:")
+    setImmediate(() => {
+      pty.emit("data", "Verification code:")
+      pty.emit("data", "PS1>")
+    })
+  })
+  await expect(ssh.connect({ host: "host", noPrompts: true })).rejects.toThrow(
+    "login prompt"
   )
 
   // No host
@@ -150,15 +170,6 @@ test("showPrompt", async () => {
 })
 
 test("run", async () => {
-  class PsuedoTerm extends EventEmitter {
-    write() {}
-    onData(cb) {
-      this.on("data", cb)
-      return { dispose: () => undefined }
-    }
-    destroy() {}
-  }
-
   const pty = new PsuedoTerm()
   const container = {
     process: { stdin: {}, stdout: {}, exit: () => null },

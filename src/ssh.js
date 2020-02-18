@@ -140,6 +140,10 @@ export class SSH {
         loginPasswordPrompt,
         verificationPrompt,
       }) => {
+        if (!this.pty) {
+          return
+        }
+
         if (ready) {
           disposable.dispose()
           resolve()
@@ -153,15 +157,13 @@ export class SSH {
         } else if (passphraseRequired) {
           reject(new Error("Use of SSH key requires a passphrase"))
         } else if (loginPasswordPrompt) {
-          if (options.noPrompts) {
-            reject(new Error("Remote displayed a login prompt"))
-          }
-
           if (!this.loginPasswordPrompts) {
             this.loginPasswordPrompts = new Map(options.loginPasswordPrompts)
           }
 
-          if (this.loginPasswordPrompts.has(loginPasswordPrompt)) {
+          if (options.noPrompts) {
+            reject(new Error("Remote displayed a login prompt"))
+          } else if (this.loginPasswordPrompts.has(loginPasswordPrompt)) {
             this.pty.write(this.loginPasswordPrompts.get(loginPasswordPrompt))
           } else {
             this.showPrompt(loginPasswordPrompt).then((password) => {
