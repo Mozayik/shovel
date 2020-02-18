@@ -21,98 +21,6 @@ export class SFTP {
     this.pty = null
   }
 
-  async connect(options = {}) {
-    if (this.pty) {
-      throw new Error("Already connected")
-    }
-
-    let args = []
-
-    if (!options.host) {
-      throw new Error("Host must be specified")
-    }
-
-    if (options.user) {
-      args.push(`${options.user}@${options.host}`)
-    } else {
-      args.push(options.host)
-    }
-
-    if (options.port) {
-      args = args.concat(["-p", options.port.toString()])
-    }
-
-    if (options.identity) {
-      args = args.concat(["-i", options.identity])
-    }
-
-    return new Promise((resolve, reject) => {
-      try {
-        this.pty = this.nodePty.spawn("sftp", args, {
-          name: "xterm-color",
-          cols: 80,
-          rows: 30,
-          cwd: process.env.HOME,
-          env: process.env,
-        })
-      } catch (error) {
-        reject(error)
-      }
-
-      this.promptDisplayed = false
-
-      const dataHandler = ({
-        ready,
-        permissionDenied,
-        loginPasswordPrompt,
-      }) => {
-        if (ready) {
-          disposable.dispose()
-          resolve()
-        } else if (permissionDenied) {
-          disposable.dispose()
-          reject(
-            new Error(
-              `Unable to connect to ${options.host}; bad password or key`
-            )
-          )
-        } else if (loginPasswordPrompt) {
-          if (options.noPrompts) {
-            reject(new Error("Remote displayed a login prompt"))
-          }
-
-          if (!this.loginPasswordPrompts) {
-            this.loginPasswordPrompts = new Map(options.loginPasswordPrompts)
-          }
-
-          if (this.loginPasswordPrompts.has(loginPasswordPrompt)) {
-            this.pty.write(this.loginPasswordPrompts.get(loginPasswordPrompt))
-          } else {
-            this.showPrompt(loginPasswordPrompt).then((password) => {
-              this.loginPasswordPrompts.set(
-                loginPasswordPrompt,
-                password + "\n"
-              )
-              setImmediate(() => dataHandler({ loginPasswordPrompt }))
-            })
-          }
-        }
-      }
-      const disposable = this.pty.onData((data) => {
-        dataHandler(SFTP.parseLines(data))
-      })
-
-      this.pty.onExit((e) => {
-        if (this.promptDisplayed) {
-          process.stdin.unref() // To free the Node event loop
-        }
-
-        this.loginPasswordPrompts = null
-        this.promptDisplayed = false
-      })
-    })
-  }
-
   static parseLines(data) {
     const stripAnsiEscapes = (s) => s.replace(ansiEscapeRegex, "")
     let errorLines = undefined
@@ -168,6 +76,88 @@ export class SFTP {
     }
   }
 
+  async connect(options = {}) {
+    if (this.pty) {
+      throw new Error("Already connected")
+    }
+
+    let args = []
+
+    if (!options.host) {
+      throw new Error("Host must be specified")
+    }
+
+    if (options.user) {
+      args.push(`${options.user}@${options.host}`)
+    } else {
+      args.push(options.host)
+    }
+
+    if (options.port) {
+      args = args.concat(["-p", options.port.toString()])
+    }
+
+    if (options.identity) {
+      args = args.concat(["-i", options.identity])
+    }
+
+    let pty = this.nodePty.spawn("sftp", args, {
+      name: "xterm-color",
+      cols: 80,
+      rows: 30,
+      cwd: process.env.HOME,
+      env: process.env,
+    })
+
+    this.promptDisplayed = false
+
+    return new Promise((resolve, reject) => {
+      let loginPasswordPrompts = new Map(options.loginPasswordPrompts)
+      const dataHandler = ({
+        ready,
+        permissionDenied,
+        loginPasswordPrompt,
+      }) => {
+        if (ready) {
+          // Successful connection, PTY stays open
+          this.pty = pty
+          this.loginPasswordPrompts = loginPasswordPrompts
+          dataEvent.dispose()
+          resolve()
+        } else if (permissionDenied) {
+          dataEvent.dispose()
+          reject(
+            new Error(
+              `Unable to connect to ${options.host}; bad password or key`
+            )
+          )
+        } else if (loginPasswordPrompt) {
+          if (options.noPrompts) {
+            dataEvent.dispose()
+            reject(new Error("Remote displayed a login prompt"))
+          } else if (loginPasswordPrompts.has(loginPasswordPrompt)) {
+            pty.write(loginPasswordPrompts.get(loginPasswordPrompt))
+          } else {
+            this.showPrompt(loginPasswordPrompt).then((password) => {
+              loginPasswordPrompts.set(loginPasswordPrompt, password + "\n")
+              setImmediate(() => dataHandler({ loginPasswordPrompt }))
+            })
+          }
+        }
+      }
+      const dataEvent = pty.onData((data) => {
+        dataHandler(SFTP.parseLines(data))
+      })
+      const exitEvent = pty.onExit((e) => {
+        if (this.promptDisplayed) {
+          process.stdin.unref() // To free the Node event loop
+        }
+
+        exitEvent.dispose()
+      })
+    })
+  }
+
   async showPrompt(prompt) {
     const rlp = this.readlinePassword.createInstance(
       this.process.stdin,
@@ -205,16 +195,14 @@ export class SFTP {
               if (options.logError) {
                 errorLines.forEach((line) => options.logError(line))
               }
-              disposable.dispose()
+              dataEvent.dispose()
               reject(new Error(`Unable to upload ${remoteFile}`))
-            }
-
-            if (ready) {
-              disposable.dispose()
+            } else if (ready) {
+              dataEvent.dispose()
               resolve()
             }
           }
-          const disposable = this.pty.onData((data) => {
+          const dataEvent = this.pty.onData((data) => {
             dataHandler(SFTP.parseLines(data))
           })
         }),
@@ -266,7 +254,7 @@ export class SFTP {
 
         const dataHandler = ({ infoLines, notFound, ready }) => {
           if (notFound) {
-            disposable.dispose()
+            dataEvent.dispose()
             reject(new Error(`File '${remoteFile}' not found on remote`))
           }
           if (infoLines) {
@@ -284,7 +272,7 @@ export class SFTP {
             }
           }
           if (ready) {
-            disposable.dispose()
+            dataEvent.dispose()
 
             if (info === null) {
               reject(new Error("Unexpected remote output"))
@@ -293,7 +281,7 @@ export class SFTP {
             }
           }
         }
-        const disposable = this.pty.onData((data) => {
+        const dataEvent = this.pty.onData((data) => {
           dataHandler(SFTP.parseLines(data))
         })
       }),
@@ -322,11 +310,9 @@ export class SFTP {
   }
 
   close() {
-    if (!this.pty) {
-      throw new Error("No terminal is connected")
+    if (this.pty) {
+      this.pty.destroy()
+      this.pty = null
     }
-
-    this.pty.destroy()
-    this.pty = null
   }
 }

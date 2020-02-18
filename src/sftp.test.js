@@ -1,26 +1,43 @@
 import { SFTP } from "./sftp"
 import EventEmitter from "events"
 
+class PsuedoTerm extends EventEmitter {
+  write() {}
+  destroy() {
+    this.emit("exit", null)
+  }
+  onData(cb) {
+    this.on("data", cb)
+    return { dispose: () => this.off("data", cb) }
+  }
+  onExit(cb) {
+    this.on("exit", cb)
+    return { dispose: () => this.off("exit", cb) }
+  }
+}
+
 test("constructor", async () => {
   const sftp = new SFTP()
 })
 
-test("connect", async () => {
-  class PsuedoTerm extends EventEmitter {
-    write() {}
-    destroy() {
-      this.emit("exit", null)
-    }
-    onData(cb) {
-      this.on("data", cb)
-      return { dispose: () => undefined }
-    }
-    onExit(cb) {
-      this.on("exit", cb)
-      return { dispose: () => undefined }
-    }
-  }
+test("parseLines", async () => {
+  const ssh = new SFTP()
+  const result = SFTP.parseLines(
+    "\nerror:\nerror:\nfred@localhost's password:\ndrwxrwxrwx \ndrwxrwxrwx \nfred@localhost: Permission denied\nsftp>"
+  )
 
+  expect(result).toEqual({
+    errorLines: ["error:", "error:"],
+    infoLines: undefined,
+    ready: true,
+    notFound: false,
+    permissionDenied: true,
+    loginPasswordPrompt: "fred@localhost's password:",
+    infoLines: ["drwxrwxrwx", "drwxrwxrwx"],
+  })
+})
+
+test("connect", async () => {
   const pty = new PsuedoTerm()
   const container = {
     process: { stdin: {}, stdout: {}, exit: () => null },
@@ -46,6 +63,9 @@ test("connect", async () => {
   }
   let sftp = new SFTP(container)
 
+  // No host
+  await expect(sftp.connect()).rejects.toThrow("Host must")
+
   // Success with password
   setImmediate(() => {
     pty.emit("data", "warning: x\n\n")
@@ -67,6 +87,9 @@ test("connect", async () => {
 
   // All options
   sftp.close()
+  setImmediate(() => {
+    pty.emit("data", "sftp>")
+  })
   await expect(
     sftp.connect({
       host: "host",
@@ -74,38 +97,27 @@ test("connect", async () => {
       identity: "~/.ssh/id_rsa",
       user: "fred",
     })
-  )
+  ).resolves.toBeUndefined()
 
-  // Already connected
+  // // Already connected
   await expect(sftp.connect({ host: "xyz" })).rejects.toThrow(
     "Already connected"
   )
 
-  // No host
+  // // No prompts allowed
   sftp.close()
-  await expect(sftp.connect()).rejects.toThrow("Host must")
+  setImmediate(() => {
+    pty.emit("data", "x@y's password:")
+  })
+  await expect(sftp.connect({ host: "host", noPrompts: true })).rejects.toThrow(
+    "displayed a login"
+  )
 
   // Bad ssh spawn
   container.nodePty.spawn = () => {
     throw new Error()
   }
   await expect(sftp.connect({ host: "xyz" })).rejects.toThrow(Error)
-})
-
-test("parseLines", async () => {
-  const ssh = new SFTP()
-  const result = SFTP.parseLines(
-    "\nerror:\nfred@localhost's password:\nfred@localhost: Permission denied\nsftp>"
-  )
-
-  expect(result).toEqual({
-    errorLines: ["error:"],
-    infoLines: undefined,
-    ready: true,
-    notFound: false,
-    permissionDenied: true,
-    loginPasswordPrompt: "fred@localhost's password:",
-  })
 })
 
 test("showPrompt", async () => {
@@ -138,17 +150,6 @@ test("showPrompt", async () => {
 })
 
 test("putContent", async () => {
-  class PsuedoTerm extends EventEmitter {
-    write() {}
-    destroy() {
-      this.emit("exit", null)
-    }
-    onData(cb) {
-      this.on("data", cb)
-      return { dispose: () => undefined }
-    }
-  }
-
   const pty = new PsuedoTerm()
   const container = {
     process: { stdin: {}, stdout: {}, exit: () => null },
@@ -171,7 +172,6 @@ test("putContent", async () => {
   })
   await expect(
     sftp.putContent("/x/y", "content", {
-      logError: () => undefined,
       timeout: 10000,
     })
   ).resolves.toBeUndefined()
@@ -186,7 +186,17 @@ test("putContent", async () => {
   setImmediate(() => {
     pty.emit("data", "error: xyz\nsftp>")
   })
-  await expect(sftp.putContent("/x/y", "something")).rejects.toThrow(Error)
+  await expect(
+    sftp.putContent("/x/y", "something", { logError: () => undefined })
+  ).rejects.toThrow("Unable to upload")
+
+  // Failed upload, no logging
+  setImmediate(() => {
+    pty.emit("data", "error: xyz\nsftp>")
+  })
+  await expect(sftp.putContent("/x/y", "something")).rejects.toThrow(
+    "Unable to upload"
+  )
 })
 
 test("getInfo", async () => {
@@ -222,6 +232,18 @@ test("getInfo", async () => {
     })
   ).resolves.toEqual({ gid: 1000, mode: 511, size: 9999, uid: 1000 })
 
+  // Happy, but different perms
+  sftp.pty = pty
+  setImmediate(() => {
+    pty.emit("data", "----------  ? 1000  1000  9999\n")
+    pty.emit("data", "sftp>")
+  })
+  await expect(
+    sftp.getInfo("/x/y", {
+      timeout: 10000,
+    })
+  ).resolves.toEqual({ gid: 1000, mode: 0, size: 9999, uid: 1000 })
+
   // Not found
   sftp.pty = pty
   setImmediate(() => {
@@ -248,7 +270,5 @@ test("close", () => {
 
   sftp.pty = { destroy: () => undefined }
 
-  // No terminal connected
-  sftp.pty = null
-  expect(() => sftp.close()).toThrow("No terminal")
+  expect(sftp.close()).toBeUndefined()
 })
