@@ -100,7 +100,7 @@ export class ShovelTool {
       }`
     )
 
-    await sftp.putContent(remoteTempFilePath, installNodeScript)
+    await sftp.putContent(installNodeScript, remoteTempFilePath)
 
     this.log.info(`Running Node.js install script; this could take a while`)
     this.log.startSpinner("Installing")
@@ -722,7 +722,7 @@ export class ShovelTool {
         )
         const remoteScriptPath = path.join(remoteTempDir, scriptPath)
 
-        await sftp.putContent(remoteScriptPath, scriptContent)
+        await sftp.putContent(scriptContent, remoteScriptPath)
 
         if (this.debug) {
           this.log.debug(`Uploaded ${path.join(remoteTempDir, scriptPath)}:`)

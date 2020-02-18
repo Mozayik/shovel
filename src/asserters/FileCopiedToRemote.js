@@ -14,25 +14,25 @@ export class FileCopiedToRemote {
   async assert(assertNode) {
     const withNode = assertNode.value.with
     const {
-      fromFile: fromFileNode,
-      toFile: toFileNode,
+      localFile: localFileNode,
+      remoteFile: remoteFileNode,
       host: hostNode,
       port: portNode,
       user: userNode,
       identity: identityNode,
     } = withNode.value
 
-    if (!fromFileNode || fromFileNode.type !== "string") {
+    if (!localFileNode || localFileNode.type !== "string") {
       throw new ScriptError(
-        "'fromFile' must be supplied and be a string",
-        fromFileNode || withNode
+        "'localFile' must be supplied and be a string",
+        localFileNode || withNode
       )
     }
 
-    if (!toFileNode || toFileNode.type !== "string") {
+    if (!remoteFileNode || remoteFileNode.type !== "string") {
       throw new ScriptError(
-        "'toFile' must be supplied and be a string",
-        toFileNode || withNode
+        "'remoteFile' must be supplied and be a string",
+        remoteFileNode || withNode
       )
     }
 
@@ -43,9 +43,9 @@ export class FileCopiedToRemote {
       )
     }
 
-    this.expandedToFile = this.interpolator(toFileNode)
-    this.expandedFromFile = this.interpolator(fromFileNode)
-    this.expandedHost = this.interpolator(hostNode)
+    this.remoteFilePath = this.interpolator(remoteFileNode)
+    this.localFilePath = this.interpolator(localFileNode)
+    this.host = this.interpolator(hostNode)
 
     if (portNode) {
       if (portNode.type !== "number") {
@@ -71,38 +71,43 @@ export class FileCopiedToRemote {
       this.identity = this.interpolator(identityNode)
     }
 
-    let fromFileInfo = await this.util.pathInfo(this.expandedFromFile)
+    let localFileInfo = await this.util.pathInfo(this.localFilePath)
 
-    if (!fromFileInfo.isFile()) {
+    if (!localFileInfo.isFile()) {
       throw new ScriptError(
-        `File ${this.expandedFromFile} does not exist`,
-        fromFileNode
+        `File ${this.localFilePath} does not exist`,
+        localFileNode
       )
     }
 
-    if (!fromFileInfo.getAccess().isReadable()) {
+    if (!localFileInfo.getAccess().isReadable()) {
       throw new ScriptError(
-        `File ${this.expandedFromFile} is not readable`,
-        fromFileNode
+        `File ${this.localFilePath} is not readable`,
+        localFileNode
       )
     }
 
     this.sftp = new this.SFTP()
-    this.sftp.connect({
+
+    await this.sftp.connect({
+      host: this.host,
+      port: this.port,
+      user: this.user,
+      identity: this.identity,
       noPrompts: true,
     })
 
-    let toFileInfo = null
+    let remoteFileInfo = null
 
     try {
-      toFileInfo = await this.sftp.getInfo(this.expandedToFile, {
+      remoteFileInfo = await this.sftp.getInfo(this.remoteFilePath, {
         timeout: 3000,
       })
-    } catch {
+    } catch (error) {
       return false
     }
 
-    const ok = toFileInfo.size === fromFileInfo.size
+    const ok = remoteFileInfo.size === localFileInfo.size
 
     if (ok) {
       this.sftp.close()
@@ -114,7 +119,7 @@ export class FileCopiedToRemote {
 
   async rectify() {
     try {
-      this.sftp.putContent(this.expandedToFile, this.expandedFromFile)
+      await this.sftp.putFile(this.localFilePath, this.remoteFilePath)
     } finally {
       this.sftp.close()
       this.sftp = null
@@ -122,13 +127,24 @@ export class FileCopiedToRemote {
   }
 
   result() {
-    return {
-      fromFile: this.expandedFromFile,
-      toFile: this.expandedToFile,
-      host: this.expandedHost,
-      port: this.port ?? 22,
-      user: this.user ?? process.env.USER,
-      identity: this.identity ?? "~/.ssh/idrsa",
+    const result = {
+      localFile: this.localFilePath,
+      remoteFile: this.remoteFilePath,
+      host: this.host,
     }
+
+    if (this.user !== undefined) {
+      result.user = this.user
+    }
+
+    if (this.port !== undefined) {
+      result.port = this.port
+    }
+
+    if (this.identity !== undefined) {
+      result.identity = this.identity
+    }
+
+    return result
   }
 }

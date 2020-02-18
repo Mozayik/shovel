@@ -5,6 +5,7 @@ import readlinePassword from "@johnls/readline-password"
 import { ansiEscapeRegex } from "./util"
 import tempy from "tempy"
 import fs from "fs-extra"
+import path from "path"
 
 const ps1 = "sftp>"
 
@@ -178,7 +179,53 @@ export class SFTP {
     return response
   }
 
-  async putContent(remoteFile, contents, options = {}) {
+  async putFile(localFile, remoteFile, options = {}) {
+    if (!this.pty) {
+      throw new Error("No terminal is connected")
+    }
+
+    const promises = [
+      new Promise((resolve, reject) => {
+        const dataHandler = ({ errorLines, ready }) => {
+          if (errorLines && errorLines.length > 0) {
+            if (options.logError) {
+              errorLines.forEach((line) => options.logError(line))
+            }
+            dataEvent.dispose()
+            reject(new Error(`Unable to upload ${remoteFile}`))
+          } else if (ready) {
+            dataEvent.dispose()
+            resolve()
+          }
+        }
+        const dataEvent = this.pty.onData((data) => {
+          dataHandler(SFTP.parseLines(data))
+        })
+      }),
+    ]
+
+    let timer = null
+
+    if (options.timeout) {
+      timer = new this.Timeout()
+      promises.push(timer.set(options.timeout))
+    }
+
+    // Ensure fully qualified local name
+    localFile = path.resolve(this.process.cwd(), localFile)
+
+    this.pty.write(`put ${localFile} ${remoteFile}\n`)
+
+    try {
+      await Promise.race(promises)
+    } finally {
+      if (timer) {
+        timer.clear()
+      }
+    }
+  }
+
+  async putContent(contents, remoteFile, options = {}) {
     if (!this.pty) {
       throw new Error("No terminal is connected")
     }
@@ -187,43 +234,7 @@ export class SFTP {
 
     try {
       await this.fs.writeFile(localFile, contents)
-
-      const promises = [
-        new Promise((resolve, reject) => {
-          const dataHandler = ({ errorLines, ready }) => {
-            if (errorLines && errorLines.length > 0) {
-              if (options.logError) {
-                errorLines.forEach((line) => options.logError(line))
-              }
-              dataEvent.dispose()
-              reject(new Error(`Unable to upload ${remoteFile}`))
-            } else if (ready) {
-              dataEvent.dispose()
-              resolve()
-            }
-          }
-          const dataEvent = this.pty.onData((data) => {
-            dataHandler(SFTP.parseLines(data))
-          })
-        }),
-      ]
-
-      let timer = null
-
-      if (options.timeout) {
-        timer = new this.Timeout()
-        promises.push(timer.set(options.timeout))
-      }
-
-      this.pty.write(`put ${localFile} ${remoteFile}\n`)
-
-      try {
-        await Promise.race(promises)
-      } finally {
-        if (timer) {
-          timer.clear()
-        }
-      }
+      await this.putFile(localFile, remoteFile, options)
     } finally {
       await this.fs.remove(localFile)
     }

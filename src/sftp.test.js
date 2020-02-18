@@ -149,10 +149,57 @@ test("showPrompt", async () => {
   await expect(sftp.showPrompt("xyz")).resolves.toBeUndefined()
 })
 
+test("putFile", async () => {
+  const pty = new PsuedoTerm()
+  const container = {
+    process: { stdin: {}, stdout: {}, exit: () => null, cwd: () => "/" },
+    console: { log: () => null },
+    fs: {
+      remove: async () => undefined,
+    },
+  }
+  let sftp = new SFTP(container)
+
+  // No terminal
+  await expect(sftp.putFile()).rejects.toThrow("No terminal")
+
+  // Success
+  sftp.pty = pty
+  setImmediate(() => {
+    pty.emit("data", "some output\n")
+    pty.emit("data", "sftp>")
+  })
+  await expect(
+    sftp.putFile("/a/b", "/x/y", {
+      timeout: 10000,
+    })
+  ).resolves.toBeUndefined()
+
+  // No timeout
+  setImmediate(() => {
+    pty.emit("data", "sftp>")
+  })
+  await expect(sftp.putFile("/a/b", "/x/y")).resolves.toBeUndefined()
+
+  // Failed upload
+  setImmediate(() => {
+    pty.emit("data", "error: xyz\nsftp>")
+  })
+  await expect(
+    sftp.putFile("/a/b", "/x/y", { logError: () => undefined })
+  ).rejects.toThrow("Unable to upload")
+
+  // Failed upload, no logging
+  setImmediate(() => {
+    pty.emit("data", "error: xyz\nsftp>")
+  })
+  await expect(sftp.putFile("/a/b", "/x/y")).rejects.toThrow("Unable to upload")
+})
+
 test("putContent", async () => {
   const pty = new PsuedoTerm()
   const container = {
-    process: { stdin: {}, stdout: {}, exit: () => null },
+    process: { stdin: {}, stdout: {}, exit: () => null, cwd: () => "/" },
     console: { log: () => null },
     fs: {
       writeFile: async () => undefined,
@@ -164,39 +211,13 @@ test("putContent", async () => {
   // No terminal
   await expect(sftp.putContent()).rejects.toThrow("No terminal")
 
-  // Success
+  // Happy path
   sftp.pty = pty
   setImmediate(() => {
     pty.emit("data", "some output\n")
     pty.emit("data", "sftp>")
   })
-  await expect(
-    sftp.putContent("/x/y", "content", {
-      timeout: 10000,
-    })
-  ).resolves.toBeUndefined()
-
-  // No timeout
-  setImmediate(() => {
-    pty.emit("data", "sftp>")
-  })
-  await expect(sftp.putContent("/x/y", "something")).resolves.toBeUndefined()
-
-  // Failed upload
-  setImmediate(() => {
-    pty.emit("data", "error: xyz\nsftp>")
-  })
-  await expect(
-    sftp.putContent("/x/y", "something", { logError: () => undefined })
-  ).rejects.toThrow("Unable to upload")
-
-  // Failed upload, no logging
-  setImmediate(() => {
-    pty.emit("data", "error: xyz\nsftp>")
-  })
-  await expect(sftp.putContent("/x/y", "something")).rejects.toThrow(
-    "Unable to upload"
-  )
+  await expect(sftp.putContent("content", "/x/y")).resolves.toBeUndefined()
 })
 
 test("getInfo", async () => {

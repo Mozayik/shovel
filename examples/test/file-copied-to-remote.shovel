@@ -1,0 +1,16 @@
+{
+  settings: {
+    description: "Copy to remote",
+  },
+  assertions: [
+    {
+      assert: "FileCopiedToRemote",
+      with: {
+        host: "ubuntu1",
+        user: "jlyonsmith",
+        localFile: "examples/test/test.zip",
+        remoteFile: "test.zip",
+      },
+    },
+  ],
+}

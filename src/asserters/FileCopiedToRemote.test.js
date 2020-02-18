@@ -6,6 +6,9 @@ import { PathInfo, PathAccess } from "../util"
 test("assert", async () => {
   const container = {
     interpolator: (node) => node.value,
+    process: {
+      cwd: () => "/",
+    },
     SFTP: class {
       async connect() {}
       async getInfo(remoteFile) {
@@ -51,27 +54,31 @@ test("assert", async () => {
     ScriptError
   )
   await expect(
-    asserter.assert(createAssertNode(asserter, { fromFile: 1 }))
+    asserter.assert(createAssertNode(asserter, { localFile: 1 }))
   ).rejects.toThrow(ScriptError)
   await expect(
-    asserter.assert(createAssertNode(asserter, { fromFile: "" }))
-  ).rejects.toThrow(ScriptError)
-  await expect(
-    asserter.assert(createAssertNode(asserter, { fromFile: "", toFile: 1 }))
-  ).rejects.toThrow(ScriptError)
-  await expect(
-    asserter.assert(createAssertNode(asserter, { fromFile: "", toFile: "" }))
+    asserter.assert(createAssertNode(asserter, { localFile: "" }))
   ).rejects.toThrow(ScriptError)
   await expect(
     asserter.assert(
-      createAssertNode(asserter, { fromFile: "", toFile: "", host: 1 })
+      createAssertNode(asserter, { localFile: "", remoteFile: 1 })
+    )
+  ).rejects.toThrow(ScriptError)
+  await expect(
+    asserter.assert(
+      createAssertNode(asserter, { localFile: "", remoteFile: "" })
+    )
+  ).rejects.toThrow(ScriptError)
+  await expect(
+    asserter.assert(
+      createAssertNode(asserter, { localFile: "", remoteFile: "", host: 1 })
     )
   ).rejects.toThrow(ScriptError)
   await expect(
     asserter.assert(
       createAssertNode(asserter, {
-        fromFile: "",
-        toFile: "",
+        localFile: "",
+        remoteFile: "",
         host: "",
         user: 1,
       })
@@ -80,8 +87,8 @@ test("assert", async () => {
   await expect(
     asserter.assert(
       createAssertNode(asserter, {
-        fromFile: "",
-        toFile: "",
+        localFile: "",
+        remoteFile: "",
         host: "",
         port: "",
       })
@@ -90,8 +97,8 @@ test("assert", async () => {
   await expect(
     asserter.assert(
       createAssertNode(asserter, {
-        fromFile: "",
-        toFile: "",
+        localFile: "",
+        remoteFile: "",
         host: "",
         identity: 1,
       })
@@ -102,8 +109,8 @@ test("assert", async () => {
   await expect(
     asserter.assert(
       createAssertNode(asserter, {
-        fromFile: "/somefile",
-        toFile: "/somefile",
+        localFile: "/somefile",
+        remoteFile: "/somefile",
         host: "hostname",
       })
     )
@@ -113,8 +120,8 @@ test("assert", async () => {
   await expect(
     asserter.assert(
       createAssertNode(asserter, {
-        fromFile: "/somefile",
-        toFile: "/somefile",
+        localFile: "/somefile",
+        remoteFile: "/somefile",
         host: "hostname",
         port: 22,
         user: "username",
@@ -123,34 +130,34 @@ test("assert", async () => {
     )
   ).resolves.toBe(true)
 
-  // With fromFile file non-existent
+  // With localFile file non-existent
   await expect(
     asserter.assert(
       createAssertNode(asserter, {
-        fromFile: "/notthere",
-        toFile: "/otherfile",
+        localFile: "/notthere",
+        remoteFile: "/otherfile",
         host: "hostname",
       })
     )
   ).rejects.toThrow(ScriptError)
 
-  // With fromFile not readable
+  // With localFile not readable
   await expect(
     asserter.assert(
       createAssertNode(asserter, {
-        fromFile: "/notreadable",
-        toFile: "/otherfile",
+        localFile: "/notreadable",
+        remoteFile: "/otherfile",
         host: "hostname",
       })
     )
   ).rejects.toThrow(ScriptError)
 
-  // Copied with toFile file non-existent
+  // Copied with remoteFile file non-existent
   await expect(
     asserter.assert(
       createAssertNode(asserter, {
-        fromFile: "/somefile",
-        toFile: "/notthere",
+        localFile: "/somefile",
+        remoteFile: "/notthere",
         host: "hostname",
       })
     )
@@ -160,8 +167,8 @@ test("assert", async () => {
   await expect(
     asserter.assert(
       createAssertNode(asserter, {
-        fromFile: "/somefile",
-        toFile: "/badfile",
+        localFile: "/somefile",
+        remoteFile: "/badfile",
         host: "hostname",
       })
     )
@@ -176,12 +183,12 @@ test("rectify", async () => {
   })
 
   const SFTP = class {
-    async putContent() {}
+    async putFile() {}
     close() {}
   }
 
-  asserter.expandedFromFile = "/blah"
-  asserter.expandedToFile = "/blurp"
+  asserter.localFilePath = "/blah"
+  asserter.remoteFilePath = "/blurp"
   asserter.sftp = new SFTP()
 
   await expect(asserter.rectify()).resolves.toBeUndefined()
@@ -190,17 +197,14 @@ test("rectify", async () => {
 test("result", async () => {
   const asserter = new FileCopiedToRemote({})
 
-  asserter.expandedFromFile = "/blah"
-  asserter.expandedToFile = "/blurp"
-  asserter.expandedHost = "hostname"
+  asserter.localFilePath = "/blah"
+  asserter.remoteFilePath = "/blurp"
+  asserter.host = "hostname"
 
   expect(asserter.result()).toEqual({
-    fromFile: asserter.expandedFromFile,
-    toFile: asserter.expandedToFile,
-    host: asserter.expandedHost,
-    port: 22,
-    user: process.env.USER,
-    identity: "~/.ssh/idrsa",
+    localFile: asserter.localFilePath,
+    remoteFile: asserter.remoteFilePath,
+    host: asserter.host,
   })
 
   asserter.port = 22
@@ -208,9 +212,9 @@ test("result", async () => {
   asserter.identity = "~/.ssh/idrsa"
 
   expect(asserter.result()).toEqual({
-    fromFile: asserter.expandedFromFile,
-    toFile: asserter.expandedToFile,
-    host: asserter.expandedHost,
+    localFile: asserter.localFilePath,
+    remoteFile: asserter.remoteFilePath,
+    host: asserter.host,
     port: asserter.port,
     user: asserter.user,
     identity: asserter.identity,
