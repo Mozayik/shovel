@@ -8,11 +8,11 @@ class PsuedoTerm extends EventEmitter {
   }
   onData(cb) {
     this.on("data", cb)
-    return { dispose: () => undefined }
+    return { dispose: () => this.off("data", cb) }
   }
   onExit(cb) {
     this.on("exit", cb)
-    return { dispose: () => undefined }
+    return { dispose: () => this.off("exit", cb) }
   }
 }
 
@@ -46,7 +46,11 @@ test("parseLines", async () => {
 test("connect", async () => {
   const pty = new PsuedoTerm()
   const container = {
-    process: { stdin: {}, stdout: {}, exit: () => null },
+    process: {
+      stdin: { unref: () => undefined },
+      stdout: {},
+      exit: () => null,
+    },
     console: { log: () => null },
     nodePty: {
       spawn: () => pty,
@@ -69,6 +73,10 @@ test("connect", async () => {
   }
   let ssh = new SSH(container)
 
+  // No host
+  ssh.close()
+  await expect(ssh.connect()).rejects.toThrow("Host must")
+
   // Success with password
   setImmediate(() => {
     pty.emit("data", "")
@@ -84,6 +92,25 @@ test("connect", async () => {
   })
   await expect(ssh.connect({ host: "host" })).resolves.toBeUndefined()
 
+  // All options
+  ssh.close()
+  setImmediate(() => {
+    pty.emit("data", "PS1>")
+  })
+  await expect(
+    ssh.connect({
+      host: "host",
+      port: 22,
+      identity: "~/.ssh/id_rsa",
+      user: "fred",
+    })
+  ).resolves.toBeUndefined()
+
+  // Already connected
+  await expect(ssh.connect({ host: "xyz" })).rejects.toThrow(
+    "Already connected"
+  )
+
   // Permission denied
   ssh.close()
   setImmediate(() => {
@@ -94,44 +121,18 @@ test("connect", async () => {
   )
 
   // Passphrase required
-  ssh.close()
   setImmediate(() => {
     pty.emit("data", "Enter passphrase for xxx")
   })
   await expect(ssh.connect({ host: "host" })).rejects.toThrow("passphrase")
 
-  // All options
-  ssh.close()
-  await expect(
-    ssh.connect({
-      host: "host",
-      port: 22,
-      identity: "~/.ssh/id_rsa",
-      user: "fred",
-    })
-  )
-
-  // Already connected
-  await expect(ssh.connect({ host: "xyz" })).rejects.toThrow(
-    "Already connected"
-  )
-
   // No prompts
-  ssh.close()
   setImmediate(() => {
     pty.emit("data", "x@y's password:")
-    setImmediate(() => {
-      pty.emit("data", "Verification code:")
-      pty.emit("data", "PS1>")
-    })
   })
   await expect(ssh.connect({ host: "host", noPrompts: true })).rejects.toThrow(
     "login prompt"
   )
-
-  // No host
-  ssh.close()
-  await expect(ssh.connect()).rejects.toThrow("Host must")
 
   // Bad ssh spawn
   container.nodePty.spawn = () => {
@@ -227,7 +228,5 @@ test("close", () => {
 
   ssh.pty = { destroy: () => undefined }
 
-  // No terminal connected
-  ssh.pty = null
-  expect(() => ssh.close()).toThrow("No terminal")
+  expect(ssh.close()).toBeUndefined()
 })

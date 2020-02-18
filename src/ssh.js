@@ -117,22 +117,19 @@ export class SSH {
 
     args = args.concat(["-o", "NumberOfPasswordPrompts=1"])
 
+    const pty = this.nodePty.spawn("ssh", args, {
+      name: "xterm-color",
+      cols: 80,
+      rows: 30,
+      cwd: process.env.HOME,
+      env: process.env,
+    })
+
+    this.promptDisplayed = false
+
     return new Promise((resolve, reject) => {
-      try {
-        this.pty = this.nodePty.spawn("ssh", args, {
-          name: "xterm-color",
-          cols: 80,
-          rows: 30,
-          cwd: process.env.HOME,
-          env: process.env,
-        })
-      } catch (error) {
-        reject(error)
-      }
-
-      this.promptDisplayed = false
-
       let promptChanged = false
+      let loginPasswordPrompts = new Map(options.loginPasswordPrompts)
       const dataHandler = ({
         ready,
         permissionDenied,
@@ -140,61 +137,51 @@ export class SSH {
         loginPasswordPrompt,
         verificationPrompt,
       }) => {
-        if (!this.pty) {
-          return
-        }
-
         if (ready) {
-          disposable.dispose()
+          // Successful connection, PTY stays open
+          this.pty = pty
+          this.loginPasswordPrompts = loginPasswordPrompts
+          dataEvent.dispose()
           resolve()
         } else if (permissionDenied) {
-          disposable.dispose()
           reject(
             new Error(
               `Unable to connect to ${options.host}; bad password or key`
             )
           )
         } else if (passphraseRequired) {
+          dataEvent.dispose()
           reject(new Error("Use of SSH key requires a passphrase"))
         } else if (loginPasswordPrompt) {
-          if (!this.loginPasswordPrompts) {
-            this.loginPasswordPrompts = new Map(options.loginPasswordPrompts)
-          }
-
           if (options.noPrompts) {
+            dataEvent.dispose()
             reject(new Error("Remote displayed a login prompt"))
-          } else if (this.loginPasswordPrompts.has(loginPasswordPrompt)) {
-            this.pty.write(this.loginPasswordPrompts.get(loginPasswordPrompt))
+          } else if (loginPasswordPrompts.has(loginPasswordPrompt)) {
+            pty.write(loginPasswordPrompts.get(loginPasswordPrompt))
           } else {
             this.showPrompt(loginPasswordPrompt).then((password) => {
-              this.loginPasswordPrompts.set(
-                loginPasswordPrompt,
-                password + "\n"
-              )
+              loginPasswordPrompts.set(loginPasswordPrompt, password + "\n")
               setImmediate(() => dataHandler({ loginPasswordPrompt }))
             })
           }
         } else if (verificationPrompt) {
           this.showPrompt(verificationPrompt).then((code) => {
-            this.pty.write(code + "\n")
+            pty.write(code + "\n")
           })
         } else if (!promptChanged) {
-          this.pty.write(`PROMPT_COMMAND=\nPS1='${ps1}'\nPS2='${ps2}'\n`)
+          pty.write(`PROMPT_COMMAND=\nPS1='${ps1}'\nPS2='${ps2}'\n`)
           promptChanged = true
         }
       }
-      const disposable = this.pty.onData((data) => {
+      const dataEvent = pty.onData((data) => {
         dataHandler(SSH.parseLines(data))
       })
-
-      this.pty.onExit((e) => {
+      const exitEvent = pty.onExit(() => {
         if (this.promptDisplayed) {
-          process.stdin.unref() // To free the Node event loop
+          this.process.stdin.unref() // To free the Node event loop
         }
 
-        this.loginPasswordPrompts = null
-        this.sudoPassword = null
-        this.sudoPassword = undefined
+        exitEvent.dispose()
       })
     })
   }
@@ -267,11 +254,11 @@ export class SSH {
 
           if (exitCode !== undefined) {
             savedExitCode = exitCode
-            disposable.dispose()
-            resolve()
+            dataEvent.dispose()
+            return resolve()
           }
         }
-        const disposable = this.pty.onData((data) => {
+        const dataEvent = this.pty.onData((data) => {
           dataHandler(SSH.parseLines(data))
         })
       })
@@ -308,11 +295,9 @@ export class SSH {
   }
 
   close() {
-    if (!this.pty) {
-      throw new Error("No terminal is connected")
+    if (this.pty) {
+      this.pty.destroy()
+      this.pty = null
     }
-
-    this.pty.destroy()
-    this.pty = null
   }
 }
