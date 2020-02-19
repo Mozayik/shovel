@@ -1,0 +1,24 @@
+{
+  assertions: [
+    {
+      assert: "FileExists",
+      with: {
+        file: "scratch/test.txt",
+      },
+    },
+    {
+      assert: "FileContains",
+      with: {
+        file: "scratch/test.txt",
+        contents: "{dateTime.toISO()}",
+      },
+    },
+    {
+      assert: "FileExists",
+      with: {
+        file: "scratch/success.txt",
+      },
+      when: "{results.last().rectified}",
+    },
+  ],
+}

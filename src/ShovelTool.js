@@ -578,7 +578,7 @@ export class ShovelTool {
         if (whenNode) {
           if (
             (whenNode.type === "boolean" && !whenNode.value) ||
-            (whenNode.type === "string" && !interpolator(whenNode))
+            (whenNode.type === "string" && !Boolean(interpolator(whenNode)))
           ) {
             continue
           }
