@@ -11,7 +11,8 @@
     "dist/**"
   ],
   "scripts": {
-    "build": "rm -rf dist/* && babel src -d dist -s --ignore **/*.test.js",
+    "clean": "rm -rf dist/*",
+    "build": "npm run clean && babel src -d dist -s --ignore **/*.test.js",
     "start": "babel-node src/shovel.js",
     "start:debug": "babel-node --inspect-brk src/shovel.js",
     "test": "jest",
