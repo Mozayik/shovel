@@ -542,14 +542,14 @@ test("runScriptLocally", async () => {
     debug: true,
     asserters: {
       TestAssert: class TestAssert {
-        constructor() { }
+        constructor() {}
         async assert(node) {
           const withNode = node.value.with
 
           return withNode && withNode.value.assert
         }
-        async rectify() { }
-        result() { }
+        async rectify() {}
+        result() {}
       },
     },
     util: { runningAsRoot: () => true },
@@ -792,16 +792,19 @@ test("run", async () => {
     expect.stringMatching(/\d\.\d\.\d/)
   )
 
-  // Running script directly
+  // Happy path
   await expect(tool.run(["somescript.shovel"])).resolves.toBeUndefined()
+
+  // No scripts and unknown argument
+  await expect(tool.run(["-unknown"])).rejects.toThrow("script file")
+  expect(container.log.warning.mock.calls[0][0]).toEqual(
+    expect.stringMatching("not recognized")
+  )
 
   // Too many scripts
   await expect(
     tool.run(["somescript.shovel", "otherscript.shovel"])
   ).rejects.toThrow(Error)
-  expect(container.log.info.mock.calls[0][0]).toEqual(
-    expect.stringMatching(/\d\.\d\.\d/)
-  )
 
   // Missing host/hosts-file
   await expect(

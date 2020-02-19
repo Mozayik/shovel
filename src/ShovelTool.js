@@ -776,6 +776,7 @@ export class ShovelTool {
   }
 
   async run(argv) {
+    const badArgs = new Set()
     const options = {
       boolean: ["help", "version", "debug", "assertOnly", "noSpinner"],
       string: ["host", "hostFile", "user", "port", "identity"],
@@ -787,6 +788,14 @@ export class ShovelTool {
         p: "port",
         u: "user",
         d: "debug",
+      },
+      unknown: (arg) => {
+        if (arg.startsWith("-")) {
+          badArgs.add(arg)
+          return false
+        } else {
+          return true
+        }
       },
     }
     const args = parseArgs(argv, options)
@@ -828,8 +837,16 @@ Arguments:
       return
     }
 
-    if (args._.length !== 1) {
-      throw new Error("Please specify just one script file")
+    if (badArgs.size > 0) {
+      for (const arg of badArgs) {
+        this.log.warning(`Argument '${arg}' is not recognized`)
+      }
+    }
+
+    if (args._.length === 0) {
+      throw new Error("Please specify a script file")
+    } else if (args._.length > 1) {
+      throw new Error("Please specify only one script file")
     }
 
     const scriptPath = path.resolve(args._[0])

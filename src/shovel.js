@@ -2,13 +2,14 @@
 import { ShovelTool } from "./ShovelTool"
 import chalk from "chalk"
 import path from "path"
-import ora from "ora"
+import { Spinner } from "cli-spinner"
 import autobind from "autobind-decorator"
 
 @autobind
 class Log {
   constructor(container = {}) {
-    this.ora = container.ora || ora
+    this.Spinner = container.Spinner || Spinner
+    this.spinnerEnabled = false
   }
 
   info() {
@@ -48,22 +49,23 @@ class Log {
   }
 
   enableSpinner() {
-    this.spinner = this.ora({
-      text: "",
-      spinner: "dots",
-      color: "green",
-    })
+    this.spinnerEnabled = true
   }
 
   startSpinner(line) {
-    if (this.spinner) {
-      this.spinner.start(line.startsWith("> ") ? line.substring(2) : line)
+    if (this.spinnerEnabled) {
+      this.spinner = new this.Spinner(
+        line.startsWith("> ") ? line.substring(2) : line
+      )
+      this.spinner.setSpinnerString(20)
+      this.spinner.setSpinnerDelay(250)
     }
   }
 
   stopSpinner() {
-    if (this.spinner && this.spinner.isSpinning) {
-      this.spinner.stop()
+    if (this.spinner) {
+      this.spinner.stop(true)
+      this.spinner = null
     }
   }
 }
