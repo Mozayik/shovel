@@ -6,17 +6,18 @@ NOTE: Requires that `DirtyCleanInterval` is set to zero (`0`) in the `/etc/cups/
 
 ## Arguments
 
-| Name          | Type      | Default        | Description                                                                                     |
-| ------------- | --------- | -------------- | ----------------------------------------------------------------------------------------------- |
-| `queue`       | `string`  |                | The print queue name.                                                                           |
-| `deviceUri`   | `string`  |                | The device URI for the printer, e.g. ipp://10.10.1.1:631/printer, serial:/                      |
-| `errorPolicy` | `string`  | `stop-printer` | Printer error policy.  One of `abort-job`, `stop-printer`, `retry-job`, `retry-current-job`.    |
-| `accepting`   | `boolean` | `true`         | If the print queue is enabled and accepting print jobs.                                         |
-| `shared`      | `boolean` | `false`        | If the printer queue is shared on the network.                                                  |
-| `location`    | `string`  | `""`           | The printer location.                                                                           |
-| `info`        | `string`  | `""`           | The printer information, typically the model number and other descriptive notes.                |
-| `ppdFile`     | `string`  | `""`           | The file name of a [PPD](https://www.cups.org/doc/postscript-driver.html) file for the printer. |
-| `ppdOptions`  | `object`  | `{}`           | The PPD options to use for this printer.  Not valid unless `ppdFile` is also set.               |
+| Name          | Type      | Default        | Description                                                                                                                    |
+| ------------- | --------- | -------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| `queue`       | `string`  |                | The print queue name.                                                                                                          |
+| `deviceUri`   | `string`  |                | The device URI for the printer, e.g. ipp://10.10.1.1:631/printer, serial:/                                                     |
+| `errorPolicy` | `string`  | `stop-printer` | Printer error policy.  One of `abort-job`, `stop-printer`, `retry-job`, `retry-current-job`.                                   |
+| `accepting`   | `boolean` | `true`         | If the print queue is enabled and accepting print jobs.                                                                        |
+| `shared`      | `boolean` | `false`        | If the printer queue is shared on the network.                                                                                 |
+| `location`    | `string`  | `""`           | The printer location.                                                                                                          |
+| `info`        | `string`  | `""`           | The printer information, typically the model number and other descriptive notes.                                               |
+| `ppdFile`     | `string`  | `""`           | The file name of a [PPD](https://www.cups.org/doc/postscript-driver.html) file for the printer.                                |
+| `ppdOptions`  | `object`  | `{}`           | The PPD options to use for this printer.  Not valid unless `ppdFile` is also set.                                              |
+| `settleTime`  | `number`  | `2`            | Number of seconds to wait for CUPS printer configuration to settle before making changes. Only applies if the assertion fails. |
 
 ## Example
 
@@ -34,7 +35,8 @@ NOTE: Requires that `DirtyCleanInterval` is set to zero (`0`) in the `/etc/cups/
     ppdFile: "/usr/local/drivers/HPLaserJet.ppd",
     ppdOptions: {
       PrintQuality: "Best",
-    }
+    },
+    settle: 5,
   }
 }
 ```

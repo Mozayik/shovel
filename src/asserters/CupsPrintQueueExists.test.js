@@ -101,6 +101,15 @@ Default cltx0`
       createAssertNode(asserter, {
         queue: "my-queue",
         deviceUri: "ipp://",
+        settleTime: "",
+      })
+    )
+  ).rejects.toThrow(ScriptError)
+  await expect(
+    asserter.assert(
+      createAssertNode(asserter, {
+        queue: "my-queue",
+        deviceUri: "ipp://",
         shared: "",
       })
     )
@@ -212,6 +221,7 @@ Default cltx0`
           PrintBothSides: "True",
           Ribbon: "PremiumResin",
         },
+        settleTime: 5,
       })
     )
   ).resolves.toBe(true)
@@ -319,6 +329,9 @@ Default cltx0`
 
 test("rectify", async () => {
   const container = {
+    Timeout: {
+      set: () => Promise.resolve(),
+    },
     childProcess: {
       exec: () => undefined,
     },
@@ -336,6 +349,7 @@ test("rectify", async () => {
   asserter.accepting = true
   asserter.ppdFile = "/x/y"
   asserter.ppdOptions = { a: "b" }
+  asserter.settleTime = 2000
 
   await expect(asserter.rectify()).resolves.toBeUndefined()
 

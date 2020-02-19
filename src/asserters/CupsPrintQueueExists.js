@@ -4,6 +4,7 @@ import path from "path"
 import fs from "fs-extra"
 import util from "../util"
 import camelCase from "camelcase"
+import Timeout from "await-timeout"
 
 const updateDeviceUri = 1 << 0
 const updateShared = 1 << 1
@@ -19,6 +20,7 @@ export class CupsPrintQueueExists {
     this.childProcess = container.childProcess || childProcess
     this.fs = container.fs || fs
     this.util = container.util || util
+    this.Timeout = container.Timeout || Timeout
     this.interpolator = container.interpolator
   }
 
@@ -34,6 +36,7 @@ export class CupsPrintQueueExists {
       info: infoNode,
       ppdFile: ppdFileNode,
       ppdOptions: ppdOptionsNode,
+      settleTime: settleTimeNode,
     } = withNode.value
 
     const info = await this.util.osInfo()
@@ -79,6 +82,16 @@ export class CupsPrintQueueExists {
 
     this.deviceUri = this.interpolator(deviceUriNode)
     this.shared = false
+
+    if (settleTimeNode) {
+      if (settleTimeNode.type !== "number") {
+        throw new ScriptError("'settleTime' must be a 'number'", settleTimeNode)
+      }
+
+      this.settleTime = settleTimeNode.value * 1000
+    } else {
+      this.settleTime = 2000
+    }
 
     if (sharedNode) {
       if (sharedNode.type !== "boolean") {
@@ -345,6 +358,8 @@ export class CupsPrintQueueExists {
   }
 
   async rectify() {
+    await this.Timeout.set(this.settleTime)
+
     if (this.updateFlags & updateDeviceUri) {
       this.childProcess.exec(
         `lpadmin -p ${this.queueName} -v ${this.deviceUri}`
