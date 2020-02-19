@@ -6,7 +6,7 @@
     {
       assert: "FileCopiedToRemote",
       with: {
-        host: "ubuntu1",
+        host: "centos1",
         user: "jlyonsmith",
         localFile: "examples/test/test.zip",
         remoteFile: "test.zip",
