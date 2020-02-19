@@ -329,16 +329,15 @@ export class CupsPrintQueueExists {
       this.updateFlags |= updatePpdFile
     }
 
-    let optionsEqual =
+    if (
       this.ppdOptions &&
-      Object.keys(existingPpdOptions).every(
+      (!Object.keys(existingPpdOptions).every(
         (key) => this.ppdOptions[key] === existingPpdOptions[key]
-      ) &&
-      Object.keys(this.ppdOptions).every(
-        (key) => existingPpdOptions[key] === this.ppdOptions[key]
-      )
-
-    if (!optionsEqual) {
+      ) ||
+        !Object.keys(this.ppdOptions).every(
+          (key) => existingPpdOptions[key] === this.ppdOptions[key]
+        ))
+    ) {
       this.updateFlags |= updatePpdOptions
     }
 
