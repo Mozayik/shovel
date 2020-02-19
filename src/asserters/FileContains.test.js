@@ -240,8 +240,8 @@ test("rectify", async () => {
   }
   const asserter = new FileContains(container)
 
-  asserter.expandedPath = "/somefile.txt"
-  asserter.expandedContents = "xyz\n"
+  asserter.filePath = "/somefile.txt"
+  asserter.contents = "xyz\n"
   asserter.fileContents = "#start\ncontent\n#end"
 
   // Before
@@ -283,11 +283,23 @@ test("rectify", async () => {
 test("result", () => {
   const asserter = new FileContains({})
 
-  asserter.expandedPath = "/somefile.txt"
-  asserter.expandedContents = "some contents"
+  asserter.filePath = "/somefile.txt"
+  asserter.contents = "some contents"
+  asserter.position = "all"
 
   expect(asserter.result()).toEqual({
-    file: asserter.expandedPath,
-    contents: asserter.expandedContents,
+    file: asserter.filePath,
+    contents: asserter.contents,
+    position: asserter.position,
+    regex: "",
+  })
+
+  asserter.regex = "abc"
+
+  expect(asserter.result()).toEqual({
+    file: asserter.filePath,
+    contents: asserter.contents,
+    position: asserter.position,
+    regex: "abc",
   })
 })

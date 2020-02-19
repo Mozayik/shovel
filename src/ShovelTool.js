@@ -96,7 +96,7 @@ export class ShovelTool {
 
     this.log.info(
       `Created remote Node.js install script${
-        this.debug ? " (" + remoteTempFilePath + ")" : ""
+      this.debug ? " (" + remoteTempFilePath + ")" : ""
       }`
     )
 
@@ -439,7 +439,7 @@ export class ShovelTool {
       }
     }
 
-    runContext.results.last = function() {
+    runContext.results.last = function () {
       return this[this.length - 1]
     }
 
@@ -597,7 +597,7 @@ export class ShovelTool {
           interpolator,
           runContext,
         })
-        let output = {}
+        let result = {}
         let rectified = false
 
         if (becomeNode && becomeNode.value) {
@@ -609,32 +609,32 @@ export class ShovelTool {
         }
 
         if (options.noSpinner) {
-          this.log.info(`> ${assertNode.value}`)
+          this.log.info(`> ${assertNode.value} `)
         } else {
           this.log.startSpinner(assertNode.value)
         }
 
         if (!(await asserter.assert(assertionNode))) {
           if (options.assertOnly) {
-            output.wouldRectify = assertNode.value
+            result.wouldRectify = assertNode.value
           } else {
             await asserter.rectify()
             rectified = true
-            output.rectified = assertNode.value
+            result.rectified = assertNode.value
           }
         } else {
-          output.asserted = assertNode.value
+          result.asserted = assertNode.value
         }
 
         if (descriptionNode) {
-          output.description = descriptionNode.value
+          result.description = descriptionNode.value
         }
 
-        output.result = asserter.result(rectified)
+        Object.assign(result, asserter.result(rectified))
 
-        runContext.results.push(output.result)
+        runContext.results.push(result)
 
-        this.log.output(JSON5.stringify(output))
+        this.log.output(JSON5.stringify(result))
       }
 
       if (sudo !== null) {
@@ -657,7 +657,7 @@ export class ShovelTool {
     let remoteTempDir = null
 
     try {
-      this.log.info(`Connecting to ${options.host}`)
+      this.log.info(`Connecting to ${options.host} `)
 
       ssh = this.createSsh({ debug: this.debug })
 
@@ -725,7 +725,7 @@ export class ShovelTool {
         await sftp.putContent(scriptContent, remoteScriptPath)
 
         if (this.debug) {
-          this.log.debug(`Uploaded ${path.join(remoteTempDir, scriptPath)}:`)
+          this.log.debug(`Uploaded ${path.join(remoteTempDir, scriptPath)}: `)
           scriptContent.split(/\n/g).forEach((line, i) => {
             this.log.debug(
               i.toString().padStart(3, " ") + ": " + line.trimEnd()
@@ -741,14 +741,14 @@ export class ShovelTool {
 
       this.log.info(
         `Running script on host${
-          scriptContext.anyScriptHasBecomes ? " as root" : ""
-        }`
+        scriptContext.anyScriptHasBecomes ? " as root" : ""
+        } `
       )
 
       await ssh.run(
-        `shovel --noSpinner${
-          options.assertOnly ? " --assertOnly " : " "
-        }${remoteRootScriptPath}`,
+        `shovel--noSpinner${
+        options.assertOnly ? " --assertOnly " : " "
+        } ${remoteRootScriptPath} `,
         {
           sudo: scriptContext.anyScriptHasBecomes,
           logOutput: this.log.output,
@@ -763,7 +763,7 @@ export class ShovelTool {
           this.log.info(`Deleting remote script directory '${remoteTempDir}'`)
         }
 
-        await ssh.run(`rm -rf ${remoteTempDir}`)
+        await ssh.run(`rm - rf ${remoteTempDir} `)
       }
 
       if (sftp) {
@@ -771,7 +771,7 @@ export class ShovelTool {
       }
 
       ssh.close()
-      this.log.info(`Disconnected from ${options.host}`)
+      this.log.info(`Disconnected from ${options.host} `)
     }
   }
 
@@ -794,37 +794,37 @@ export class ShovelTool {
     this.debug = args.debug
 
     if (args.version) {
-      this.log.info(`${version.fullVersion}`)
+      this.log.info(`${version.fullVersion} `)
       return
     }
 
     if (args.help) {
       this.log.info(`
-Usage: ${this.toolName} [options] <script-file>
+          Usage: ${ this.toolName} [options] < script - file >
 
-Description:
+            Description:
 
-Runs a Shovel configuration script. If 'host' or 'hostFile' argument
-is given then the script will be run on those hosts using SSH. If not
-then the script will be run directly on the machine without SSH.
+          Runs a Shovel configuration script.If 'host' or 'hostFile' argument
+          is given then the script will be run on those hosts using SSH.If not
+          then the script will be run directly on the machine without SSH.
 
-Node.js and Shovel will be installed on the remote hosts if not already
-present. For installation to work the SSH user must have sudo
-permissions on the host. If passwords are required for login or
+            Node.js and Shovel will be installed on the remote hosts if not already
+          present.For installation to work the SSH user must have sudo
+          permissions on the host.If passwords are required for login or
 sudo the tool will prompt.
 
-Arguments:
-  --help                    Shows this help
-  --version                 Shows the tool version
-  --host, -h <host>         Remote host name. Default is to run the script
-                            directly on the local system
-  --port, -p <port>         Remote port number; default is 22
-  --user, -u <user>         Remote user name; defaults to current user
-  --identity, -i <key>      User identity file
-  --hostFile, -f <file>     JSON5 file containing multiple host names
-  --assertOnly, -a          Only run assertions, don't rectify
-  --noSpinner               Disable spinner animation
-`)
+            Arguments:
+          --help                    Shows this help
+          --version                 Shows the tool version
+          --host, -h < host > Remote host name.Default is to run the script
+          directly on the local system
+          --port, -p < port > Remote port number; default is 22
+          --user, -u < user > Remote user name; defaults to current user
+          --identity, -i < key > User identity file
+          --hostFile, -f < file > JSON5 file containing multiple host names
+          --assertOnly, -a          Only run assertions, don't rectify
+          --noSpinner               Disable spinner animation
+            `)
       return
     }
 

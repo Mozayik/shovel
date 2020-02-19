@@ -25,7 +25,7 @@ export class FileContains {
       )
     }
 
-    this.expandedPath = this.interpolator(fileNode)
+    this.filePath = this.interpolator(fileNode)
 
     if (regexNode) {
       if (regexNode.type !== "string") {
@@ -83,18 +83,18 @@ export class FileContains {
       )
     }
 
-    this.expandedContents = this.interpolator(contentsNode)
+    this.contents = this.interpolator(contentsNode)
 
     if (
-      !(await this.util.pathInfo(this.expandedPath)).getAccess().isReadWrite()
+      !(await this.util.pathInfo(this.filePath)).getAccess().isReadWrite()
     ) {
       throw new ScriptError(
-        `${this.expandedPath} does not exist or is not readable & writable`,
+        `${this.filePath} does not exist or is not readable & writable`,
         fileNode
       )
     }
 
-    this.fileContents = await this.fs.readFile(this.expandedPath, {
+    this.fileContents = await this.fs.readFile(this.filePath, {
       encoding: "utf8",
     })
 
@@ -113,9 +113,9 @@ export class FileContains {
 
         if (
           this.fileContents.substring(
-            match.index - this.expandedContents.length,
+            match.index - this.contents.length,
             match.index
-          ) === this.expandedContents
+          ) === this.contents
         ) {
           // Desired content is after the before regex
           return true
@@ -137,8 +137,8 @@ export class FileContains {
         if (
           this.fileContents.substring(
             this.regExp.lastIndex,
-            this.regExp.lastIndex + this.expandedContents.length
-          ) === this.expandedContents
+            this.regExp.lastIndex + this.contents.length
+          ) === this.contents
         ) {
           // Desired content is before the regex
           return true
@@ -148,7 +148,7 @@ export class FileContains {
         this.lastIndex = this.regExp.lastIndex
         break
       case "over":
-        if (this.fileContents.includes(this.expandedContents)) {
+        if (this.fileContents.includes(this.contents)) {
           // Desired content is in file
           return true
         }
@@ -164,7 +164,7 @@ export class FileContains {
 
         break
       case "all":
-        if (this.fileContents === this.expandedContents) {
+        if (this.fileContents === this.contents) {
           return true
         }
         break
@@ -180,31 +180,31 @@ export class FileContains {
       case "before":
         contents =
           this.fileContents.substring(0, this.firstIndex) +
-          this.expandedContents +
+          this.contents +
           this.fileContents.substring(this.firstIndex)
         break
       case "after":
         contents =
           this.fileContents.substring(0, this.lastIndex) +
-          this.expandedContents +
+          this.contents +
           this.fileContents.substring(this.lastIndex)
         break
       case "over":
         contents =
           this.fileContents.substring(0, this.firstIndex) +
-          this.expandedContents +
+          this.contents +
           this.fileContents.substring(this.lastIndex)
         break
       case "all":
       default:
-        contents = this.expandedContents
+        contents = this.contents
         break
     }
 
-    await this.fs.outputFile(this.expandedPath, contents)
+    await this.fs.outputFile(this.filePath, contents)
   }
 
   result() {
-    return { file: this.expandedPath, contents: this.expandedContents }
+    return { file: this.filePath, contents: this.contents, position: this.position, regex: this.regex ?? "" }
   }
 }

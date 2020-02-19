@@ -446,7 +446,7 @@ test("createRunContext", async () => {
         "{dateTime.asLocal('2020-02-09T00:28:31.710Z')}"
       )
     )
-  ).toBe("Sat Feb 08 2020 16:28:31 GMT-0800 (Pacific Standard Time)")
+  ).toBe(new Date("2020-02-09T00:28:31.710Z").toString())
   expect(
     result.interpolator(
       testUtil.createNode(scriptNode.filename, "{dateTime.asLocal()}")
@@ -542,14 +542,14 @@ test("runScriptLocally", async () => {
     debug: true,
     asserters: {
       TestAssert: class TestAssert {
-        constructor() {}
+        constructor() { }
         async assert(node) {
           const withNode = node.value.with
 
           return withNode && withNode.value.assert
         }
-        async rectify() {}
-        result() {}
+        async rectify() { }
+        result() { }
       },
     },
     util: { runningAsRoot: () => true },

@@ -78,6 +78,22 @@ COMMIT
   -A OUTPUT -d 8.8.4.4/32 -o eno1 -p udp -m udp --dport 53 -j ACCEPT
   -A OUTPUT -j DROP
   COMMIT`
+  const shorterRules = "*nat\nCOMMIT\n*filter\nCOMMIT"
+  const longerRules = `
+*nat
+-A POSTROUTING -s 10.10.0.0/16 -o eno1 -j MASQUERADE
+-A POSTROUTING -s 10.20.0.0/16 -o eno1 -j MASQUERADE
+COMMIT
+*filter
+-A INPUT -p tcp -m multiport --dports 22 -j f2b-sshd
+-A INPUT -i eno2 -p tcp -m tcp --dport 8300 -j ACCEPT
+-A INPUT -j DROP
+-A FORWARD -i eno2 -o eno1 -j ACCEPT
+-A FORWARD -j DROP
+-A OUTPUT -d 8.8.4.4/32 -o eno1 -p udp -m udp --dport 53 -j ACCEPT
+-A OUTPUT -j DROP
+COMMIT
+`
 
   // Happy path
   await expect(
@@ -104,7 +120,19 @@ COMMIT
   await expect(
     asserter.assert(
       createAssertNode(asserter, {
-        contents: "*nat\nCOMMIT\n*filter\nCOMMIT",
+        contents: shorterRules,
+      })
+    )
+  ).resolves.toBe(false)
+
+  // New has extra rules
+  await expect(
+    asserter.assert(
+      createAssertNode(asserter, {
+        contents: longerRules,
+        ignore: {
+          filter: ["^-A INPUT.*-j f2b-sshd$", "^-A f2b-sshd.*$"],
+        },
       })
     )
   ).resolves.toBe(false)
