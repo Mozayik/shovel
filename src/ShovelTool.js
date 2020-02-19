@@ -722,10 +722,11 @@ export class ShovelTool {
         )
         const remoteScriptPath = path.join(remoteTempDir, scriptPath)
 
+        await ssh.run(`mkdir -p ${path.dirname(remoteScriptPath)}`)
         await sftp.putContent(scriptContent, remoteScriptPath)
 
         if (this.debug) {
-          this.log.debug(`Uploaded ${path.join(remoteTempDir, scriptPath)}:`)
+          this.log.debug(`Uploaded ${remoteScriptPath}:`)
           scriptContent.split(/\n/g).forEach((line, i) => {
             this.log.debug(
               i.toString().padStart(3, " ") + ": " + line.trimEnd()
