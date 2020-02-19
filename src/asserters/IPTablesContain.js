@@ -122,6 +122,11 @@ export class IPTablesContain {
 
           j += 1
         }
+
+        // Not the same if after taking out ignored rules we don't have the same count as the new rules
+        if (j !== newRules.length) {
+          return false
+        }
       }
 
       return true

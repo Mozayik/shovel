@@ -3,7 +3,7 @@
     {
       assert: "IPTablesContain",
       with: {
-        contents: "*filter\\n-A INPUT -j ACCEPT\\nCOMMIT\\n-A OUTPUT -j ACCEPT\\nCOMMIT\\n",
+        contents: "*filter\n-A INPUT -j ACCEPT\n-A OUTPUT -j ACCEPT\nCOMMIT\n",
       },
       become: "root",
     },

@@ -1,0 +1,25 @@
+{
+  // See https://unix.stackexchange.com/a/390631/360570 for further info
+  // TODO: Need to support --user on ServiceEnabled
+  vars: {
+    serviceFilePath: "~/.config/systemd/user/ssh-agent.service",
+    local: {
+      serviceContent: "{fs.readFile(path.join(sys.scriptDir,'templates/ssh-agent.service'))}"
+    }
+  },
+  assertions: [
+    {
+      assert: "FileExists",
+      with: {
+        file: "{vars.serviceFilePath}"
+      }
+    },
+    {
+      assert: "FileContains",
+      with: {
+        file: "{vars.serviceFilePath}",
+        contents: "{vars.local.serviceContent}",
+      }
+    }
+  ]
+}

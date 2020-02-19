@@ -11,10 +11,10 @@
       assert: "FileContains",
       with: {
         path: "scratch/my-bashrc",
-        contents: "# The individual per-interactive-shell startup file\\n\
-\\n\
-source /usr/local/etc/bash_completion.d/git-prompt.sh\\n\
-source /usr/local/etc/bash_completion.d/git-completion.bash\\n\
+        contents: "# The individual per-interactive-shell startup file\
+\
+source /usr/local/etc/bash_completion.d/git-prompt.sh\
+source /usr/local/etc/bash_completion.d/git-completion.bash\
 ",
       },
     },
