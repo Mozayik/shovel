@@ -287,8 +287,10 @@ export class SSH {
       }
     }
 
-    if (!options.noThrow && savedExitCode !== 0) {
-      throw new Error(`Command '${command}' returned exit code ${exitCode}`)
+    if (!options.noThrow && savedExitCode) {
+      throw new Error(
+        `Command '${command}' returned exit code ${savedExitCode}`
+      )
     }
 
     return { exitCode: savedExitCode, output }
