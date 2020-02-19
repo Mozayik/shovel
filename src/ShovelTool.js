@@ -608,11 +608,7 @@ export class ShovelTool {
           this.process.seteuid(sudo.uid)
         }
 
-        if (options.noSpinner) {
-          this.log.info(`> ${assertNode.value} `)
-        } else {
-          this.log.startSpinner(assertNode.value)
-        }
+        this.log.startSpinner(assertNode.value)
 
         if (!(await asserter.assert(assertionNode))) {
           if (options.assertOnly) {

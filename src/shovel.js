@@ -59,6 +59,9 @@ class Log {
       )
       this.spinner.setSpinnerString(20)
       this.spinner.setSpinnerDelay(250)
+      this.spinner.start()
+    } else {
+      this.info(`> ${line}`)
     }
   }
 
