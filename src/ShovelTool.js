@@ -556,7 +556,7 @@ export class ShovelTool {
         if (
           whenNode &&
           ((whenNode.type === "boolean" && !whenNode.value) ||
-            (whenNode.type === "string" && !!!interpolator(whenNode)))
+            (whenNode.type === "string" && Boolean(interpolator(whenNode))))
         ) {
           this.log.info(
             `Not running '${scriptPath}' because settings.when is false`
@@ -657,7 +657,7 @@ export class ShovelTool {
     let remoteTempDir = null
 
     try {
-      this.log.info(`Connecting to ${options.host} `)
+      this.log.info(`Connecting to ${options.host}`)
 
       ssh = this.createSsh({ debug: this.debug })
 
@@ -725,7 +725,7 @@ export class ShovelTool {
         await sftp.putContent(scriptContent, remoteScriptPath)
 
         if (this.debug) {
-          this.log.debug(`Uploaded ${path.join(remoteTempDir, scriptPath)}: `)
+          this.log.debug(`Uploaded ${path.join(remoteTempDir, scriptPath)}:`)
           scriptContent.split(/\n/g).forEach((line, i) => {
             this.log.debug(
               i.toString().padStart(3, " ") + ": " + line.trimEnd()
@@ -745,23 +745,25 @@ export class ShovelTool {
         } `
       )
 
-      await (`shovel --noSpinner${
-        options.assertOnly ? " --assertOnly " : " "
-      } ${remoteRootScriptPath} `,
-      {
-        sudo: scriptContext.anyScriptHasBecomes,
-        logOutput: this.log.output,
-        logError: this.log.outputError,
-        logStart: this.log.startSpinner,
-        noThrow: true,
-      })
+      await ssh.run(
+        `shovel --noSpinner${
+          options.assertOnly ? " --assertOnly " : " "
+        } ${remoteRootScriptPath} `,
+        {
+          sudo: scriptContext.anyScriptHasBecomes,
+          logOutput: this.log.output,
+          logError: this.log.outputError,
+          logStart: this.log.startSpinner,
+          noThrow: true,
+        }
+      )
     } finally {
       if (remoteTempDir) {
         if (this.debug) {
           this.log.info(`Deleting remote script directory '${remoteTempDir}'`)
         }
 
-        await `rm -rf ${remoteTempDir} `
+        await ssh.run(`rm -rf ${remoteTempDir}`)
       }
 
       if (sftp) {
@@ -769,7 +771,7 @@ export class ShovelTool {
       }
 
       ssh.close()
-      this.log.info(`Disconnected from ${options.host} `)
+      this.log.info(`Disconnected from ${options.host}`)
     }
   }
 
@@ -792,7 +794,7 @@ export class ShovelTool {
     this.debug = args.debug
 
     if (args.version) {
-      this.log.info(`${version.fullVersion} `)
+      this.log.info(`${version.fullVersion}`)
       return
     }
 
