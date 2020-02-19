@@ -96,7 +96,7 @@ export class ShovelTool {
 
     this.log.info(
       `Created remote Node.js install script${
-      this.debug ? " (" + remoteTempFilePath + ")" : ""
+        this.debug ? " (" + remoteTempFilePath + ")" : ""
       }`
     )
 
@@ -439,7 +439,7 @@ export class ShovelTool {
       }
     }
 
-    runContext.results.last = function () {
+    runContext.results.last = function() {
       return this[this.length - 1]
     }
 
@@ -741,29 +741,27 @@ export class ShovelTool {
 
       this.log.info(
         `Running script on host${
-        scriptContext.anyScriptHasBecomes ? " as root" : ""
+          scriptContext.anyScriptHasBecomes ? " as root" : ""
         } `
       )
 
-      await ssh.run(
-        `shovel--noSpinner${
+      await (`shovel --noSpinner${
         options.assertOnly ? " --assertOnly " : " "
-        } ${remoteRootScriptPath} `,
-        {
-          sudo: scriptContext.anyScriptHasBecomes,
-          logOutput: this.log.output,
-          logError: this.log.outputError,
-          logStart: this.log.startSpinner,
-          noThrow: true,
-        }
-      )
+      } ${remoteRootScriptPath} `,
+      {
+        sudo: scriptContext.anyScriptHasBecomes,
+        logOutput: this.log.output,
+        logError: this.log.outputError,
+        logStart: this.log.startSpinner,
+        noThrow: true,
+      })
     } finally {
       if (remoteTempDir) {
         if (this.debug) {
           this.log.info(`Deleting remote script directory '${remoteTempDir}'`)
         }
 
-        await ssh.run(`rm - rf ${remoteTempDir} `)
+        await `rm -rf ${remoteTempDir} `
       }
 
       if (sftp) {
@@ -800,31 +798,31 @@ export class ShovelTool {
 
     if (args.help) {
       this.log.info(`
-          Usage: ${ this.toolName} [options] < script - file >
+Usage: ${this.toolName} [options] <script-file>
 
-            Description:
+Description:
 
-          Runs a Shovel configuration script.If 'host' or 'hostFile' argument
-          is given then the script will be run on those hosts using SSH.If not
-          then the script will be run directly on the machine without SSH.
+Runs a Shovel configuration script.If 'host' or 'hostFile' argument
+is given then the script will be run on those hosts using SSH.If not
+then the script will be run directly on the machine without SSH.
 
-            Node.js and Shovel will be installed on the remote hosts if not already
-          present.For installation to work the SSH user must have sudo
-          permissions on the host.If passwords are required for login or
+Node.js and Shovel will be installed on the remote hosts if not already
+present.For installation to work the SSH user must have sudo
+permissions on the host.If passwords are required for login or
 sudo the tool will prompt.
 
-            Arguments:
-          --help                    Shows this help
-          --version                 Shows the tool version
-          --host, -h < host > Remote host name.Default is to run the script
-          directly on the local system
-          --port, -p < port > Remote port number; default is 22
-          --user, -u < user > Remote user name; defaults to current user
-          --identity, -i < key > User identity file
-          --hostFile, -f < file > JSON5 file containing multiple host names
-          --assertOnly, -a          Only run assertions, don't rectify
-          --noSpinner               Disable spinner animation
-            `)
+Arguments:
+  --help                 Shows this help
+  --version              Shows the tool version
+  --host, -h <host>      Remote host name.Default is to run the script
+                         directly on the local system
+  --port, -p <port>      Remote port number; default is 22
+  --user, -u <user>      Remote user name; defaults to current user
+  --identity, -i <key>   User identity file
+  --hostFile, -f <file>  JSON5 file containing multiple host names
+  --assertOnly, -a       Only run assertions, don't rectify
+  --noSpinner            Disable spinner animation
+`)
       return
     }
 
