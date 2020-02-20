@@ -36,7 +36,7 @@ NOTE: Requires that `DirtyCleanInterval` is set to zero (`0`) in the `/etc/cups/
     ppdOptions: {
       PrintQuality: "Best",
     },
-    settle: 5,
+    settleTime: 5,
   }
 }
 ```
