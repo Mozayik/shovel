@@ -27,7 +27,7 @@ export class ShovelTool {
   }
 
   static minNodeVersion = "v10.17.0"
-  static ltsNodeVersion = "v12.14.0"
+  static ltsNodeVersion = "v12.16.1"
   static npmPackageName = "@brownpapertickets/shovel"
 
   async assertHasNode(ssh) {
@@ -53,13 +53,13 @@ export class ShovelTool {
         yum clean all
         yum makecache fast
         yum install -y -q make
-        yum install -y -q nodejs node-gyp
+        yum install -y -q nodejs
         ;;
       "(Ubuntu")
         curl -sL https://deb.nodesource.com/setup_${nodeMajorVersion}.x | bash -
         apt update
         apt install -y -q g++ make
-        apt install -y -q nodejs node-gyp
+        apt install -y -q nodejs
         ;;
       *)
         echo Unsupported Linux distro
@@ -251,15 +251,12 @@ export class ShovelTool {
 
     for (const includeNode of includesNode.value) {
       if (includeNode.type !== "string") {
-        throw new ScriptError(
-          "'include' array item must be a string",
-          includeNode
-        )
+        throw new ScriptError("Include must be a string", includeNode)
       }
 
       if (path.isAbsolute(includeNode.value)) {
         throw new ScriptError(
-          "Absolute path for inclued is not allowed",
+          "Absolute path for include is not allowed",
           includeNode
         )
       }
@@ -447,13 +444,13 @@ export class ShovelTool {
   }
 
   updateRunContext(runContext, interpolator, scriptNode, options = {}) {
-    const processObjectNode = (vars, node, withInterpolation) => {
+    const interpolateObjectNode = (vars, node, withInterpolation) => {
       Object.entries(node.value).forEach(([k, v]) => {
         if (v.type === "object") {
           if (!vars[k] || typeof vars[k] !== "object") {
             vars[k] = {}
           }
-          processObjectNode(
+          interpolateObjectNode(
             vars[k],
             v,
             k === "local" && vars === runContext.vars ? true : withInterpolation
@@ -462,25 +459,25 @@ export class ShovelTool {
           if (!vars[k] || !Array.isArray(vars[k])) {
             vars[k] = []
           }
-          processArrayNode(vars[k], v, withInterpolation)
+          interpolateArrayNode(vars[k], v, withInterpolation)
         } else {
           vars[k] =
             v.type === "string" && withInterpolation ? interpolator(v) : v.value
         }
       })
     }
-    const processArrayNode = (vars, node, withInterpolation) => {
+    const interpolateArrayNode = (vars, node, withInterpolation) => {
       node.value.forEach((v, i) => {
         if (v.type === "object") {
           if (!vars[i] || typeof vars[i] !== "object") {
             vars[i] = {}
           }
-          processObjectNode(vars[i], v, withInterpolation)
+          interpolateObjectNode(vars[i], v, withInterpolation)
         } else if (v.type === "array") {
           if (!vars[i] || !Array.isArray(vars[i])) {
             vars[i] = []
           }
-          processArrayNode(vars[i], v, withInterpolation)
+          interpolateArrayNode(vars[i], v, withInterpolation)
         } else {
           vars[i] =
             v.type === "string" && withInterpolation ? interpolator(v) : v.value
@@ -496,7 +493,7 @@ export class ShovelTool {
     const { vars: varsNode } = scriptNode.value
 
     // Process vars in a way that merges with existing and allows back references
-    processObjectNode(
+    interpolateObjectNode(
       runContext.vars,
       varsNode,
       !!!options.interpolateOnlyLocalVars

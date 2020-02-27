@@ -507,34 +507,67 @@ test("createRunContext", async () => {
 
 test("updateRunContext", async () => {
   const tool = new ShovelTool(container)
-  const interpolator = (s) => s
+  const interpolator = (n) =>
+    typeof n.type === "string" &&
+    n.value.startsWith("{") &&
+    n.value.endsWith("}")
+      ? n.value.substring(1, n.value.length - 1)
+      : n.value
   const runContext = {
     sys: {},
     vars: {},
   }
   const scriptNode = testUtil.createScriptNode("a.shovel")
-
-  // Interpolation with vars
-  scriptNode.value.vars = testUtil.createNode(scriptNode.filename, {
-    s: "b",
+  const testVars = {
+    s: "{2}",
     n: 1,
     x: null,
     b: true,
     a: [1, 2, 3],
     b: [{}, { x: 10 }, { x: 11 }],
-    c: ["1", "2", "{vars.n}"],
+    c: ["1", "2", "{3}"],
     d: [[1, 2], [3], [4]],
     o: { s: "a", n: 2 },
-    local: { s: "c" },
-  })
-  expect(
-    tool.updateRunContext(runContext, interpolator, scriptNode)
-  ).toBeUndefined()
+    local: { s: "{1}" },
+  }
+
+  // Interpolation with vars
+  scriptNode.value.vars = testUtil.createNode(scriptNode.filename, testVars)
+
   expect(
     tool.updateRunContext(runContext, interpolator, scriptNode, {
       interpolateOnlyLocalVars: true,
     })
   ).toBeUndefined()
+  expect(runContext.vars).toEqual({
+    s: "{2}",
+    n: 1,
+    x: null,
+    b: true,
+    a: [1, 2, 3],
+    b: [{}, { x: 10 }, { x: 11 }],
+    c: ["1", "2", "{3}"],
+    d: [[1, 2], [3], [4]],
+    o: { s: "a", n: 2 },
+    local: { s: "1" },
+  })
+
+  scriptNode.value.vars = testUtil.createNode(scriptNode.filename, testVars)
+  expect(
+    tool.updateRunContext(runContext, interpolator, scriptNode)
+  ).toBeUndefined()
+  expect(runContext.vars).toEqual({
+    s: "2",
+    n: 1,
+    x: null,
+    b: true,
+    a: [1, 2, 3],
+    b: [{}, { x: 10 }, { x: 11 }],
+    c: ["1", "2", "3"],
+    d: [[1, 2], [3], [4]],
+    o: { s: "a", n: 2 },
+    local: { s: "1" },
+  })
 })
 
 test("runScriptLocally", async () => {
