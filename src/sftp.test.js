@@ -21,19 +21,33 @@ test("constructor", async () => {
 })
 
 test("parseLines", async () => {
-  const ssh = new SFTP()
-  const result = SFTP.parseLines(
+  const sftp = new SFTP({
+    console: { log: () => null },
+  })
+  let result = sftp.parseLines(
     "\nerror:\nerror:\nfred@localhost's password:\ndrwxrwxrwx \ndrwxrwxrwx \nfred@localhost: Permission denied\nsftp>"
   )
 
   expect(result).toEqual({
     errorLines: ["error:", "error:"],
-    infoLines: undefined,
+    infoLines: null,
     ready: true,
     notFound: false,
     permissionDenied: true,
     loginPasswordPrompt: "fred@localhost's password:",
     infoLines: ["drwxrwxrwx", "drwxrwxrwx"],
+  })
+
+  sftp.debug = true
+  result = sftp.parseLines("sftp>")
+  expect(result).toEqual({
+    errorLines: null,
+    infoLines: null,
+    ready: true,
+    notFound: false,
+    permissionDenied: false,
+    loginPasswordPrompt: null,
+    infoLines: null,
   })
 })
 

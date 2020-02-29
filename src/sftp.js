@@ -22,15 +22,15 @@ export class SFTP {
     this.pty = null
   }
 
-  static parseLines(data) {
+  parseLines(data) {
     const stripAnsiEscapes = (s) => s.replace(ansiEscapeRegex, "")
-    let errorLines = undefined
+    let errorLines = null
     let ready = false
-    let loginPasswordPrompt = undefined
+    let loginPasswordPrompt = null
     let lines = stripAnsiEscapes(data.toString()).match(/^.*((\r\n|\n|\r)|$)/gm)
     let permissionDenied = false
     let notFound = false
-    let infoLines = undefined
+    let infoLines = null
 
     lines = lines.map((line) => line.trim())
 
@@ -42,7 +42,7 @@ export class SFTP {
       if (!line) {
         continue
       } else if (line.startsWith("error:") || line.startsWith("warning:")) {
-        if (errorLines === undefined) {
+        if (errorLines === null) {
           errorLines = [line]
         } else {
           errorLines.push(line)
@@ -54,7 +54,7 @@ export class SFTP {
       } else if (line.endsWith("not found")) {
         notFound = true
       } else if (/^[dl-]{1}[rwx-]{9}/.test(line)) {
-        if (infoLines === undefined) {
+        if (infoLines === null) {
           infoLines = [line]
         } else {
           infoLines.push(line)
@@ -148,7 +148,7 @@ export class SFTP {
         }
       }
       const dataEvent = pty.onData((data) => {
-        dataHandler(SFTP.parseLines(data))
+        dataHandler(this.parseLines(data))
       })
       const exitEvent = pty.onExit((e) => {
         if (this.promptDisplayed) {
@@ -200,7 +200,7 @@ export class SFTP {
           }
         }
         const dataEvent = this.pty.onData((data) => {
-          dataHandler(SFTP.parseLines(data))
+          dataHandler(this.parseLines(data))
         })
       }),
     ]
@@ -294,7 +294,7 @@ export class SFTP {
           }
         }
         const dataEvent = this.pty.onData((data) => {
-          dataHandler(SFTP.parseLines(data))
+          dataHandler(this.parseLines(data))
         })
       }),
     ]
