@@ -3,14 +3,16 @@
     description: "Set file contents",
   },
   vars: {
-    local: { fileContents: "{fs.readFile('examples/much-content.txt')}" },
+    local: {
+      fileContents: "{fs.readFile(path.join(sys.scriptDir, 'templates/much-content.txt'))}",
+    },
   },
   assertions: [
-    { assert: "FileExists", with: { path: "scratch/my-bashrc" } },
+    { assert: "FileExists", with: { file: "scratch/much-content.txt" } },
     {
       assert: "FileContains",
       with: {
-        path: "scratch/my-bashrc",
+        file: "scratch/my-bashrc",
         contents: "# The individual per-interactive-shell startup file\
 \
 source /usr/local/etc/bash_completion.d/git-prompt.sh\
@@ -18,11 +20,11 @@ source /usr/local/etc/bash_completion.d/git-completion.bash\
 ",
       },
     },
-    { assert: "FileExists", with: { path: "scratch/my-otherfile.sh" } },
+    { assert: "FileExists", with: { file: "scratch/my-otherfile.sh" } },
     {
       assert: "FileContains",
       with: {
-        path: "scratch/my-otherfile.sh",
+        file: "scratch/much-content.txt",
         contents: "{vars.local.fileContents}",
       },
     },

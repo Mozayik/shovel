@@ -652,7 +652,7 @@ export class ShovelTool {
     try {
       this.log.info(`Connecting to ${options.host}`)
 
-      ssh = this.createSsh({ debug: this.debug })
+      ssh = this.createSsh({ debug: options.sshDebug })
 
       const connectOptions = {
         host: options.host,
@@ -663,7 +663,7 @@ export class ShovelTool {
 
       await ssh.connect(connectOptions)
 
-      sftp = this.createSftp({ debug: this.debug })
+      sftp = this.createSftp({ debug: options.sftpDebug })
 
       await sftp.connect(
         Object.assign(connectOptions, {
@@ -708,11 +708,16 @@ export class ShovelTool {
             includeNode.value.substring(scriptContext.rootScriptDirPath.length)
         }
 
+        const newScript = JSON5.simplify(scriptNode)
+
+        newScript.vars = runContext.vars
+
         const scriptContent = JSON5.stringify(
-          JSON5.simplify(scriptNode),
+          newScript,
           null,
           this.debug ? "  " : undefined
         )
+
         const remoteScriptPath = path.join(remoteTempDir, scriptPath)
 
         await ssh.run(`mkdir -p ${path.dirname(remoteScriptPath)}`)
@@ -772,7 +777,15 @@ export class ShovelTool {
   async run(argv) {
     const badArgs = new Set()
     const options = {
-      boolean: ["help", "version", "debug", "assertOnly", "noSpinner"],
+      boolean: [
+        "help",
+        "version",
+        "debug",
+        "assertOnly",
+        "noSpinner",
+        "sshDebug",
+        "sftpDebug",
+      ],
       string: ["host", "hostFile", "user", "port", "identity"],
       alias: {
         a: "assertOnly",
@@ -817,16 +830,19 @@ permissions on the host.If passwords are required for login or
 sudo the tool will prompt.
 
 Arguments:
-  --help                 Shows this help
-  --version              Shows the tool version
-  --host, -h <host>      Remote host name.Default is to run the script
-                         directly on the local system
-  --port, -p <port>      Remote port number; default is 22
-  --user, -u <user>      Remote user name; defaults to current user
-  --identity, -i <key>   User identity file
-  --hostFile, -f <file>  JSON5 file containing multiple host names
-  --assertOnly, -a       Only run assertions, don't rectify
-  --noSpinner            Disable spinner animation
+  --help                  Shows this help
+  --version               Shows the tool version
+  --host, -h <host>       Remote host name.Default is to run the script
+                          directly on the local system
+  --port, -p <port>       Remote port number; default is 22
+  --user, -u <user>       Remote user name; defaults to current user
+  --identity, -i <key>    User identity file
+  --hostFile, -f <file>   JSON5 file containing multiple host names
+  --assertOnly, -a        Only run assertions, don't rectify
+  --noSpinner             Disable spinner animation
+  --debug                 Show script related debugging output
+  --sshDebug              Show SSH related debugging output
+  --sftpDebug             Show SFTP related debugging output
 `)
       return
     }
@@ -885,6 +901,8 @@ Arguments:
             user: host.user,
             identity: host.identity,
             assertOnly: args.assertOnly,
+            sshDebug: args.sshDebug,
+            sftpDebug: args.sftpDebug,
           })
         } catch (error) {
           this.log.error(this.debug ? error : error.message)

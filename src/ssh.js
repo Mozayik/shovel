@@ -17,45 +17,60 @@ export class SSH {
     this.console = container.console || console
     this.debug = container.debug
     this.pty = null
+    this.partialJsonLine = null
   }
 
-  static parseLines(data) {
+  parseLines(data) {
     const stripAnsiEscapes = (s) => s.replace(ansiEscapeRegex, "")
     const outputLines = []
     const errorLines = []
     const jsonLines = []
-    let startLine = undefined
-    let exitCode = undefined
+    let startLine = null
+    let exitCode = null
     let ready = false
     let permissionDenied = false
     let passphraseRequired = false
-    let loginPasswordPrompt = undefined
-    let sudoPasswordPrompt = undefined
-    let verificationPrompt = undefined
+    let loginPasswordPrompt = null
+    let sudoPasswordPrompt = null
+    let verificationPrompt = null
     let lines = stripAnsiEscapes(data.toString()).match(/^.*((\r\n|\n|\r)|$)/gm)
+    const hasBalancedBraces = (s) =>
+      s
+        .split("")
+        .reduce((a, c) => a + (c === "{" ? 1 : c === "}" ? -1 : 0), 0) === 0
 
     lines = lines.map((line) => line.trim())
 
-    // NOTE: Keep for debugging
-    // console.log(lines)
+    if (this.debug) {
+      console.log(lines)
+    }
 
-    for (const line of lines) {
+    for (let i = 0; i < lines.length; i++) {
+      let line = lines[i]
+
       if (!line) {
         continue
+      } else if (this.partialJsonLine || line.startsWith("{")) {
+        if (this.partialJsonLine) {
+          line = this.partialJsonLine + line
+        }
+
+        if (hasBalancedBraces(line)) {
+          jsonLines.push(line)
+          this.partialJsonLine = null
+        } else {
+          this.partialJsonLine = line
+        }
       } else if (line.startsWith("error:") || line.startsWith("warning:")) {
         errorLines.push(line)
       } else if (/^\d+$/.test(line)) {
         exitCode = parseInt(line)
       } else if (/^v?\d+\.\d+\.\d+/.test(line)) {
-        // Version numbers
         outputLines.push(line)
       } else if (line.startsWith("/")) {
-        // Paths
         outputLines.push(line)
       } else if (line.startsWith(">")) {
         startLine = line
-      } else if (line.startsWith("{")) {
-        jsonLines.push(line)
       } else if (line.startsWith("[sudo] password for")) {
         sudoPasswordPrompt = line
       } else if (/^.+@.+'s password:/.test(line)) {
@@ -75,7 +90,7 @@ export class SSH {
       ready = true
     }
 
-    return {
+    const result = {
       outputLines,
       errorLines,
       jsonLines,
@@ -88,6 +103,8 @@ export class SSH {
       sudoPasswordPrompt,
       verificationPrompt,
     }
+
+    return result
   }
 
   async connect(options = {}) {
@@ -174,7 +191,7 @@ export class SSH {
         }
       }
       const dataEvent = pty.onData((data) => {
-        dataHandler(SSH.parseLines(data))
+        dataHandler(this.parseLines(data))
       })
       const exitEvent = pty.onExit(() => {
         if (this.promptDisplayed) {
@@ -213,11 +230,12 @@ export class SSH {
 
     const promises = []
     let output = []
-    let savedExitCode = undefined
+    let savedExitCode = null
 
     promises.push(
       new Promise((resolve, reject) => {
         const dataHandler = ({
+          ready,
           exitCode,
           jsonLines,
           errorLines,
@@ -225,6 +243,15 @@ export class SSH {
           startLine,
           sudoPasswordPrompt,
         }) => {
+          if (ready) {
+            dataEvent.dispose()
+            return resolve()
+          }
+
+          if (exitCode !== null) {
+            savedExitCode = exitCode
+          }
+
           if (outputLines) {
             output = output.concat(outputLines)
           }
@@ -251,15 +278,9 @@ export class SSH {
           if (options.logStart && startLine) {
             options.logStart(startLine)
           }
-
-          if (exitCode !== undefined) {
-            savedExitCode = exitCode
-            dataEvent.dispose()
-            return resolve()
-          }
         }
         const dataEvent = this.pty.onData((data) => {
-          dataHandler(SSH.parseLines(data))
+          dataHandler(this.parseLines(data))
         })
       })
     )

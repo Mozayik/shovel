@@ -34,8 +34,9 @@ export class SFTP {
 
     lines = lines.map((line) => line.trim())
 
-    // NOTE: Keep for debugging
-    // console.log(lines)
+    if (this.debug) {
+      console.log(lines)
+    }
 
     for (const line of lines) {
       if (!line) {
