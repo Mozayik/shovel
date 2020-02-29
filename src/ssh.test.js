@@ -23,8 +23,10 @@ test("constructor", async () => {
 })
 
 test("parseLines", async () => {
-  const ssh = new SSH()
-  const result = SSH.parseLines(
+  const ssh = new SSH({
+    console: { log: () => null },
+  })
+  let result = ssh.parseLines(
     "Enter passphrase for xxx\nVerification code:\nerror:\nfred@localhost's password:\nfred@localhost: Permission denied\n[sudo] password for\nabc\n/x/y/z\nv1.2.3\n{}\n> start\n0\nPS1>\n"
   )
 
@@ -40,6 +42,23 @@ test("parseLines", async () => {
     loginPasswordPrompt: "fred@localhost's password:",
     sudoPasswordPrompt: "[sudo] password for",
     verificationPrompt: "Verification code:",
+  })
+
+  ssh.parseLines("{\n")
+  ssh.debug = true
+  result = ssh.parseLines("}\n")
+  expect(result).toEqual({
+    outputLines: [],
+    errorLines: [],
+    jsonLines: ["{}"],
+    startLine: null,
+    exitCode: null,
+    ready: false,
+    permissionDenied: false,
+    passphraseRequired: false,
+    loginPasswordPrompt: null,
+    sudoPasswordPrompt: null,
+    verificationPrompt: null,
   })
 })
 
@@ -196,10 +215,13 @@ test("run", async () => {
   // Success
   ssh.pty = pty
   setImmediate(() => {
-    pty.emit("data", "> start\nerror: blah\n{x:1}\n")
     pty.emit("data", "[sudo] password for x")
     setImmediate(() => {
-      pty.emit("data", "/x\n0\nPS1>")
+      pty.emit("data", "> start\nerror: blah\n{x:1}\n")
+
+      setImmediate(() => {
+        pty.emit("data", "/x\n0\nPS1>")
+      })
     })
   })
   await expect(
@@ -216,7 +238,7 @@ test("run", async () => {
     output: ["/x"],
   })
 
-  // Bad exit code, no timeout
+  // Bad exit code, no timeout, no sudo
   setImmediate(() => {
     pty.emit("data", "1\nPS1>")
   })

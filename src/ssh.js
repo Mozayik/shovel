@@ -42,7 +42,7 @@ export class SSH {
     lines = lines.map((line) => line.trim())
 
     if (this.debug) {
-      console.log(lines)
+      this.console.log(lines)
     }
 
     for (let i = 0; i < lines.length; i++) {
@@ -243,11 +243,6 @@ export class SSH {
           startLine,
           sudoPasswordPrompt,
         }) => {
-          if (ready) {
-            dataEvent.dispose()
-            return resolve()
-          }
-
           if (exitCode !== null) {
             savedExitCode = exitCode
           }
@@ -277,6 +272,11 @@ export class SSH {
 
           if (options.logStart && startLine) {
             options.logStart(startLine)
+          }
+
+          if (ready) {
+            dataEvent.dispose()
+            return resolve()
           }
         }
         const dataEvent = this.pty.onData((data) => {
