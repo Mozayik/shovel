@@ -250,8 +250,9 @@ export class Utility {
           const user = users.find((user) => user.name === fields[0])
 
           if (user) {
-            user.disabled = fields[1] === "*"
-            user.password = !user.disabled ? fields[1] : ""
+            user.passwordDisabled =
+              fields[1].startsWith("!") || fields[1].startsWith("*")
+            user.password = !user.passwordDisabled ? fields[1] : ""
           }
         })
     }

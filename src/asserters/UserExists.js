@@ -22,6 +22,7 @@ export class UserExists {
       homeDir: homeDirNode,
       comment: commentNode,
       group: groupNode,
+      passwordDisabled: passwordDisabledNode,
     } = withNode.value
 
     if (!userNode || userNode.type !== "string") {
@@ -102,6 +103,17 @@ export class UserExists {
       this.comment = this.interpolator(commentNode)
     }
 
+    if (passwordDisabledNode) {
+      if (passwordDisabledNode.type !== "boolean") {
+        throw new ScriptError(
+          "'passwordDisabled' must be a boolean",
+          passwordDisabledNode
+        )
+      }
+
+      this.passwordDisabled = passwordDisabledNode.value
+    }
+
     this.name = this.interpolator(userNode)
 
     const user = (await this.util.getUsers(this.fs)).find(
@@ -131,7 +143,9 @@ export class UserExists {
         (this.gid !== undefined && this.gid !== user.gid) ||
         (this.shell !== undefined && this.shell !== user.shell) ||
         (this.homeDir !== undefined && this.homeDir !== user.homeDir) ||
-        (this.comment !== undefined && this.comment !== user.comment)
+        (this.comment !== undefined && this.comment !== user.comment) ||
+        (this.passwordDisabled !== undefined &&
+          this.passwordDisabled !== user.passwordDisabled)
       ) {
         if (!runningAsRoot) {
           throw new ScriptError("Only root user can modify users", assertNode)
@@ -172,10 +186,13 @@ export class UserExists {
       addArg("-s", this.shell) +
       addArg("-h", this.homeDir) +
       addArg("-c", this.comment) +
+      // TODO: Handle the --disable-password when adding
       " " +
       this.name
 
     await this.childProcess.exec(command)
+
+    // TODO: Handle password lock when modifying
 
     const user = (await this.util.getUsers()).find(
       (user) => user.name === this.name
