@@ -21,6 +21,7 @@ export class UserExists {
       shell: shellNode,
       homeDir: homeDirNode,
       comment: commentNode,
+      group: groupNode,
     } = withNode.value
 
     if (!userNode || userNode.type !== "string") {
@@ -59,6 +60,22 @@ export class UserExists {
       }
 
       this.gid = gidNode.value
+    }
+
+    if (groupNode) {
+      if (groupNode.type !== "string") {
+        throw new ScriptError("'group' must be a string", groupNode)
+      }
+
+      const name = groupNode.value
+      const groups = await this.util.getGroups()
+      const group = groups.find((group) => group.name === name)
+
+      if (!group) {
+        throw new ScriptError(`Group '${name}' does not exist`, groupNode)
+      }
+
+      this.gid = group.gid
     }
 
     if (shellNode) {

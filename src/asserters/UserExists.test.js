@@ -20,6 +20,12 @@ test("assert", async () => {
           comment: "",
         },
       ],
+      getGroups: async () => [
+        {
+          name: "group1",
+          gid: 1000,
+        },
+      ],
     },
   }
 
@@ -47,6 +53,14 @@ test("assert", async () => {
     asserter.assert(createAssertNode(asserter, { user: "x", gid: "1" }))
   ).rejects.toThrow(ScriptError)
   await expect(
+    asserter.assert(createAssertNode(asserter, { user: "x", group: 1 }))
+  ).rejects.toThrow(ScriptError)
+  await expect(
+    asserter.assert(
+      createAssertNode(asserter, { user: "user1", group: "notthere" })
+    )
+  ).rejects.toThrow(ScriptError)
+  await expect(
     asserter.assert(createAssertNode(asserter, { user: "x", shell: 1 }))
   ).rejects.toThrow(ScriptError)
   await expect(
@@ -61,6 +75,7 @@ test("assert", async () => {
     asserter.assert(
       createAssertNode(asserter, {
         user: "user1",
+        group: "group1",
       })
     )
   ).resolves.toBe(true)
