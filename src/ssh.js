@@ -262,16 +262,17 @@ export class SSH {
             }
           }
 
-          if (options.logError && errorLines) {
-            errorLines.forEach((line) => options.logError(line))
-          }
-
           if (options.logOutput && jsonLines) {
             jsonLines.forEach((line) => options.logOutput(line))
           }
 
           if (options.logStart && startLine) {
             options.logStart(startLine)
+          }
+
+          // Show error lines last
+          if (options.logError && errorLines) {
+            errorLines.forEach((line) => options.logError(line))
           }
 
           if (ready) {
