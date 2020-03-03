@@ -252,7 +252,6 @@ export class Utility {
           if (user) {
             user.passwordDisabled =
               fields[1].startsWith("!") || fields[1].startsWith("*")
-            user.password = !user.passwordDisabled ? fields[1] : ""
           }
         })
     }

@@ -19,11 +19,24 @@ test("assert", async () => {
           homeDir: "/users/user1",
           comment: "",
         },
+        {
+          name: "service1",
+          uid: 100,
+          gid: 100,
+          shell: "/sbin/nologin",
+          homeDir: "/var/service",
+          comment: "",
+          passwordDisabled: true,
+        },
       ],
       getGroups: async () => [
         {
           name: "group1",
           gid: 1000,
+        },
+        {
+          name: "service1",
+          gid: 100,
         },
       ],
     },
@@ -69,6 +82,11 @@ test("assert", async () => {
   await expect(
     asserter.assert(createAssertNode(asserter, { user: "x", comment: 1 }))
   ).rejects.toThrow(ScriptError)
+  await expect(
+    asserter.assert(
+      createAssertNode(asserter, { user: "x", passwordDisabled: 1 })
+    )
+  ).rejects.toThrow(ScriptError)
 
   // Happy path
   await expect(
@@ -76,6 +94,19 @@ test("assert", async () => {
       createAssertNode(asserter, {
         user: "user1",
         group: "group1",
+        passwordDisabled: false,
+      })
+    )
+  ).resolves.toBe(true)
+
+  asserter.uid = undefined
+
+  await expect(
+    asserter.assert(
+      createAssertNode(asserter, {
+        user: "service1",
+        group: "service1",
+        passwordDisabled: true,
       })
     )
   ).resolves.toBe(true)
@@ -198,15 +229,22 @@ test("rectify", async () => {
   asserter.name = "user1"
   asserter.system = true
   asserter.user = users[0]
+  asserter.passwordDisabled = false
   await expect(asserter.rectify()).resolves.toBeUndefined()
 
   asserter.system = false
   asserter.comment = "Comment with spaces"
+  asserter.passwordDisabled = true
   await expect(asserter.rectify()).resolves.toBeUndefined()
 
   asserter.modify = true
   asserter.name = "badname"
   asserter.user = users[1]
+  asserter.passwordDisabled = false
+  await expect(asserter.rectify()).rejects.toThrow(Error)
+
+  asserter.user = users[1]
+  asserter.passwordDisabled = true
   await expect(asserter.rectify()).rejects.toThrow(Error)
 })
 

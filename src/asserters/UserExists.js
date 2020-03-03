@@ -145,6 +145,7 @@ export class UserExists {
         (this.homeDir !== undefined && this.homeDir !== user.homeDir) ||
         (this.comment !== undefined && this.comment !== user.comment) ||
         (this.passwordDisabled !== undefined &&
+          user.passwordDisabled !== undefined &&
           this.passwordDisabled !== user.passwordDisabled)
       ) {
         if (!runningAsRoot) {
@@ -186,13 +187,19 @@ export class UserExists {
       addArg("-s", this.shell) +
       addArg("-h", this.homeDir) +
       addArg("-c", this.comment) +
-      // TODO: Handle the --disable-password when adding
+      (this.modify ? addArg("-L", this.passwordDisabled) : "") +
       " " +
       this.name
 
     await this.childProcess.exec(command)
 
-    // TODO: Handle password lock when modifying
+    if (!this.modify && this.passwordDisabled !== undefined) {
+      if (this.passwordDisabled) {
+        await this.childProcess.exec(`passwd --lock ${this.name}`)
+      } else {
+        await this.childProcess.exec(`passwd --unlock ${this.name}`)
+      }
+    }
 
     const user = (await this.util.getUsers()).find(
       (user) => user.name === this.name

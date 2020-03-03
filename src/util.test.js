@@ -253,7 +253,6 @@ ntp:*:18267:0:99999:7:::`
 
   await expect(util.getUsers()).resolves.toContainEqual({
     name: "someuser",
-    password: "$6$asthoeu08aeoust/",
     passwordDisabled: false,
     uid: 1000,
     gid: 1000,
