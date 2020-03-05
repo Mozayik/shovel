@@ -2,5 +2,5 @@
   metadata: {
     description: "Empty script",
   },
-  assertions: [],
+  statements: [],
 }

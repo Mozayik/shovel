@@ -5,7 +5,7 @@
       bashProfileContent: "{fs.readFile(path.join(sys.scriptDir,'templates/bash-profile.sh'))}",
     },
   },
-  assertions: [
+  statements: [
     {
       assert: "FileExists",
       with: {

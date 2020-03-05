@@ -224,7 +224,7 @@ export class ShovelTool {
       includes: includesNode,
       metadata: metadataNode,
       vars: varsNode,
-      assertions: assertionsNode,
+      statements: statementsNode,
     } = scriptNode.value
 
     if (!includesNode) {
@@ -239,8 +239,8 @@ export class ShovelTool {
       scriptNode.value.vars = varsNode = createObjectNode()
     }
 
-    if (!assertionsNode) {
-      scriptNode.value.assertions = assertionsNode = createArrayNode([])
+    if (!statementsNode) {
+      scriptNode.value.statements = statementsNode = createArrayNode([])
     }
 
     addFilename(scriptNode)
@@ -276,13 +276,13 @@ export class ShovelTool {
       throw new ScriptError("'vars' must be an object", varsNode)
     }
 
-    if (assertionsNode.type !== "array") {
-      throw new ScriptError("'assertions' must be an array", assertionsNode)
+    if (statementsNode.type !== "array") {
+      throw new ScriptError("'statements' must be an array", statementsNode)
     }
 
-    for (const assertionNode of assertionsNode.value) {
-      if (assertionNode.type !== "object") {
-        throw new ScriptError("Assertion must be an object", assertionNode)
+    for (const statementNode of statementsNode.value) {
+      if (statementNode.type !== "object") {
+        throw new ScriptError("Assertion must be an object", statementNode)
       }
 
       const {
@@ -290,14 +290,14 @@ export class ShovelTool {
         when: whenNode,
         assert: assertNode,
         with: withNode,
-      } = assertionNode.value
+      } = statementNode.value
 
       if (assertNode) {
         if (assertNode.type !== "string") {
           throw new ScriptError("'assert' must be a string", assertNode)
         }
       } else {
-        throw new ScriptError("'assert' property is not present", assertionNode)
+        throw new ScriptError("'assert' property is not present", statementNode)
       }
 
       if (descriptionNode && descriptionNode.type !== "string") {
@@ -314,7 +314,7 @@ export class ShovelTool {
       if (!withNode || withNode.type !== "object") {
         throw new ScriptError(
           "'with' must be present and of type 'object'",
-          assertionNode
+          statementNode
         )
       }
     }
@@ -352,8 +352,8 @@ export class ShovelTool {
 
         anyScriptHasBecomes =
           anyScriptHasBecomes ||
-          !!scriptNode.value.assertions.value.find((assertionNode) =>
-            assertionNode.value.hasOwnProperty("become")
+          !!scriptNode.value.statements.value.find((statementNode) =>
+            statementNode.value.hasOwnProperty("become")
           )
 
         for (var includeNode of scriptNode.value.includes.value) {
@@ -536,7 +536,7 @@ export class ShovelTool {
       }
 
       const {
-        assertions: assertionsNode,
+        statements: statementsNode,
         metadata: metadataNode,
       } = scriptNode.value
 
@@ -564,13 +564,13 @@ export class ShovelTool {
 
       this.log.info(`Running '${scriptPath}'`)
 
-      for (const assertionNode of assertionsNode.value) {
+      for (const statementNode of statementsNode.value) {
         const {
           assert: assertNode,
           when: whenNode,
           become: becomeNode,
           description: descriptionNode,
-        } = assertionNode.value
+        } = statementNode.value
 
         if (whenNode) {
           if (
@@ -586,7 +586,7 @@ export class ShovelTool {
         if (!Asserter) {
           throw new ScriptError(
             `${assertNode.value} is not a valid asserter`,
-            assertionNode
+            statementNode
           )
         }
 
@@ -607,7 +607,7 @@ export class ShovelTool {
 
         this.log.startSpinner(assertNode.value)
 
-        if (!(await asserter.assert(assertionNode))) {
+        if (!(await asserter.assert(statementNode))) {
           if (options.assertOnly) {
             result.wouldRectify = assertNode.value
           } else {
@@ -838,7 +838,7 @@ Arguments:
   --user, -u <user>       Remote user name; defaults to current user
   --identity, -i <key>    User identity file
   --hostFile, -f <file>   JSON5 file containing multiple host names
-  --assertOnly, -a        Only run assertions, don't rectify
+  --assertOnly, -a        Only run statements, don't rectify
   --noSpinner             Disable spinner animation
   --debug                 Show script related debugging output
   --sshDebug              Show SSH related debugging output

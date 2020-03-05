@@ -4,7 +4,7 @@
       contents: "{util.moustache(fs.readFile(path.join(sys.scriptDir, 'templates/moustache-template.txt')))}",
     },
   },
-  assertions: [
+  statements: [
     {
       assert: "FileExists",
       with: {

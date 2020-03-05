@@ -7,7 +7,7 @@
     TEST_DIR_2: "shvl-dir-2",
     TEST_FILE_1: "shvl-file-1",
   },
-  assertions: [
+  statements: [
     {
       description: "Create Test Directory",
       assert: "DirectoryExists",

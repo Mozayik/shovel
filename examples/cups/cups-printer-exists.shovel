@@ -1,5 +1,5 @@
 {
-  assertions: [
+  statements: [
     {
       assert: "CupsPrintQueueExists",
       with: {
@@ -11,7 +11,7 @@
         description: "HP LaserJet",
         errorPolicy: "retry-job",
       },
-      become: "root"
-    }
-  ]
+      become: "root",
+    },
+  ],
 }

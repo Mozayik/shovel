@@ -2,7 +2,7 @@
   vars: {
     bashCompletionDir: "/usr/local/etc/bash_completion.d",
   },
-  assertions: [
+  statements: [
     {
       assert: "DirectoryExists",
       with: {

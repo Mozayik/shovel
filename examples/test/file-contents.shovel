@@ -7,7 +7,7 @@
       fileContents: "{fs.readFile(path.join(sys.scriptDir, 'templates/much-content.txt'))}",
     },
   },
-  assertions: [
+  statements: [
     { assert: "FileExists", with: { file: "scratch/much-content.txt" } },
     {
       assert: "FileContains",

@@ -5,7 +5,7 @@
   vars: {
     doTheThing: false,
   },
-  assertions: [
+  statements: [
     {
       assert: "SystemPackageInstalled",
       with: {

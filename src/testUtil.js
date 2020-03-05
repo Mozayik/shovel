@@ -35,6 +35,6 @@ export const createScriptNode = (filename) => {
     metadata: {},
     vars: {},
     includes: [],
-    assertions: [],
+    statements: [],
   })
 }

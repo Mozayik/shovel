@@ -2,7 +2,7 @@
   metadata: {
     description: "Copy to remote",
   },
-  assertions: [
+  statements: [
     {
       assert: "FileCopiedToRemote",
       with: {

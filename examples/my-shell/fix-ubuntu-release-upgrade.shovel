@@ -1,7 +1,7 @@
 {
   // This fixes the "failed to connect to http://changelogs.ubuntu.com/meta-release" mesasge in Ubuntu
   // See https://askubuntu.com/questions/919441/failed-to-connect-to-http-changelogs-ubuntu-com-meta-release
-  assertions: [
+  statements: [
     {
       assert: "FilesDeleted",
       with: {

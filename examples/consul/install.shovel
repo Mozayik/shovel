@@ -5,7 +5,7 @@
     zipFile: "{`consul_${vars.version}_linux_amd64.zip`}",
     unzipDir: "{path.join(vars.downloadDir, path.basename(vars.zipFile, '.zip')}",
   },
-  assertions: [
+  statements: [
     {
       assert: "DirectoryExists",
       with: {

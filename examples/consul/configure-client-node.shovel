@@ -1,6 +1,6 @@
 {
   description: "Bootstrap and start consul cluster",
-  assertions: [
+  statements: [
     {
       assert: "otherAssertions",
       with: {

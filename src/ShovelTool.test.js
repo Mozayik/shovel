@@ -239,7 +239,7 @@ test("loadScriptFile", async () => {
       metadata: {},
       includes: ["something.shovel"],
       vars: { a: 1, b: null, c: [1,2,3], d: { x: "x" }},
-      assertions: [{assert: "Thing", with: {}}],
+      statements: [{assert: "Thing", with: {}}],
     }`
   await expect(tool.loadScriptFile("test.shovel")).resolves.not.toBeNull()
 
@@ -285,51 +285,51 @@ test("loadScriptFile", async () => {
     }`
   await expect(tool.loadScriptFile("test.shovel")).rejects.toThrow(ScriptError)
 
-  // Bad assertions
+  // Bad statements
   container.fs.readFile = async (path) =>
     `{
-      assertions: {},
+      statements: {},
     }`
   await expect(tool.loadScriptFile("test.shovel")).rejects.toThrow(ScriptError)
 
-  // Bad assertion
+  // Bad statement
   container.fs.readFile = async (path) =>
     `{
-      assertions: [1],
+      statements: [1],
     }`
   await expect(tool.loadScriptFile("test.shovel")).rejects.toThrow(ScriptError)
 
-  // Missing assertion name
+  // Missing statement name
   container.fs.readFile = async (path) =>
     `{
-      assertions: [{}],
+      statements: [{}],
     }`
   await expect(tool.loadScriptFile("test.shovel")).rejects.toThrow(ScriptError)
 
-  // Bad assertion name
+  // Bad statement name
   container.fs.readFile = async (path) =>
     `{
-      assertions: [{ assert: 1 }],
+      statements: [{ assert: 1 }],
     }`
   await expect(tool.loadScriptFile("test.shovel")).rejects.toThrow(ScriptError)
 
-  // Bad assertion description
+  // Bad statement description
   container.fs.readFile = async (path) =>
     `{
-      assertions: [{ assert: "Thing", description: 1 }],
+      statements: [{ assert: "Thing", description: 1 }],
     }`
   await expect(tool.loadScriptFile("test.shovel")).rejects.toThrow(ScriptError)
 
-  // Bad assertion with
+  // Bad statement with
   container.fs.readFile = async (path) =>
     `{
-      assertions: [{ assert: "Thing", with: 1 }],
+      statements: [{ assert: "Thing", with: 1 }],
     }`
   await expect(tool.loadScriptFile("test.shovel")).rejects.toThrow(ScriptError)
-  // Bad assertion when
+  // Bad statement when
   container.fs.readFile = async (path) =>
     `{
-      assertions: [{ assert: "Thing", when: 1 }],
+      statements: [{ assert: "Thing", when: 1 }],
     }`
   await expect(tool.loadScriptFile("test.shovel")).rejects.toThrow(ScriptError)
 })
@@ -346,7 +346,7 @@ test("createScriptContext", async () => {
             "./c.shovel",
             "./c.shovel",
           ],
-          assertions: [
+          statements: [
             {
               assert: "Something",
               with: {},
@@ -356,7 +356,7 @@ test("createScriptContext", async () => {
         }`
           case "/a/c.shovel":
             return `{
-          assertions: []
+          statements: []
           }`
           case "/a/d.shovel":
             return `{
@@ -602,7 +602,7 @@ test("runScriptLocally", async () => {
               metadata: {
                 description: "test",
               },
-              assertions: [
+              statements: [
                 {
                   description: "test",
                   assert: "TestAssert",
@@ -626,7 +626,7 @@ test("runScriptLocally", async () => {
             }`
           case "/x/b.shovel":
             return `{
-              assertions: [
+              statements: [
                 {
                   assert: "TestAssert",
                   with: {}
@@ -635,7 +635,7 @@ test("runScriptLocally", async () => {
             }`
           case "/x/c.shovel":
             return `{
-              assertions: [
+              statements: [
                 {
                   assert: "UnknownAsert",
                   with: {}
@@ -723,7 +723,7 @@ test("runScriptRemotely", async () => {
               includes: [
                 "b.shovel",
               ],
-              assertions: [
+              statements: [
                 {
                   assert: "Something",
                   with: {},
@@ -733,7 +733,7 @@ test("runScriptRemotely", async () => {
             }`
           case "/x/b.shovel":
             return `{
-              assertions: [],
+              statements: [],
             }`
           default:
             throw new Error()

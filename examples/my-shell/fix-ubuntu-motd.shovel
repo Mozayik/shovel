@@ -2,7 +2,7 @@
   vars: {
     motdDir: "/etc/update-motd.d",
   },
-  assertions: [
+  statements: [
     {
       assert: "FilesDeleted",
       with: {

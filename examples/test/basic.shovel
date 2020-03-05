@@ -8,7 +8,7 @@
     testDir2: "shvl-dir-2",
     testFile1: "shvl-file-1",
   },
-  assertions: [
+  statements: [
     {
       description: "Create Scratch Directory",
       assert: "DirectoryExists",

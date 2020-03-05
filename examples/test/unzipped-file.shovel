@@ -2,7 +2,7 @@
   metadata: {
     description: "Unzip file",
   },
-  assertions: [
+  statements: [
     {
       assert: "ZipFileUnzipped",
       with: {

@@ -4,22 +4,22 @@
   vars: {
     serviceFilePath: "~/.config/systemd/user/ssh-agent.service",
     local: {
-      serviceContent: "{fs.readFile(path.join(sys.scriptDir,'templates/ssh-agent.service'))}"
-    }
+      serviceContent: "{fs.readFile(path.join(sys.scriptDir,'templates/ssh-agent.service'))}",
+    },
   },
-  assertions: [
+  statements: [
     {
       assert: "FileExists",
       with: {
-        file: "{vars.serviceFilePath}"
-      }
+        file: "{vars.serviceFilePath}",
+      },
     },
     {
       assert: "FileContains",
       with: {
         file: "{vars.serviceFilePath}",
         contents: "{vars.local.serviceContent}",
-      }
-    }
-  ]
+      },
+    },
+  ],
 }

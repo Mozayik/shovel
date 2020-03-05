@@ -2,7 +2,7 @@
   vars: {
     vimrc: "{path.join(user.homeDir,'.vimrc')}",
   },
-  assertions: [
+  statements: [
     {
       assert: "FileExists",
       with: {
