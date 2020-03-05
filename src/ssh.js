@@ -29,6 +29,7 @@ export class SSH {
     let exitCode = null
     let ready = false
     let permissionDenied = false
+    let connectionRefused = false
     let passphraseRequired = false
     let loginPasswordPrompt = null
     let sudoPasswordPrompt = null
@@ -61,6 +62,8 @@ export class SSH {
         } else {
           this.partialJsonLine = line
         }
+      } else if (line.endsWith(": Connection refused")) {
+        connectionRefused = true
       } else if (line.startsWith("error:") || line.startsWith("warning:")) {
         errorLines.push(line)
       } else if (/^\d+$/.test(line)) {
@@ -98,6 +101,7 @@ export class SSH {
       exitCode,
       ready,
       permissionDenied,
+      connectionRefused,
       passphraseRequired,
       loginPasswordPrompt,
       sudoPasswordPrompt,
@@ -150,6 +154,7 @@ export class SSH {
       const dataHandler = ({
         ready,
         permissionDenied,
+        connectionRefused,
         passphraseRequired,
         loginPasswordPrompt,
         verificationPrompt,
@@ -166,6 +171,8 @@ export class SSH {
               `Unable to connect to ${options.host}; bad password or key`
             )
           )
+        } else if (connectionRefused) {
+          reject(new Error(`Connection was refused by ${options.host}`))
         } else if (passphraseRequired) {
           dataEvent.dispose()
           reject(new Error("Use of SSH key requires a passphrase"))

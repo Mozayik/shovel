@@ -27,7 +27,7 @@ test("parseLines", async () => {
     console: { log: () => null },
   })
   let result = ssh.parseLines(
-    "Enter passphrase for xxx\nVerification code:\nerror:\nfred@localhost's password:\nfred@localhost: Permission denied\n[sudo] password for\nabc\n/x/y/z\nv1.2.3\n{}\n> start\n0\nPS1>\n"
+    "Enter passphrase for xxx\nVerification code:\nerror:\nfred@localhost's password:\nfred@localhost: Permission denied\nxyz: Connection refused\n[sudo] password for\nabc\n/x/y/z\nv1.2.3\n{}\n> start\n0\nPS1>\n"
   )
 
   expect(result).toEqual({
@@ -38,6 +38,7 @@ test("parseLines", async () => {
     exitCode: 0,
     ready: false,
     permissionDenied: true,
+    connectionRefused: true,
     passphraseRequired: true,
     loginPasswordPrompt: "fred@localhost's password:",
     sudoPasswordPrompt: "[sudo] password for",
@@ -55,6 +56,7 @@ test("parseLines", async () => {
     exitCode: null,
     ready: false,
     permissionDenied: false,
+    connectionRefused: false,
     passphraseRequired: false,
     loginPasswordPrompt: null,
     sudoPasswordPrompt: null,
@@ -138,6 +140,13 @@ test("connect", async () => {
   await expect(ssh.connect({ host: "host" })).rejects.toThrow(
     "Unable to connect"
   )
+
+  // Connection refused
+  ssh.close()
+  setImmediate(() => {
+    pty.emit("data", "x@y: Connection refused")
+  })
+  await expect(ssh.connect({ host: "host" })).rejects.toThrow("refused")
 
   // Passphrase required
   setImmediate(() => {
