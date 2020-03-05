@@ -139,7 +139,7 @@ export class ShovelTool {
     return (
       result.exitCode === 0 &&
       result.output.length > 0 &&
-      result.output[0].startsWith(version.shortVersion)
+      semver.gte(semver.clean(result.output[0]), version.shortVersion)
     )
   }
 
