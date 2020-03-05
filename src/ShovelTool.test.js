@@ -236,24 +236,24 @@ test("loadScriptFile", async () => {
   // Clean script
   container.fs.readFile = async (path) =>
     `{
-      settings: {},
+      metadata: {},
       includes: ["something.shovel"],
       vars: { a: 1, b: null, c: [1,2,3], d: { x: "x" }},
       assertions: [{assert: "Thing", with: {}}],
     }`
   await expect(tool.loadScriptFile("test.shovel")).resolves.not.toBeNull()
 
-  // Bad settings
+  // Bad metadata
   container.fs.readFile = async (path) =>
     `{
-      settings: [],
+      metadata: [],
     }`
   await expect(tool.loadScriptFile("test.shovel")).rejects.toThrow(ScriptError)
 
   // Bad description
   container.fs.readFile = async (path) =>
     `{
-      settings: {description: 1},
+      metadata: {description: 1},
     }`
   await expect(tool.loadScriptFile("test.shovel")).rejects.toThrow(ScriptError)
 
@@ -599,7 +599,7 @@ test("runScriptLocally", async () => {
         switch (path) {
           case "/x/a.shovel":
             return `{
-              settings: {
+              metadata: {
                 description: "test",
               },
               assertions: [
@@ -644,14 +644,14 @@ test("runScriptLocally", async () => {
             }`
           case "/x/d.shovel":
             return `{
-              settings: {
+              metadata: {
                 description: "test",
                 when: false
               }
             }`
           case "/x/e.shovel":
             return `{
-              settings: {
+              metadata: {
                 when: "{}"
               }
             }`

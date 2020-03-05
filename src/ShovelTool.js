@@ -222,7 +222,7 @@ export class ShovelTool {
 
     let {
       includes: includesNode,
-      settings: settingsNode,
+      metadata: metadataNode,
       vars: varsNode,
       assertions: assertionsNode,
     } = scriptNode.value
@@ -231,8 +231,8 @@ export class ShovelTool {
       scriptNode.value.includes = includesNode = createArrayNode()
     }
 
-    if (!settingsNode) {
-      scriptNode.value.settings = settingsNode = createObjectNode()
+    if (!metadataNode) {
+      scriptNode.value.metadata = metadataNode = createObjectNode()
     }
 
     if (!varsNode) {
@@ -262,11 +262,11 @@ export class ShovelTool {
       }
     }
 
-    if (settingsNode.type !== "object") {
-      throw new ScriptError("'settings' must be an object", settingsNode)
+    if (metadataNode.type !== "object") {
+      throw new ScriptError("'metadata' must be an object", metadataNode)
     }
 
-    const { description: descriptionNode } = settingsNode.value
+    const { description: descriptionNode } = metadataNode.value
 
     if (descriptionNode && descriptionNode.type !== "string") {
       throw new ScriptError("'description' must be a string", descriptionNode)
@@ -537,14 +537,14 @@ export class ShovelTool {
 
       const {
         assertions: assertionsNode,
-        settings: settingsNode,
+        metadata: metadataNode,
       } = scriptNode.value
 
-      if (Object.keys(settingsNode.value).length > 0) {
+      if (Object.keys(metadataNode.value).length > 0) {
         const {
           when: whenNode,
           description: descriptionNode,
-        } = settingsNode.value
+        } = metadataNode.value
 
         if (descriptionNode) {
           this.log.output(`\{ description: "${descriptionNode.value}" \}`)
@@ -556,7 +556,7 @@ export class ShovelTool {
             (whenNode.type === "string" && Boolean(interpolator(whenNode))))
         ) {
           this.log.info(
-            `Not running '${scriptPath}' because settings.when is false`
+            `Not running '${scriptPath}' because metadata.when is false`
           )
           return
         }

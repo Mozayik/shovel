@@ -23,8 +23,8 @@ Here is a Shovel script that creates some directories and files on a remote syst
 
 ```json5
 {
-  // Global settings for the script go here
-  settings: {
+  // Global metadata for the script go here
+  metadata: {
     description: "A basic script",
   },
   // Global variables go here
@@ -86,14 +86,14 @@ The *design goals* of Shovel are:
 
 Shovel scripts can have either a `.json5` extension, or if you want to be able to identify the scripts from the command line, a `.shovel` extension is recommended. Shovel scripts are made up of:
 
-1. `settings`
+1. `metadata`
 2. `vars`
 3. `includes`
 4. `assertions`
 
 Scripts are a sequence of assertions executed sequentially. The order of the assertions is important. Later assertions can expect the assertions higher up in the script to have either be true or to have been rectified to be true.  Note that it is fine to write a script where all the assertions are not expected to be true each time the script is run.  For example, you might write a script to stop a service so you can set some configuration files, then start the service again.  The stop/start assertions will always be triggered.  The important thing is that assertions ensure that the script doesn't make changes it doesn't have too.  This is really helpful when restarting a script after an unexpected failure, for example.
 
-### `settings`
+### `metadata`
 
 Settings are just metadata for the script.  The following metadata is supported:
 

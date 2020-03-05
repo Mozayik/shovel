@@ -1,6 +1,6 @@
 # Settings
 
-`settings` is simply a place to put data about the script.
+`metadata` is simply a place to put data about the script.
 
 | Name          | Type                  | Default     | Description                                                                        |
 | ------------- | --------------------- | ----------- | ---------------------------------------------------------------------------------- |

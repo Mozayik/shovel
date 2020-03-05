@@ -1,5 +1,5 @@
 {
-  settings: {
+  metadata: {
     description: "A basic script",
   },
   includes: ["./empty.json5"],
