@@ -541,25 +541,13 @@ export class ShovelTool {
       } = scriptNode.value
 
       if (Object.keys(metadataNode.value).length > 0) {
-        const {
-          when: whenNode,
-          description: descriptionNode,
-        } = metadataNode.value
-
-        if (descriptionNode) {
-          this.log.output(`\{ description: "${descriptionNode.value}" \}`)
-        }
-
-        if (
-          whenNode &&
-          ((whenNode.type === "boolean" && !whenNode.value) ||
-            (whenNode.type === "string" && Boolean(interpolator(whenNode))))
-        ) {
-          this.log.info(
-            `Not running '${scriptPath}' because metadata.when is false`
+        this.log.output(
+          JSON5.stringify(
+            JSON5.simplify(metadataNode.value),
+            null,
+            this.debug ? "  " : null
           )
-          return
-        }
+        )
       }
 
       this.log.info(`Running '${scriptPath}'`)

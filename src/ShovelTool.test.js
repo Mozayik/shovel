@@ -626,6 +626,9 @@ test("runScriptLocally", async () => {
             }`
           case "/x/b.shovel":
             return `{
+              metadata: {
+                description: "test",
+              },
               statements: [
                 {
                   assert: "TestAssert",
@@ -641,19 +644,6 @@ test("runScriptLocally", async () => {
                   with: {}
                 }
               ]
-            }`
-          case "/x/d.shovel":
-            return `{
-              metadata: {
-                description: "test",
-                when: false
-              }
-            }`
-          case "/x/e.shovel":
-            return `{
-              metadata: {
-                when: "{}"
-              }
             }`
           default:
             throw new Error()
@@ -682,10 +672,6 @@ test("runScriptLocally", async () => {
   await expect(tool.runScriptLocally("/x/a.shovel")).rejects.toThrow(
     "not running as root"
   )
-
-  // When says no
-  await expect(tool.runScriptLocally("/x/d.shovel")).resolves.toBeUndefined()
-  await expect(tool.runScriptLocally("/x/e.shovel")).resolves.toBeUndefined()
 
   // No becomes and only asserts
   tool.debug = false
