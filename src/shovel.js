@@ -19,7 +19,11 @@ class Log {
 
   output(line) {
     this.stopSpinner()
-    if (line.startsWith("{rectified") || line.startsWith("{wouldRectify")) {
+    if (
+      line.startsWith("{rectified") ||
+      line.startsWith("{wouldRectify") ||
+      line.startsWith("{performed")
+    ) {
       console.log(chalk.yellow(line))
     } else if (line.startsWith("{asserted")) {
       console.log(chalk.green(line))

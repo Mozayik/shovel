@@ -68,7 +68,9 @@ export class FilesDeleted {
     }
   }
 
-  result(rectified) {
-    return { files: rectified ? this.unlinkFilePaths : this.filePaths }
+  result() {
+    return {
+      files: this.unlinkFilePaths === 0 ? this.filePaths : this.unlinkFilePaths,
+    }
   }
 }

@@ -130,7 +130,7 @@ export class GroupExists {
     this.gid = group.gid
   }
 
-  result(rectified) {
+  result() {
     return { group: this.expandedGroupName, gid: this.gid }
   }
 }

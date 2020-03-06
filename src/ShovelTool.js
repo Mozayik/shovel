@@ -8,6 +8,7 @@ import path from "path"
 import JSON5 from "@johnls/json5"
 import autobind from "autobind-decorator"
 import * as asserters from "./asserters"
+import * as actions from "./actions"
 import util from "./util"
 import { ScriptError } from "./ScriptError"
 import semver from "semver"
@@ -20,6 +21,7 @@ export class ShovelTool {
     this.log = container.log
     this.util = container.util || util
     this.asserters = container.asserters || asserters
+    this.actions = container.actions || actions
     this.process = container.process || process
     this.createSsh = container.createSsh || ((options) => new SSH(options))
     this.createSftp = container.createSftp || ((options) => new SFTP(options))
@@ -555,6 +557,7 @@ export class ShovelTool {
       for (const statementNode of statementsNode.value) {
         const {
           assert: assertNode,
+          action: actionNode,
           when: whenNode,
           become: becomeNode,
           description: descriptionNode,
@@ -569,22 +572,6 @@ export class ShovelTool {
           }
         }
 
-        const Asserter = this.asserters[assertNode.value]
-
-        if (!Asserter) {
-          throw new ScriptError(
-            `${assertNode.value} is not a valid asserter`,
-            statementNode
-          )
-        }
-
-        const asserter = new Asserter({
-          interpolator,
-          runContext,
-        })
-        let result = {}
-        let rectified = false
-
         if (becomeNode && becomeNode.value) {
           this.process.setegid(0)
           this.process.seteuid(0)
@@ -593,25 +580,59 @@ export class ShovelTool {
           this.process.seteuid(sudo.uid)
         }
 
-        this.log.startSpinner(assertNode.value)
+        let result = {}
 
-        if (!(await asserter.assert(statementNode))) {
-          if (options.assertOnly) {
-            result.wouldRectify = assertNode.value
-          } else {
-            await asserter.rectify()
-            rectified = true
-            result.rectified = assertNode.value
+        if (assertNode) {
+          const Asserter = this.asserters[assertNode.value]
+
+          if (!Asserter) {
+            throw new ScriptError(
+              `${assertNode.value} is not a valid asserter`,
+              statementNode
+            )
           }
+
+          const asserter = new Asserter({
+            interpolator,
+            runContext,
+          })
+
+          this.log.startSpinner(assertNode.value)
+
+          if (!(await asserter.assert(statementNode))) {
+            if (options.assertOnly) {
+              result.wouldRectify = assertNode.value
+            } else {
+              await asserter.rectify()
+              result.rectified = assertNode.value
+            }
+          } else {
+            result.asserted = assertNode.value
+          }
+
+          Object.assign(result, asserter.result())
         } else {
-          result.asserted = assertNode.value
+          const Action = this.actions[actionNode.value]
+
+          if (!Action) {
+            throw new ScriptError(
+              `${actionNode.value} is not a valid action`,
+              actionNode
+            )
+          }
+
+          this.log.startSpinner(actionNode.value)
+
+          const action = new Action({ interpolator, runContext })
+
+          await action.perform()
+
+          Object.assign(result, action.result())
         }
 
         if (descriptionNode) {
           result.description = descriptionNode.value
         }
-
-        Object.assign(result, asserter.result(rectified))
 
         runContext.results.push(result)
 
