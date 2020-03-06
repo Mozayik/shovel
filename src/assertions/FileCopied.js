@@ -14,6 +14,12 @@ export class FileCopied {
     const withNode = assertNode.value.with
     const { fromFile: fromFileNode, toFile: toFileNode } = withNode.value
 
+    // TODO: Make this work: AssertionBase.parseArguments method, interpolate and put vars in this
+    // this.parseArguments(assertNode, {
+    //   fromFile: {type: "string"},
+    //   toFile: {type: "string"},
+    // })
+
     if (!fromFileNode || fromFileNode.type !== "string") {
       throw new ScriptError(
         "'fromFile' must be supplied and be a string",
@@ -31,6 +37,7 @@ export class FileCopied {
     this.toFilePath = this.interpolator(toFileNode)
     this.fromFilePath = this.interpolator(fromFileNode)
 
+    // TODO: Check for existence separate from access
     if (
       !(await this.util.pathInfo(this.fromFilePath)).getAccess().isReadable()
     ) {
@@ -41,15 +48,10 @@ export class FileCopied {
     }
 
     if (!(await this.util.pathInfo(this.toFilePath)).isFile()) {
-      if (
-        !(await this.util.pathInfo(path.dirname(this.toFilePath)))
-          .getAccess()
-          .isWriteable()
-      ) {
-        throw new ScriptError(
-          `Cannot write to parent directory of ${this.toFilePath}`,
-          toFileNode
-        )
+      const parentDir = path.dirname(this.toFilePath)
+
+      if (!(await this.util.pathInfo(parentDir)).getAccess().isWriteable()) {
+        throw new ScriptError(`Cannot write to '${parentDir}'`, toFileNode)
       }
 
       return false

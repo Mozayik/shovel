@@ -1,0 +1,11 @@
+{
+  includes: ["common.shovel"],
+  statements: [
+    {
+      assert: "FileExists",
+      with: {
+        file: "{path.join(sys.scriptDir, 'common.shovel')}",
+      },
+    },
+  ],
+}

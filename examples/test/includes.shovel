@@ -1,0 +1,3 @@
+{
+  includes: ["more/simple.shovel"],
+}
