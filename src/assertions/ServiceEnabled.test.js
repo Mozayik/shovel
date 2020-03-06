@@ -22,30 +22,30 @@ test("assert", async () => {
     },
   }
 
-  const asserter = new ServiceEnabled(container)
+  const assertion = new ServiceEnabled(container)
 
   // Bad args
-  await expect(asserter.assert(createAssertNode(asserter, {}))).rejects.toThrow(
-    ScriptError
-  )
   await expect(
-    asserter.assert(createAssertNode(asserter, { service: 1 }))
+    assertion.assert(createAssertNode(assertion, {}))
+  ).rejects.toThrow(ScriptError)
+  await expect(
+    assertion.assert(createAssertNode(assertion, { service: 1 }))
   ).rejects.toThrow(ScriptError)
 
   // Happy path
   await expect(
-    asserter.assert(createAssertNode(asserter, { service: "service" }))
+    assertion.assert(createAssertNode(assertion, { service: "service" }))
   ).resolves.toBe(true)
 
   // With service disabled
   await expect(
-    asserter.assert(createAssertNode(asserter, { service: "otherService" }))
+    assertion.assert(createAssertNode(assertion, { service: "otherService" }))
   ).resolves.toBe(false)
 
   // With service disabled and not root
   container.util.runningAsRoot = () => false
   await expect(
-    asserter.assert(createAssertNode(asserter, { service: "otherService" }))
+    assertion.assert(createAssertNode(assertion, { service: "otherService" }))
   ).rejects.toThrow(ScriptError)
 })
 
@@ -60,20 +60,20 @@ test("rectify", async () => {
       },
     },
   }
-  const asserter = new ServiceEnabled(container)
+  const assertion = new ServiceEnabled(container)
 
-  asserter.expandedServiceName = "service"
+  assertion.expandedServiceName = "service"
 
-  await expect(asserter.rectify()).resolves.toBeUndefined()
+  await expect(assertion.rectify()).resolves.toBeUndefined()
 })
 
 test("result", () => {
-  const asserter = new ServiceEnabled({})
+  const assertion = new ServiceEnabled({})
 
-  asserter.expandedServiceName = "otherService"
+  assertion.expandedServiceName = "otherService"
 
-  expect(asserter.result()).toEqual({
-    service: asserter.expandedServiceName,
+  expect(assertion.result()).toEqual({
+    service: assertion.expandedServiceName,
     enabled: true,
   })
 })

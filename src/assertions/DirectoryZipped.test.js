@@ -89,40 +89,40 @@ test("assert", async () => {
       }),
     },
   }
-  const asserter = new DirectoryZipped(container)
+  const assertion = new DirectoryZipped(container)
 
   // Bad zip arg
-  await expect(asserter.assert(createAssertNode(asserter, {}))).rejects.toThrow(
-    ScriptError
-  )
   await expect(
-    asserter.assert(createAssertNode(asserter, { zipFile: 1 }))
+    assertion.assert(createAssertNode(assertion, {}))
+  ).rejects.toThrow(ScriptError)
+  await expect(
+    assertion.assert(createAssertNode(assertion, { zipFile: 1 }))
   ).rejects.toThrow(ScriptError)
 
   // Bad from arg
   await expect(
-    asserter.assert(createAssertNode(asserter, { zipFile: "" }))
+    assertion.assert(createAssertNode(assertion, { zipFile: "" }))
   ).rejects.toThrow(ScriptError)
   await expect(
-    asserter.assert(createAssertNode(asserter, { zipFile: "", directory: 1 }))
+    assertion.assert(createAssertNode(assertion, { zipFile: "", directory: 1 }))
   ).rejects.toThrow(ScriptError)
 
   // Bad globs arg
   await expect(
-    asserter.assert(
-      createAssertNode(asserter, { zipFile: "", directory: "", globs: 1 })
+    assertion.assert(
+      createAssertNode(assertion, { zipFile: "", directory: "", globs: 1 })
     )
   ).rejects.toThrow(ScriptError)
   await expect(
-    asserter.assert(
-      createAssertNode(asserter, { zipFile: "", directory: "", globs: [1] })
+    assertion.assert(
+      createAssertNode(assertion, { zipFile: "", directory: "", globs: [1] })
     )
   ).rejects.toThrow(ScriptError)
 
   // With from directory not present or inaccessible
   await expect(
-    asserter.assert(
-      createAssertNode(asserter, {
+    assertion.assert(
+      createAssertNode(assertion, {
         zipFile: "./somefile.zip",
         directory: "./missing",
         globs: ["*"],
@@ -132,8 +132,8 @@ test("assert", async () => {
 
   // With zip not present
   await expect(
-    asserter.assert(
-      createAssertNode(asserter, {
+    assertion.assert(
+      createAssertNode(assertion, {
         zipFile: "./otherfile.zip",
         directory: "./fromdir",
         globs: ["*"],
@@ -143,8 +143,8 @@ test("assert", async () => {
 
   // With all files zipped and the same
   await expect(
-    asserter.assert(
-      createAssertNode(asserter, {
+    assertion.assert(
+      createAssertNode(assertion, {
         zipFile: "./somefile.zip",
         directory: "./fromdir",
       })
@@ -153,8 +153,8 @@ test("assert", async () => {
 
   // With a file missing
   await expect(
-    asserter.assert(
-      createAssertNode(asserter, {
+    assertion.assert(
+      createAssertNode(assertion, {
         zipFile: "./withfilemissing.zip",
         directory: "./fromdir",
       })
@@ -166,8 +166,8 @@ test("assert", async () => {
     throw new Error()
   }
   await expect(
-    asserter.assert(
-      createAssertNode(asserter, {
+    assertion.assert(
+      createAssertNode(assertion, {
         zipFile: "./somefile.zip",
         directory: "./fromdir",
       })
@@ -205,32 +205,32 @@ test("rectify", async () => {
       },
     },
   }
-  const asserter = new DirectoryZipped(container)
+  const assertion = new DirectoryZipped(container)
 
-  asserter.expandedDirectory = "/from"
-  asserter.expandedZipFile = "a.zip"
-  asserter.zipFileExists = true
-  asserter.files = ["a.txt"]
+  assertion.expandedDirectory = "/from"
+  assertion.expandedZipFile = "a.zip"
+  assertion.zipFileExists = true
+  assertion.files = ["a.txt"]
 
-  await expect(asserter.rectify()).resolves.toBeUndefined()
+  await expect(assertion.rectify()).resolves.toBeUndefined()
 
-  asserter.zipFileExists = false
+  assertion.zipFileExists = false
 
-  await expect(asserter.rectify()).resolves.toBeUndefined()
+  await expect(assertion.rectify()).resolves.toBeUndefined()
 })
 
 test("result", () => {
-  const asserter = new DirectoryZipped({})
+  const assertion = new DirectoryZipped({})
 
-  asserter.expandedZipFile = "/a.zip"
-  asserter.expandedDirectory = "/from"
-  asserter.globs = "*"
-  asserter.files = ["a.txt"]
+  assertion.expandedZipFile = "/a.zip"
+  assertion.expandedDirectory = "/from"
+  assertion.globs = "*"
+  assertion.files = ["a.txt"]
 
-  expect(asserter.result()).toEqual({
-    zipFile: asserter.expandedZipFile,
-    directory: asserter.expandedDirectory,
-    globs: asserter.globs,
-    files: asserter.files,
+  expect(assertion.result()).toEqual({
+    zipFile: assertion.expandedZipFile,
+    directory: assertion.expandedDirectory,
+    globs: assertion.globs,
+    files: assertion.files,
   })
 })

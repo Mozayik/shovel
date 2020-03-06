@@ -82,20 +82,20 @@ test("assert", async () => {
     },
   }
 
-  const asserter = new FileExists(container)
+  const assertion = new FileExists(container)
 
   // Missing args
-  await expect(asserter.assert(createAssertNode(asserter, {}))).rejects.toThrow(
-    ScriptError
-  )
   await expect(
-    asserter.assert(createAssertNode(asserter, { file: 1 }))
+    assertion.assert(createAssertNode(assertion, {}))
+  ).rejects.toThrow(ScriptError)
+  await expect(
+    assertion.assert(createAssertNode(assertion, { file: 1 }))
   ).rejects.toThrow(ScriptError)
 
   // File exists
   await expect(
-    asserter.assert(
-      createAssertNode(asserter, {
+    assertion.assert(
+      createAssertNode(assertion, {
         file: "/file1",
         owner: { uid: 0, gid: 0 },
         mode: { user: "rw-", group: "r--", other: "r--" },
@@ -105,8 +105,8 @@ test("assert", async () => {
 
   // File exists with different group owner
   await expect(
-    asserter.assert(
-      createAssertNode(asserter, {
+    assertion.assert(
+      createAssertNode(assertion, {
         file: "/file2",
         owner: { uid: 0, gid: 0 },
         mode: { user: "rw-", group: "r--", other: "r--" },
@@ -116,8 +116,8 @@ test("assert", async () => {
 
   // Directory exists instead
   await expect(
-    asserter.assert(
-      createAssertNode(asserter, {
+    assertion.assert(
+      createAssertNode(assertion, {
         file: "/bar",
       })
     )
@@ -129,8 +129,8 @@ test("assert", async () => {
     gid: 10,
   }))
   await expect(
-    asserter.assert(
-      createAssertNode(asserter, {
+    assertion.assert(
+      createAssertNode(assertion, {
         file: "/file2",
         owner: { uid: 0, gid: 0 },
         mode: { user: "rw-", group: "r--", other: "r--" },
@@ -144,8 +144,8 @@ test("assert", async () => {
     gid: 0,
   }))
   await expect(
-    asserter.assert(
-      createAssertNode(asserter, {
+    assertion.assert(
+      createAssertNode(assertion, {
         file: "/file3",
         owner: { uid: 0, gid: 0 },
         mode: { user: "rw-", group: "r--", other: "r--" },
@@ -159,8 +159,8 @@ test("assert", async () => {
     gid: 10,
   }))
   await expect(
-    asserter.assert(
-      createAssertNode(asserter, {
+    assertion.assert(
+      createAssertNode(assertion, {
         file: "/file4",
         owner: { uid: 0, gid: 0 },
         mode: { user: "rw-", group: "r--", other: "r--" },
@@ -174,13 +174,13 @@ test("assert", async () => {
 
   // File does not exist and root directory accessible
   await expect(
-    asserter.assert(createAssertNode(asserter, { file: "/bar/notthere" }))
+    assertion.assert(createAssertNode(assertion, { file: "/bar/notthere" }))
   ).resolves.toBe(false)
 
   // File does not exist and root directory not accessible
   container.util.canAccess = jest.fn(async () => false)
   await expect(
-    asserter.assert(createAssertNode(asserter, { file: "/foo/notthere" }))
+    assertion.assert(createAssertNode(assertion, { file: "/foo/notthere" }))
   ).rejects.toThrow(ScriptError)
 })
 
@@ -193,19 +193,19 @@ test("rectify", async () => {
       chmod: async (path, mode) => null,
     },
   }
-  const asserter = new FileExists(container)
+  const assertion = new FileExists(container)
 
-  asserter.filePath = "/notthere"
-  asserter.mode = 0o777
-  asserter.owner = { uid: 0, gid: 0 }
+  assertion.filePath = "/notthere"
+  assertion.mode = 0o777
+  assertion.owner = { uid: 0, gid: 0 }
 
-  await expect(asserter.rectify()).resolves.toBeUndefined()
+  await expect(assertion.rectify()).resolves.toBeUndefined()
 })
 
 test("result", () => {
-  const asserter = new FileExists({})
+  const assertion = new FileExists({})
 
-  asserter.filePath = "/notthere"
+  assertion.filePath = "/notthere"
 
-  expect(asserter.result()).toEqual({ file: asserter.filePath })
+  expect(assertion.result()).toEqual({ file: assertion.filePath })
 })

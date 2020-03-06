@@ -12,12 +12,12 @@ test("assert", async () => {
       runningAsRoot: jest.fn(() => true),
     },
   }
-  const asserter = new SystemPackageRemoved(container)
+  const assertion = new SystemPackageRemoved(container)
 
   // Not supported OS
   container.util.osInfo = jest.fn(async () => ({ platform: "windows" }))
   await expect(
-    asserter.assert(createAssertNode(asserter, { package: "test" }))
+    assertion.assert(createAssertNode(assertion, { package: "test" }))
   ).rejects.toThrow(ScriptError)
 
   // Missing package
@@ -25,13 +25,13 @@ test("assert", async () => {
     platform: "linux",
     id: "ubuntu",
   }))
-  await expect(asserter.assert(createAssertNode(asserter, {}))).rejects.toThrow(
-    ScriptError
-  )
+  await expect(
+    assertion.assert(createAssertNode(assertion, {}))
+  ).rejects.toThrow(ScriptError)
 
   // Bad package
   await expect(
-    asserter.assert(createAssertNode(asserter, { package: 1 }))
+    assertion.assert(createAssertNode(assertion, { package: 1 }))
   ).rejects.toThrow(ScriptError)
 
   // Package not present on Ubuntu
@@ -39,7 +39,7 @@ test("assert", async () => {
     throw new Error()
   })
   await expect(
-    asserter.assert(createAssertNode(asserter, { package: "there" }))
+    assertion.assert(createAssertNode(assertion, { package: "there" }))
   ).resolves.toBe(true)
 
   // Package not present on CentOS
@@ -48,7 +48,7 @@ test("assert", async () => {
     id: "centos",
   }))
   await expect(
-    asserter.assert(createAssertNode(asserter, { package: "there" }))
+    assertion.assert(createAssertNode(assertion, { package: "there" }))
   ).resolves.toBe(true)
 
   // Package present and running as root
@@ -57,13 +57,13 @@ test("assert", async () => {
     stderr: "",
   }))
   await expect(
-    asserter.assert(createAssertNode(asserter, { package: "notthere" }))
+    assertion.assert(createAssertNode(assertion, { package: "notthere" }))
   ).resolves.toBe(false)
 
   // Package present and not running as root
   container.util.runningAsRoot = jest.fn(() => false)
   await expect(
-    asserter.assert(createAssertNode(asserter, { package: "there" }))
+    assertion.assert(createAssertNode(assertion, { package: "there" }))
   ).rejects.toThrow(ScriptError)
 })
 
@@ -80,17 +80,17 @@ test("rectify", async () => {
       runningAsRoot: jest.fn(() => true),
     },
   }
-  const asserter = new SystemPackageRemoved(container)
+  const assertion = new SystemPackageRemoved(container)
 
-  asserter.expandedPackageName = "somepackage"
+  assertion.expandedPackageName = "somepackage"
 
-  await expect(asserter.rectify()).resolves.toBeUndefined()
+  await expect(assertion.rectify()).resolves.toBeUndefined()
 })
 
 test("result", () => {
-  const asserter = new SystemPackageRemoved({})
+  const assertion = new SystemPackageRemoved({})
 
-  asserter.expandedPackageName = "somepackage"
+  assertion.expandedPackageName = "somepackage"
 
-  expect(asserter.result()).toEqual({ package: asserter.expandedPackageName })
+  expect(assertion.result()).toEqual({ package: assertion.expandedPackageName })
 })

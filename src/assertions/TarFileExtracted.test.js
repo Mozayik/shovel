@@ -73,40 +73,42 @@ test("assert", async () => {
       },
     },
   }
-  const asserter = new TarFileExtracted(container)
+  const assertion = new TarFileExtracted(container)
 
   // Bad arguments
-  await expect(asserter.assert(createAssertNode(asserter, {}))).rejects.toThrow(
-    ScriptError
-  )
   await expect(
-    asserter.assert(createAssertNode(asserter, { file: 1 }))
+    assertion.assert(createAssertNode(assertion, {}))
   ).rejects.toThrow(ScriptError)
   await expect(
-    asserter.assert(
-      createAssertNode(asserter, { file: "/xyz/some.tar", toDirectory: 1 })
+    assertion.assert(createAssertNode(assertion, { file: 1 }))
+  ).rejects.toThrow(ScriptError)
+  await expect(
+    assertion.assert(
+      createAssertNode(assertion, { file: "/xyz/some.tar", toDirectory: 1 })
     )
   ).rejects.toThrow(ScriptError)
 
   // Happy path
   await expect(
-    asserter.assert(createAssertNode(asserter, { file: "/xyz/some.tar" }))
+    assertion.assert(createAssertNode(assertion, { file: "/xyz/some.tar" }))
   ).resolves.toBe(true)
 
   // With a file different
   await expect(
-    asserter.assert(createAssertNode(asserter, { file: "/xyz/other.tar" }))
+    assertion.assert(createAssertNode(assertion, { file: "/xyz/other.tar" }))
   ).resolves.toBe(false)
 
   // Unreadable tar
   await expect(
-    asserter.assert(createAssertNode(asserter, { file: "/xyz/unreadable.tar" }))
+    assertion.assert(
+      createAssertNode(assertion, { file: "/xyz/unreadable.tar" })
+    )
   ).rejects.toThrow(ScriptError)
 
   // Unreadable directory
   await expect(
-    asserter.assert(
-      createAssertNode(asserter, {
+    assertion.assert(
+      createAssertNode(assertion, {
         file: "/xyz/some.tar",
         toDirectory: "/unreadable",
       })
@@ -120,22 +122,22 @@ test("rectify", async () => {
       x: async () => undefined,
     },
   }
-  const asserter = new TarFileExtracted(container)
+  const assertion = new TarFileExtracted(container)
 
-  asserter.expandedFile = ""
-  asserter.expandedDirectory = ""
+  assertion.expandedFile = ""
+  assertion.expandedDirectory = ""
 
-  await expect(asserter.rectify()).resolves.toBeUndefined()
+  await expect(assertion.rectify()).resolves.toBeUndefined()
 })
 
 test("result", () => {
-  const asserter = new TarFileExtracted({})
+  const assertion = new TarFileExtracted({})
 
-  asserter.expandedFile = "some.tar"
-  asserter.expandedDirectory = ""
+  assertion.expandedFile = "some.tar"
+  assertion.expandedDirectory = ""
 
-  expect(asserter.result()).toEqual({
-    file: asserter.expandedFile,
-    toDirectory: asserter.expandedDirectory,
+  expect(assertion.result()).toEqual({
+    file: assertion.expandedFile,
+    toDirectory: assertion.expandedDirectory,
   })
 })

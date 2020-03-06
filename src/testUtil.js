@@ -23,9 +23,9 @@ export const createNode = (filename, value) => {
   return innerCreateNode(value)
 }
 
-export const createAssertNode = (asserter, args) => {
+export const createAssertNode = (assertion, args) => {
   return createNode("a.json5", {
-    assert: asserter.constructor.name,
+    assert: assertion.constructor.name,
     with: args,
   })
 }

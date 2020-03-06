@@ -31,31 +31,33 @@ test("assert", async () => {
     },
   }
 
-  const asserter = new FileHasCapability(container)
+  const assertion = new FileHasCapability(container)
 
   // Bad args
-  await expect(asserter.assert(createAssertNode(asserter, {}))).rejects.toThrow(
-    ScriptError
-  )
   await expect(
-    asserter.assert(createAssertNode(asserter, { file: 1 }))
+    assertion.assert(createAssertNode(assertion, {}))
   ).rejects.toThrow(ScriptError)
   await expect(
-    asserter.assert(createAssertNode(asserter, { file: "file" }))
+    assertion.assert(createAssertNode(assertion, { file: 1 }))
   ).rejects.toThrow(ScriptError)
   await expect(
-    asserter.assert(createAssertNode(asserter, { file: "file", capability: 1 }))
+    assertion.assert(createAssertNode(assertion, { file: "file" }))
   ).rejects.toThrow(ScriptError)
   await expect(
-    asserter.assert(
-      createAssertNode(asserter, { file: "file1", capability: "CAP_NOT_REAL" })
+    assertion.assert(
+      createAssertNode(assertion, { file: "file", capability: 1 })
+    )
+  ).rejects.toThrow(ScriptError)
+  await expect(
+    assertion.assert(
+      createAssertNode(assertion, { file: "file1", capability: "CAP_NOT_REAL" })
     )
   ).rejects.toThrow(ScriptError)
 
   // Happy path
   await expect(
-    asserter.assert(
-      createAssertNode(asserter, {
+    assertion.assert(
+      createAssertNode(assertion, {
         file: "/file1",
         capability: "CAP_NET_BIND_SERVICE",
       })
@@ -64,8 +66,8 @@ test("assert", async () => {
 
   // File does not exist
   await expect(
-    asserter.assert(
-      createAssertNode(asserter, {
+    assertion.assert(
+      createAssertNode(assertion, {
         file: "/file2",
         capability: "cap_audit_control",
       })
@@ -74,8 +76,8 @@ test("assert", async () => {
 
   // File not file
   await expect(
-    asserter.assert(
-      createAssertNode(asserter, {
+    assertion.assert(
+      createAssertNode(assertion, {
         file: "/file3",
         capability: "cap_audit_control",
       })
@@ -87,8 +89,8 @@ test("assert", async () => {
     throw new Error()
   }
   await expect(
-    asserter.assert(
-      createAssertNode(asserter, {
+    assertion.assert(
+      createAssertNode(assertion, {
         file: "/file1",
         capability: "cap_audit_control",
       })
@@ -98,8 +100,8 @@ test("assert", async () => {
   // Not running as root
   container.util.runningAsRoot = () => false
   await expect(
-    asserter.assert(
-      createAssertNode(asserter, {
+    assertion.assert(
+      createAssertNode(assertion, {
         file: "/file1",
         capability: "cap_audit_control",
       })
@@ -113,22 +115,22 @@ test("rectify", async () => {
       exec: jest.fn(async () => undefined),
     },
   }
-  const asserter = new FileHasCapability(container)
+  const assertion = new FileHasCapability(container)
 
-  asserter.filePath = "/notthere"
-  asserter.capability = "cap_net_bind_service"
+  assertion.filePath = "/notthere"
+  assertion.capability = "cap_net_bind_service"
 
-  await expect(asserter.rectify()).resolves.toBeUndefined()
+  await expect(assertion.rectify()).resolves.toBeUndefined()
 })
 
 test("result", () => {
-  const asserter = new FileHasCapability({})
+  const assertion = new FileHasCapability({})
 
-  asserter.filePath = "/notthere"
-  asserter.capability = "cap_net_bind_service"
+  assertion.filePath = "/notthere"
+  assertion.capability = "cap_net_bind_service"
 
-  expect(asserter.result()).toEqual({
-    file: asserter.filePath,
-    capability: asserter.capability,
+  expect(assertion.result()).toEqual({
+    file: assertion.filePath,
+    capability: assertion.capability,
   })
 })

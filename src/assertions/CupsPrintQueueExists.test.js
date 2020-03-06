@@ -76,29 +76,29 @@ Default cltx0`
     },
   }
 
-  const asserter = new CupsPrintQueueExists(container)
+  const assertion = new CupsPrintQueueExists(container)
 
   // Bad arguments
-  await expect(asserter.assert(createAssertNode(asserter, {}))).rejects.toThrow(
-    ScriptError
-  )
   await expect(
-    asserter.assert(createAssertNode(asserter, { queue: 1 }))
+    assertion.assert(createAssertNode(assertion, {}))
   ).rejects.toThrow(ScriptError)
   await expect(
-    asserter.assert(createAssertNode(asserter, { queue: "XYZ" }))
+    assertion.assert(createAssertNode(assertion, { queue: 1 }))
   ).rejects.toThrow(ScriptError)
   await expect(
-    asserter.assert(createAssertNode(asserter, { queue: "valid" }))
+    assertion.assert(createAssertNode(assertion, { queue: "XYZ" }))
   ).rejects.toThrow(ScriptError)
   await expect(
-    asserter.assert(
-      createAssertNode(asserter, { queue: "my-queue", deviceUri: true })
+    assertion.assert(createAssertNode(assertion, { queue: "valid" }))
+  ).rejects.toThrow(ScriptError)
+  await expect(
+    assertion.assert(
+      createAssertNode(assertion, { queue: "my-queue", deviceUri: true })
     )
   ).rejects.toThrow(ScriptError)
   await expect(
-    asserter.assert(
-      createAssertNode(asserter, {
+    assertion.assert(
+      createAssertNode(assertion, {
         queue: "my-queue",
         deviceUri: "ipp://",
         settleTime: "",
@@ -106,8 +106,8 @@ Default cltx0`
     )
   ).rejects.toThrow(ScriptError)
   await expect(
-    asserter.assert(
-      createAssertNode(asserter, {
+    assertion.assert(
+      createAssertNode(assertion, {
         queue: "my-queue",
         deviceUri: "ipp://",
         shared: "",
@@ -115,8 +115,8 @@ Default cltx0`
     )
   ).rejects.toThrow(ScriptError)
   await expect(
-    asserter.assert(
-      createAssertNode(asserter, {
+    assertion.assert(
+      createAssertNode(assertion, {
         queue: "my-queue",
         deviceUri: "ipp://",
         errorPolicy: 1,
@@ -124,8 +124,8 @@ Default cltx0`
     )
   ).rejects.toThrow(ScriptError)
   await expect(
-    asserter.assert(
-      createAssertNode(asserter, {
+    assertion.assert(
+      createAssertNode(assertion, {
         queue: "my-queue",
         deviceUri: "ipp://",
         errorPolicy: "invalid",
@@ -133,8 +133,8 @@ Default cltx0`
     )
   ).rejects.toThrow(ScriptError)
   await expect(
-    asserter.assert(
-      createAssertNode(asserter, {
+    assertion.assert(
+      createAssertNode(assertion, {
         queue: "my-queue",
         deviceUri: "ipp://",
         location: 1,
@@ -142,8 +142,8 @@ Default cltx0`
     )
   ).rejects.toThrow(ScriptError)
   await expect(
-    asserter.assert(
-      createAssertNode(asserter, {
+    assertion.assert(
+      createAssertNode(assertion, {
         queue: "my-queue",
         deviceUri: "ipp://",
         info: 1,
@@ -151,8 +151,8 @@ Default cltx0`
     )
   ).rejects.toThrow(ScriptError)
   await expect(
-    asserter.assert(
-      createAssertNode(asserter, {
+    assertion.assert(
+      createAssertNode(assertion, {
         queue: "my-queue",
         deviceUri: "ipp://",
         accepting: 1,
@@ -160,8 +160,8 @@ Default cltx0`
     )
   ).rejects.toThrow(ScriptError)
   await expect(
-    asserter.assert(
-      createAssertNode(asserter, {
+    assertion.assert(
+      createAssertNode(assertion, {
         queue: "my-queue",
         deviceUri: "ipp://",
         ppdFile: 1,
@@ -169,8 +169,8 @@ Default cltx0`
     )
   ).rejects.toThrow(ScriptError)
   await expect(
-    asserter.assert(
-      createAssertNode(asserter, {
+    assertion.assert(
+      createAssertNode(assertion, {
         queue: "my-queue",
         deviceUri: "ipp://",
         ppdFile: "/not/there.ppd",
@@ -178,8 +178,8 @@ Default cltx0`
     )
   ).rejects.toThrow(ScriptError)
   await expect(
-    asserter.assert(
-      createAssertNode(asserter, {
+    assertion.assert(
+      createAssertNode(assertion, {
         queue: "my-queue",
         deviceUri: "ipp://",
         ppdOptions: 1,
@@ -187,8 +187,8 @@ Default cltx0`
     )
   ).rejects.toThrow(ScriptError)
   await expect(
-    asserter.assert(
-      createAssertNode(asserter, {
+    assertion.assert(
+      createAssertNode(assertion, {
         queue: "my-queue",
         deviceUri: "ipp://",
         ppdOptions: {}, // Must have ppdFile
@@ -196,8 +196,8 @@ Default cltx0`
     )
   ).rejects.toThrow(ScriptError)
   await expect(
-    asserter.assert(
-      createAssertNode(asserter, {
+    assertion.assert(
+      createAssertNode(assertion, {
         queue: "my-queue",
         deviceUri: "ipp://",
         ppdFile: "/usr/local/drivers/printer1.ppd",
@@ -210,8 +210,8 @@ Default cltx0`
 
   // Happy path
   await expect(
-    asserter.assert(
-      createAssertNode(asserter, {
+    assertion.assert(
+      createAssertNode(assertion, {
         queue: "printer1",
         deviceUri: "serial:/dev/usb/lp0",
         errorPolicy: "abort-job",
@@ -228,8 +228,8 @@ Default cltx0`
 
   // Print queue does not exist
   await expect(
-    asserter.assert(
-      createAssertNode(asserter, {
+    assertion.assert(
+      createAssertNode(assertion, {
         queue: "printer3",
         deviceUri: "ipp://",
         shared: false,
@@ -243,8 +243,8 @@ Default cltx0`
 
   // Print queue is all different
   await expect(
-    asserter.assert(
-      createAssertNode(asserter, {
+    assertion.assert(
+      createAssertNode(assertion, {
         queue: "printer1",
         deviceUri: "ipp://",
         errorPolicy: "retry-job",
@@ -278,8 +278,8 @@ Default cltx0`
     }
   }
   await expect(
-    asserter.assert(
-      createAssertNode(asserter, {
+    assertion.assert(
+      createAssertNode(assertion, {
         queue: "printer3",
         deviceUri: "ipp://",
         ppdFile: "/usr/local/drivers/printer1.ppd",
@@ -293,8 +293,8 @@ Default cltx0`
   // Not running as root
   container.util.runningAsRoot = () => false
   await expect(
-    asserter.assert(
-      createAssertNode(asserter, {
+    assertion.assert(
+      createAssertNode(assertion, {
         queue: "printer1",
         deviceUri: "serial:/dev/usb/lp0",
       })
@@ -304,8 +304,8 @@ Default cltx0`
   // Bad /etc/cups/cupsd.confi
   container.fs.readFile = async () => "#Bad file\n"
   await expect(
-    asserter.assert(
-      createAssertNode(asserter, {
+    assertion.assert(
+      createAssertNode(assertion, {
         queue: "printer1",
         deviceUri: "serial:/dev/usb/lp0",
       })
@@ -318,8 +318,8 @@ Default cltx0`
     id: "unknown",
   })
   await expect(
-    asserter.assert(
-      createAssertNode(asserter, {
+    assertion.assert(
+      createAssertNode(assertion, {
         queue: "printer1",
         deviceUri: "serial:/dev/usb/lp0",
       })
@@ -336,61 +336,61 @@ test("rectify", async () => {
       exec: () => undefined,
     },
   }
-  const asserter = new CupsPrintQueueExists(container)
+  const assertion = new CupsPrintQueueExists(container)
 
-  asserter.queueName = "my-printer"
+  assertion.queueName = "my-printer"
 
-  await expect(asserter.rectify()).resolves.toBeUndefined()
+  await expect(assertion.rectify()).resolves.toBeUndefined()
 
-  asserter.updateFlags = 0xff
-  asserter.deviceUri = "ipp://"
-  asserter.errorPolicy = "abort-job"
-  asserter.share = true
-  asserter.accepting = true
-  asserter.ppdFile = "/x/y"
-  asserter.ppdOptions = { a: "b" }
-  asserter.settleTime = 2000
+  assertion.updateFlags = 0xff
+  assertion.deviceUri = "ipp://"
+  assertion.errorPolicy = "abort-job"
+  assertion.share = true
+  assertion.accepting = true
+  assertion.ppdFile = "/x/y"
+  assertion.ppdOptions = { a: "b" }
+  assertion.settleTime = 2000
 
-  await expect(asserter.rectify()).resolves.toBeUndefined()
+  await expect(assertion.rectify()).resolves.toBeUndefined()
 
-  asserter.accepting = false
+  assertion.accepting = false
 
-  await expect(asserter.rectify()).resolves.toBeUndefined()
+  await expect(assertion.rectify()).resolves.toBeUndefined()
 })
 
 test("result", () => {
-  const asserter = new CupsPrintQueueExists({})
+  const assertion = new CupsPrintQueueExists({})
 
-  asserter.queueName = "my-printer"
-  asserter.deviceUri = "ipp://somewhere.com:631/printer"
-  asserter.errorPolicy = "retry-current-job"
-  asserter.shared = false
-  asserter.accepting = false
+  assertion.queueName = "my-printer"
+  assertion.deviceUri = "ipp://somewhere.com:631/printer"
+  assertion.errorPolicy = "retry-current-job"
+  assertion.shared = false
+  assertion.accepting = false
 
-  expect(asserter.result()).toEqual({
-    queue: asserter.queueName,
-    deviceUri: asserter.deviceUri,
-    errorPolicy: asserter.errorPolicy,
-    shared: asserter.shared,
-    accepting: asserter.accepting,
+  expect(assertion.result()).toEqual({
+    queue: assertion.queueName,
+    deviceUri: assertion.deviceUri,
+    errorPolicy: assertion.errorPolicy,
+    shared: assertion.shared,
+    accepting: assertion.accepting,
   })
 
-  asserter.info = "x"
-  asserter.location = "y"
-  asserter.ppdFile = "/x/y"
-  asserter.ppdOptions = { a: "b" }
-  asserter.updateFlags = 0xff
+  assertion.info = "x"
+  assertion.location = "y"
+  assertion.ppdFile = "/x/y"
+  assertion.ppdOptions = { a: "b" }
+  assertion.updateFlags = 0xff
 
-  expect(asserter.result()).toEqual({
-    queue: asserter.queueName,
-    deviceUri: asserter.deviceUri,
-    errorPolicy: asserter.errorPolicy,
-    shared: asserter.shared,
-    accepting: asserter.accepting,
-    info: asserter.info,
-    location: asserter.location,
-    ppdFile: asserter.ppdFile,
-    ppdOptions: asserter.ppdOptions,
-    updateFlags: asserter.updateFlags,
+  expect(assertion.result()).toEqual({
+    queue: assertion.queueName,
+    deviceUri: assertion.deviceUri,
+    errorPolicy: assertion.errorPolicy,
+    shared: assertion.shared,
+    accepting: assertion.accepting,
+    info: assertion.info,
+    location: assertion.location,
+    ppdFile: assertion.ppdFile,
+    ppdOptions: assertion.ppdOptions,
+    updateFlags: assertion.updateFlags,
   })
 })

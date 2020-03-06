@@ -31,27 +31,29 @@ test("assert", async () => {
     },
   }
 
-  const asserter = new AutoToolProjectConfigured(container)
+  const assertion = new AutoToolProjectConfigured(container)
 
   // Bad args
-  await expect(asserter.assert(createAssertNode(asserter, {}))).rejects.toThrow(
-    ScriptError
-  )
   await expect(
-    asserter.assert(createAssertNode(asserter, { directory: 1 }))
+    assertion.assert(createAssertNode(assertion, {}))
   ).rejects.toThrow(ScriptError)
   await expect(
-    asserter.assert(createAssertNode(asserter, { directory: "", args: 1 }))
+    assertion.assert(createAssertNode(assertion, { directory: 1 }))
+  ).rejects.toThrow(ScriptError)
+  await expect(
+    assertion.assert(createAssertNode(assertion, { directory: "", args: 1 }))
   ).rejects.toThrow(ScriptError)
 
   // All configured
   await expect(
-    asserter.assert(createAssertNode(asserter, { directory: "/xyz", args: "" }))
+    assertion.assert(
+      createAssertNode(assertion, { directory: "/xyz", args: "" })
+    )
   ).resolves.toBe(true)
 
   // config not found
   await expect(
-    asserter.assert(createAssertNode(asserter, { directory: "/abc" }))
+    assertion.assert(createAssertNode(assertion, { directory: "/abc" }))
   ).rejects.toThrow(ScriptError)
 })
 
@@ -63,21 +65,21 @@ test("rectify", async () => {
       }),
     },
   }
-  const asserter = new AutoToolProjectConfigured(container)
+  const assertion = new AutoToolProjectConfigured(container)
 
-  asserter.expandedDirectory = "/xyz"
+  assertion.expandedDirectory = "/xyz"
 
-  await expect(asserter.rectify()).resolves.toBeUndefined()
+  await expect(assertion.rectify()).resolves.toBeUndefined()
 })
 
 test("result", () => {
-  const asserter = new AutoToolProjectConfigured({})
+  const assertion = new AutoToolProjectConfigured({})
 
-  asserter.expandedDirectory = "blah"
-  asserter.expandedArgs = "blah"
+  assertion.expandedDirectory = "blah"
+  assertion.expandedArgs = "blah"
 
-  expect(asserter.result()).toEqual({
-    directory: asserter.expandedDirectory,
-    args: asserter.expandedArgs,
+  expect(assertion.result()).toEqual({
+    directory: assertion.expandedDirectory,
+    args: assertion.expandedArgs,
   })
 })

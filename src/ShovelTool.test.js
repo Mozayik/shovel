@@ -573,7 +573,7 @@ test("updateRunContext", async () => {
 test("runScriptLocally", async () => {
   Object.assign(container, {
     debug: true,
-    asserters: {
+    assertions: {
       TestAssert: class TestAssert {
         constructor() {}
         async assert(node) {
@@ -679,7 +679,7 @@ test("runScriptLocally", async () => {
     tool.runScriptLocally("/x/b.shovel", { assertOnly: true })
   ).resolves.toBeUndefined()
 
-  // Bad asserter
+  // Bad assertion
   await expect(tool.runScriptLocally("/x/c.shovel")).rejects.toThrow(
     ScriptError
   )

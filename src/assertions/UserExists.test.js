@@ -42,56 +42,56 @@ test("assert", async () => {
     },
   }
 
-  const asserter = new UserExists(container)
+  const assertion = new UserExists(container)
 
   // Bad args
-  await expect(asserter.assert(createAssertNode(asserter, {}))).rejects.toThrow(
-    ScriptError
-  )
   await expect(
-    asserter.assert(createAssertNode(asserter, { user: 1 }))
+    assertion.assert(createAssertNode(assertion, {}))
   ).rejects.toThrow(ScriptError)
   await expect(
-    asserter.assert(createAssertNode(asserter, { user: "x", uid: "1" }))
+    assertion.assert(createAssertNode(assertion, { user: 1 }))
   ).rejects.toThrow(ScriptError)
   await expect(
-    asserter.assert(createAssertNode(asserter, { user: "x", system: 1 }))
+    assertion.assert(createAssertNode(assertion, { user: "x", uid: "1" }))
   ).rejects.toThrow(ScriptError)
   await expect(
-    asserter.assert(
-      createAssertNode(asserter, { user: "x", uid: 1000, system: true })
+    assertion.assert(createAssertNode(assertion, { user: "x", system: 1 }))
+  ).rejects.toThrow(ScriptError)
+  await expect(
+    assertion.assert(
+      createAssertNode(assertion, { user: "x", uid: 1000, system: true })
     )
   ).rejects.toThrow(ScriptError)
   await expect(
-    asserter.assert(createAssertNode(asserter, { user: "x", gid: "1" }))
+    assertion.assert(createAssertNode(assertion, { user: "x", gid: "1" }))
   ).rejects.toThrow(ScriptError)
   await expect(
-    asserter.assert(createAssertNode(asserter, { user: "x", group: 1 }))
+    assertion.assert(createAssertNode(assertion, { user: "x", group: 1 }))
   ).rejects.toThrow(ScriptError)
   await expect(
-    asserter.assert(
-      createAssertNode(asserter, { user: "user1", group: "notthere" })
+    assertion.assert(
+      createAssertNode(assertion, { user: "user1", group: "notthere" })
     )
   ).rejects.toThrow(ScriptError)
   await expect(
-    asserter.assert(createAssertNode(asserter, { user: "x", shell: 1 }))
+    assertion.assert(createAssertNode(assertion, { user: "x", shell: 1 }))
   ).rejects.toThrow(ScriptError)
   await expect(
-    asserter.assert(createAssertNode(asserter, { user: "x", homeDir: 1 }))
+    assertion.assert(createAssertNode(assertion, { user: "x", homeDir: 1 }))
   ).rejects.toThrow(ScriptError)
   await expect(
-    asserter.assert(createAssertNode(asserter, { user: "x", comment: 1 }))
+    assertion.assert(createAssertNode(assertion, { user: "x", comment: 1 }))
   ).rejects.toThrow(ScriptError)
   await expect(
-    asserter.assert(
-      createAssertNode(asserter, { user: "x", passwordDisabled: 1 })
+    assertion.assert(
+      createAssertNode(assertion, { user: "x", passwordDisabled: 1 })
     )
   ).rejects.toThrow(ScriptError)
 
   // Happy path
   await expect(
-    asserter.assert(
-      createAssertNode(asserter, {
+    assertion.assert(
+      createAssertNode(assertion, {
         user: "user1",
         group: "group1",
         passwordDisabled: false,
@@ -99,11 +99,11 @@ test("assert", async () => {
     )
   ).resolves.toBe(true)
 
-  asserter.uid = undefined
+  assertion.uid = undefined
 
   await expect(
-    asserter.assert(
-      createAssertNode(asserter, {
+    assertion.assert(
+      createAssertNode(assertion, {
         user: "service1",
         group: "service1",
         passwordDisabled: true,
@@ -113,87 +113,87 @@ test("assert", async () => {
 
   // With user existing but with different stuff
   await expect(
-    asserter.assert(
-      createAssertNode(asserter, {
+    assertion.assert(
+      createAssertNode(assertion, {
         user: "user1",
         gid: 2000,
       })
     )
   ).resolves.toBe(false)
-  asserter.gid = undefined
+  assertion.gid = undefined
   await expect(
-    asserter.assert(
-      createAssertNode(asserter, {
+    assertion.assert(
+      createAssertNode(assertion, {
         user: "user1",
         uid: 2000,
       })
     )
   ).resolves.toBe(false)
-  asserter.uid = undefined
+  assertion.uid = undefined
   await expect(
-    asserter.assert(
-      createAssertNode(asserter, {
+    assertion.assert(
+      createAssertNode(assertion, {
         user: "user1",
         shell: "/bin/bash",
       })
     )
   ).resolves.toBe(false)
-  asserter.shell = undefined
+  assertion.shell = undefined
   await expect(
-    asserter.assert(
-      createAssertNode(asserter, {
+    assertion.assert(
+      createAssertNode(assertion, {
         user: "user1",
         homeDir: "/home/user1",
       })
     )
   ).resolves.toBe(false)
-  asserter.homeDir = undefined
+  assertion.homeDir = undefined
   await expect(
-    asserter.assert(
-      createAssertNode(asserter, {
+    assertion.assert(
+      createAssertNode(assertion, {
         user: "user1",
         comment: "User1",
       })
     )
   ).resolves.toBe(false)
-  asserter.comment = undefined
+  assertion.comment = undefined
 
   // User existing outside system range
   await expect(
-    asserter.assert(
-      createAssertNode(asserter, {
+    assertion.assert(
+      createAssertNode(assertion, {
         user: "user1",
         system: true,
       })
     )
   ).rejects.toThrow(ScriptError)
-  asserter.system = undefined
+  assertion.system = undefined
 
   // With user absent
   container.util.getLoginDefs = async () => ({})
 
   await expect(
-    asserter.assert(createAssertNode(asserter, { user: "notthere" }))
+    assertion.assert(createAssertNode(assertion, { user: "notthere" }))
   ).resolves.toBe(false)
 
   // User absent with system flag
   await expect(
-    asserter.assert(
-      createAssertNode(asserter, { user: "notthere", system: true })
+    assertion.assert(
+      createAssertNode(assertion, { user: "notthere", system: true })
     )
   ).resolves.toBe(false)
-  asserter.system = undefined
+  assertion.system = undefined
 
   // With user absent and not root
   container.util.runningAsRoot = () => false
   await expect(
-    asserter.assert(createAssertNode(asserter, { user: "notthere" }))
+    assertion.assert(createAssertNode(assertion, { user: "notthere" }))
   ).rejects.toThrow(ScriptError)
 
   // With user different and not root
   await expect(
-    asserter.assert(
-      createAssertNode(asserter, {
+    assertion.assert(
+      createAssertNode(assertion, {
         user: "user1",
         gid: 2,
       })
@@ -223,33 +223,33 @@ test("rectify", async () => {
       getUsers: async () => users,
     },
   }
-  const asserter = new UserExists(container)
+  const assertion = new UserExists(container)
 
-  asserter.modify = false
-  asserter.name = "user1"
-  asserter.system = true
-  asserter.user = users[0]
-  asserter.passwordDisabled = false
-  await expect(asserter.rectify()).resolves.toBeUndefined()
+  assertion.modify = false
+  assertion.name = "user1"
+  assertion.system = true
+  assertion.user = users[0]
+  assertion.passwordDisabled = false
+  await expect(assertion.rectify()).resolves.toBeUndefined()
 
-  asserter.system = false
-  asserter.comment = "Comment with spaces"
-  asserter.passwordDisabled = true
-  await expect(asserter.rectify()).resolves.toBeUndefined()
+  assertion.system = false
+  assertion.comment = "Comment with spaces"
+  assertion.passwordDisabled = true
+  await expect(assertion.rectify()).resolves.toBeUndefined()
 
-  asserter.modify = true
-  asserter.name = "badname"
-  asserter.user = users[1]
-  asserter.passwordDisabled = false
-  await expect(asserter.rectify()).rejects.toThrow(Error)
+  assertion.modify = true
+  assertion.name = "badname"
+  assertion.user = users[1]
+  assertion.passwordDisabled = false
+  await expect(assertion.rectify()).rejects.toThrow(Error)
 
-  asserter.user = users[1]
-  asserter.passwordDisabled = true
-  await expect(asserter.rectify()).rejects.toThrow(Error)
+  assertion.user = users[1]
+  assertion.passwordDisabled = true
+  await expect(assertion.rectify()).rejects.toThrow(Error)
 })
 
 test("result", () => {
-  const asserter = new UserExists({})
+  const assertion = new UserExists({})
   const user = {
     name: "user1",
     gid: 12,
@@ -259,7 +259,7 @@ test("result", () => {
     comment: "",
   }
 
-  Object.assign(asserter, user)
+  Object.assign(assertion, user)
 
-  expect(asserter.result()).toEqual(user)
+  expect(assertion.result()).toEqual(user)
 })

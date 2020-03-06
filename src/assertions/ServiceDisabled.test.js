@@ -22,30 +22,30 @@ test("assert", async () => {
     },
   }
 
-  const asserter = new ServiceDisabled(container)
+  const assertion = new ServiceDisabled(container)
 
   // Bad args
-  await expect(asserter.assert(createAssertNode(asserter, {}))).rejects.toThrow(
-    ScriptError
-  )
   await expect(
-    asserter.assert(createAssertNode(asserter, { service: 1 }))
+    assertion.assert(createAssertNode(assertion, {}))
+  ).rejects.toThrow(ScriptError)
+  await expect(
+    assertion.assert(createAssertNode(assertion, { service: 1 }))
   ).rejects.toThrow(ScriptError)
 
   // Happy path
   await expect(
-    asserter.assert(createAssertNode(asserter, { service: "otherService" }))
+    assertion.assert(createAssertNode(assertion, { service: "otherService" }))
   ).resolves.toBe(true)
 
   // With service enabled
   await expect(
-    asserter.assert(createAssertNode(asserter, { service: "service" }))
+    assertion.assert(createAssertNode(assertion, { service: "service" }))
   ).resolves.toBe(false)
 
   // With service enabled and not root
   container.util.runningAsRoot = () => false
   await expect(
-    asserter.assert(createAssertNode(asserter, { service: "service" }))
+    assertion.assert(createAssertNode(assertion, { service: "service" }))
   ).rejects.toThrow(ScriptError)
 })
 
@@ -60,20 +60,20 @@ test("rectify", async () => {
       },
     },
   }
-  const asserter = new ServiceDisabled(container)
+  const assertion = new ServiceDisabled(container)
 
-  asserter.expandedServiceName = "otherService"
+  assertion.expandedServiceName = "otherService"
 
-  await expect(asserter.rectify()).resolves.toBeUndefined()
+  await expect(assertion.rectify()).resolves.toBeUndefined()
 })
 
 test("result", () => {
-  const asserter = new ServiceDisabled({})
+  const assertion = new ServiceDisabled({})
 
-  asserter.expandedServiceName = "otherService"
+  assertion.expandedServiceName = "otherService"
 
-  expect(asserter.result()).toEqual({
-    service: asserter.expandedServiceName,
+  expect(assertion.result()).toEqual({
+    service: assertion.expandedServiceName,
     enabled: false,
   })
 })

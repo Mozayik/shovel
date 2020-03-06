@@ -122,28 +122,28 @@ test("assert", async () => {
     },
   }
 
-  const asserter = new ZipFileUnzipped(container)
+  const assertion = new ZipFileUnzipped(container)
 
   // With bad zip path
-  await expect(asserter.assert(createAssertNode(asserter, {}))).rejects.toThrow(
-    ScriptError
-  )
   await expect(
-    asserter.assert(createAssertNode(asserter, { file: 1 }))
+    assertion.assert(createAssertNode(assertion, {}))
+  ).rejects.toThrow(ScriptError)
+  await expect(
+    assertion.assert(createAssertNode(assertion, { file: 1 }))
   ).rejects.toThrow(ScriptError)
 
   // With bad toDirectory path
   await expect(
-    asserter.assert(createAssertNode(asserter, { file: "" }))
+    assertion.assert(createAssertNode(assertion, { file: "" }))
   ).rejects.toThrow(ScriptError)
   await expect(
-    asserter.assert(createAssertNode(asserter, { file: "", toDirectory: 1 }))
+    assertion.assert(createAssertNode(assertion, { file: "", toDirectory: 1 }))
   ).rejects.toThrow(ScriptError)
 
   // With file not present
   await expect(
-    asserter.assert(
-      createAssertNode(asserter, {
+    assertion.assert(
+      createAssertNode(assertion, {
         file: "./missing.zip",
         toDirectory: "./outdir",
       })
@@ -152,8 +152,8 @@ test("assert", async () => {
 
   // With all files unzipped and the same
   await expect(
-    asserter.assert(
-      createAssertNode(asserter, {
+    assertion.assert(
+      createAssertNode(assertion, {
         file: "./somefile.zip",
         toDirectory: "./outdir",
       })
@@ -162,8 +162,8 @@ test("assert", async () => {
 
   // With output directory missing
   await expect(
-    asserter.assert(
-      createAssertNode(asserter, {
+    assertion.assert(
+      createAssertNode(assertion, {
         file: "./somefile.zip",
         toDirectory: "./notthere",
       })
@@ -172,8 +172,8 @@ test("assert", async () => {
 
   // With a file missing
   await expect(
-    asserter.assert(
-      createAssertNode(asserter, {
+    assertion.assert(
+      createAssertNode(assertion, {
         file: "./withfilemissing.zip",
         toDirectory: "./outdir",
       })
@@ -182,8 +182,8 @@ test("assert", async () => {
 
   // With a file as different size
   await expect(
-    asserter.assert(
-      createAssertNode(asserter, {
+    assertion.assert(
+      createAssertNode(assertion, {
         file: "./filesize.zip",
         toDirectory: "./outdir",
       })
@@ -192,8 +192,8 @@ test("assert", async () => {
 
   // With a file as a directory
   await expect(
-    asserter.assert(
-      createAssertNode(asserter, {
+    assertion.assert(
+      createAssertNode(assertion, {
         file: "./filedir.zip",
         toDirectory: "./outdir",
       })
@@ -202,8 +202,8 @@ test("assert", async () => {
 
   // With a directory as a file
   await expect(
-    asserter.assert(
-      createAssertNode(asserter, {
+    assertion.assert(
+      createAssertNode(assertion, {
         file: "./dirfile.zip",
         toDirectory: "./outdir",
       })
@@ -215,8 +215,8 @@ test("assert", async () => {
     throw Error()
   })
   await expect(
-    asserter.assert(
-      createAssertNode(asserter, {
+    assertion.assert(
+      createAssertNode(assertion, {
         file: "./somefile.zip",
         toDirectory: "./outdir",
       })
@@ -279,28 +279,28 @@ test("rectify", async () => {
       }),
     },
   }
-  const asserter = new ZipFileUnzipped(container)
+  const assertion = new ZipFileUnzipped(container)
 
-  asserter.expandedFilePath = "/xyz.zip"
-  asserter.expandedToPath = "/"
+  assertion.expandedFilePath = "/xyz.zip"
+  assertion.expandedToPath = "/"
 
-  await expect(asserter.rectify()).resolves.toBeUndefined()
+  await expect(assertion.rectify()).resolves.toBeUndefined()
 
   // If zip file cannot be opened
   container.yauzl.open = jest.fn(async () => {
     throw new Error()
   })
-  await expect(asserter.rectify()).rejects.toThrow(Error)
+  await expect(assertion.rectify()).rejects.toThrow(Error)
 })
 
 test("result", () => {
-  const asserter = new ZipFileUnzipped({})
+  const assertion = new ZipFileUnzipped({})
 
-  asserter.expandedFilePath = "blah.zip"
-  asserter.expandedToPath = "file/"
+  assertion.expandedFilePath = "blah.zip"
+  assertion.expandedToPath = "file/"
 
-  expect(asserter.result()).toEqual({
-    file: asserter.expandedFilePath,
-    toDirectory: asserter.expandedToPath,
+  expect(assertion.result()).toEqual({
+    file: assertion.expandedFilePath,
+    toDirectory: assertion.expandedToPath,
   })
 })

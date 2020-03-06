@@ -42,26 +42,26 @@ COMMIT
     },
   }
 
-  const asserter = new IPTablesContain(container)
+  const assertion = new IPTablesContain(container)
 
   // Bad arguments
-  await expect(asserter.assert(createAssertNode(asserter, {}))).rejects.toThrow(
-    ScriptError
-  )
   await expect(
-    asserter.assert(createAssertNode(asserter, { file: 1 }))
+    assertion.assert(createAssertNode(assertion, {}))
   ).rejects.toThrow(ScriptError)
   await expect(
-    asserter.assert(createAssertNode(asserter, { contents: "", ignore: 1 }))
+    assertion.assert(createAssertNode(assertion, { file: 1 }))
   ).rejects.toThrow(ScriptError)
   await expect(
-    asserter.assert(
-      createAssertNode(asserter, { contents: "", ignore: { x: 1 } })
+    assertion.assert(createAssertNode(assertion, { contents: "", ignore: 1 }))
+  ).rejects.toThrow(ScriptError)
+  await expect(
+    assertion.assert(
+      createAssertNode(assertion, { contents: "", ignore: { x: 1 } })
     )
   ).rejects.toThrow(ScriptError)
   await expect(
-    asserter.assert(
-      createAssertNode(asserter, { contents: "", ignore: { x: [1] } })
+    assertion.assert(
+      createAssertNode(assertion, { contents: "", ignore: { x: [1] } })
     )
   ).rejects.toThrow(ScriptError)
 
@@ -97,8 +97,8 @@ COMMIT
 
   // Happy path
   await expect(
-    asserter.assert(
-      createAssertNode(asserter, {
+    assertion.assert(
+      createAssertNode(assertion, {
         contents: rules,
         ignore: {
           filter: ["^-A INPUT.*-j f2b-sshd$", "^-A f2b-sshd.*$"],
@@ -109,8 +109,8 @@ COMMIT
 
   // New has missing tables
   await expect(
-    asserter.assert(
-      createAssertNode(asserter, {
+    assertion.assert(
+      createAssertNode(assertion, {
         contents: "#Bogus",
       })
     )
@@ -118,8 +118,8 @@ COMMIT
 
   // New has missing rules
   await expect(
-    asserter.assert(
-      createAssertNode(asserter, {
+    assertion.assert(
+      createAssertNode(assertion, {
         contents: shorterRules,
       })
     )
@@ -127,8 +127,8 @@ COMMIT
 
   // New has extra rules
   await expect(
-    asserter.assert(
-      createAssertNode(asserter, {
+    assertion.assert(
+      createAssertNode(assertion, {
         contents: longerRules,
         ignore: {
           filter: ["^-A INPUT.*-j f2b-sshd$", "^-A f2b-sshd.*$"],
@@ -142,8 +142,8 @@ COMMIT
     throw Error()
   }
   await expect(
-    asserter.assert(
-      createAssertNode(asserter, {
+    assertion.assert(
+      createAssertNode(assertion, {
         contents: rules,
       })
     )
@@ -162,19 +162,19 @@ test("rectify", async () => {
       exec: async () => ({ stdout: "" }),
     },
   }
-  const asserter = new IPTablesContain(container)
+  const assertion = new IPTablesContain(container)
 
-  asserter.contents = "xyz\n"
+  assertion.contents = "xyz\n"
 
-  await expect(asserter.rectify()).resolves.toBeUndefined()
+  await expect(assertion.rectify()).resolves.toBeUndefined()
 })
 
 test("result", () => {
-  const asserter = new IPTablesContain({})
+  const assertion = new IPTablesContain({})
 
-  asserter.contents = "some contents"
+  assertion.contents = "some contents"
 
-  expect(asserter.result()).toEqual({
-    contents: asserter.contents,
+  expect(assertion.result()).toEqual({
+    contents: assertion.contents,
   })
 })

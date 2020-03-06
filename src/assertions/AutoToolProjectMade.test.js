@@ -42,63 +42,63 @@ test("assert", async () => {
     },
   }
 
-  const asserter = new AutoToolProjectMade(container)
+  const assertion = new AutoToolProjectMade(container)
 
   // Bad command
-  await expect(asserter.assert(createAssertNode(asserter, {}))).rejects.toThrow(
-    ScriptError
-  )
   await expect(
-    asserter.assert(createAssertNode(asserter, { directory: 1 }))
+    assertion.assert(createAssertNode(assertion, {}))
   ).rejects.toThrow(ScriptError)
   await expect(
-    asserter.assert(createAssertNode(asserter, { directory: "", args: 1 }))
+    assertion.assert(createAssertNode(assertion, { directory: 1 }))
+  ).rejects.toThrow(ScriptError)
+  await expect(
+    assertion.assert(createAssertNode(assertion, { directory: "", args: 1 }))
   ).rejects.toThrow(ScriptError)
 
   // All made
   await expect(
-    asserter.assert(createAssertNode(asserter, { directory: "/xyz" }))
+    assertion.assert(createAssertNode(assertion, { directory: "/xyz" }))
   ).resolves.toBe(true)
 
   // All not made
   await expect(
-    asserter.assert(
-      createAssertNode(asserter, { directory: "/xyz", args: "bar" })
+    assertion.assert(
+      createAssertNode(assertion, { directory: "/xyz", args: "bar" })
     )
   ).resolves.toBe(false)
 
   // No Makefile found
   await expect(
-    asserter.assert(createAssertNode(asserter, { directory: "/notthere" }))
+    assertion.assert(createAssertNode(assertion, { directory: "/notthere" }))
   ).rejects.toThrow(ScriptError)
 })
 
 test("rectify", async () => {
   const container = { childProcess: {} }
-  const asserter = new AutoToolProjectMade(container)
+  const assertion = new AutoToolProjectMade(container)
 
   // Good config
   container.childProcess.exec = async () => ({})
-  asserter.expandedArgs = "bar"
-  await expect(asserter.rectify()).resolves.toBeUndefined()
+  assertion.expandedArgs = "bar"
+  await expect(assertion.rectify()).resolves.toBeUndefined()
 
   // Bad config
-  asserter.assertNode = createAssertNode(asserter, {})
-  asserter.expandedArgs = ""
+  assertion.assertNode = createAssertNode(assertion, {})
+  assertion.expandedArgs = ""
   container.childProcess.exec = async () => {
     throw new Error("unknown")
   }
-  await expect(asserter.rectify()).rejects.toThrow(ScriptError)
+  await expect(assertion.rectify()).rejects.toThrow(ScriptError)
 })
 
 test("result", () => {
-  const asserter = new AutoToolProjectMade({})
+  const assertion = new AutoToolProjectMade({})
 
-  asserter.expandedDirectory = "blah"
-  asserter.expandedArgs = "blah"
+  assertion.expandedDirectory = "blah"
+  assertion.expandedArgs = "blah"
 
-  expect(asserter.result()).toEqual({
-    directory: asserter.expandedDirectory,
-    args: asserter.expandedArgs,
+  expect(assertion.result()).toEqual({
+    directory: assertion.expandedDirectory,
+    args: assertion.expandedArgs,
   })
 })

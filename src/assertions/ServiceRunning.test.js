@@ -13,20 +13,20 @@ test("assert", async () => {
     },
   }
 
-  const asserter = new ServiceRunning(container)
+  const assertion = new ServiceRunning(container)
 
   // Bad args
-  await expect(asserter.assert(createAssertNode(asserter, {}))).rejects.toThrow(
-    ScriptError
-  )
   await expect(
-    asserter.assert(createAssertNode(asserter, { service: 1 }))
+    assertion.assert(createAssertNode(assertion, {}))
+  ).rejects.toThrow(ScriptError)
+  await expect(
+    assertion.assert(createAssertNode(assertion, { service: 1 }))
   ).rejects.toThrow(ScriptError)
 
   // With service active
   container.childProcess.exec = async () => ({ stdout: "active" })
   await expect(
-    asserter.assert(createAssertNode(asserter, { service: "service" }))
+    assertion.assert(createAssertNode(assertion, { service: "service" }))
   ).resolves.toBe(true)
 
   // With service inactive
@@ -34,13 +34,13 @@ test("assert", async () => {
     throw new Error()
   }
   await expect(
-    asserter.assert(createAssertNode(asserter, { service: "otherService" }))
+    assertion.assert(createAssertNode(assertion, { service: "otherService" }))
   ).resolves.toBe(false)
 
   // With service inactive not root
   container.util.runningAsRoot = () => false
   await expect(
-    asserter.assert(createAssertNode(asserter, { service: "otherService" }))
+    assertion.assert(createAssertNode(assertion, { service: "otherService" }))
   ).rejects.toThrow(ScriptError)
 })
 
@@ -61,11 +61,11 @@ test("rectify", async () => {
       },
     },
   }
-  const asserter = new ServiceRunning(container)
+  const assertion = new ServiceRunning(container)
 
-  asserter.expandedServiceName = "service"
+  assertion.expandedServiceName = "service"
 
-  await expect(asserter.rectify()).resolves.toBeUndefined()
+  await expect(assertion.rectify()).resolves.toBeUndefined()
 
   // With service that doesn't start
   container.childProcess.exec = async (command) => {
@@ -76,13 +76,13 @@ test("rectify", async () => {
     }
   }
 
-  await expect(asserter.rectify()).rejects.toThrow(Error)
+  await expect(assertion.rectify()).rejects.toThrow(Error)
 })
 
 test("result", () => {
-  const asserter = new ServiceRunning({})
+  const assertion = new ServiceRunning({})
 
-  asserter.expandedServiceName = "otherService"
+  assertion.expandedServiceName = "otherService"
 
-  expect(asserter.result()).toEqual({ service: asserter.expandedServiceName })
+  expect(assertion.result()).toEqual({ service: assertion.expandedServiceName })
 })

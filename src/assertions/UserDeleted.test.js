@@ -11,30 +11,30 @@ test("assert", async () => {
     },
   }
 
-  const asserter = new UserDeleted(container)
+  const assertion = new UserDeleted(container)
 
   // Bad args
-  await expect(asserter.assert(createAssertNode(asserter, {}))).rejects.toThrow(
-    ScriptError
-  )
   await expect(
-    asserter.assert(createAssertNode(asserter, { user: 1 }))
+    assertion.assert(createAssertNode(assertion, {}))
+  ).rejects.toThrow(ScriptError)
+  await expect(
+    assertion.assert(createAssertNode(assertion, { user: 1 }))
   ).rejects.toThrow(ScriptError)
 
   // With user absent
   await expect(
-    asserter.assert(createAssertNode(asserter, { user: "notthere" }))
+    assertion.assert(createAssertNode(assertion, { user: "notthere" }))
   ).resolves.toBe(true)
 
   // With user present
   await expect(
-    asserter.assert(createAssertNode(asserter, { user: "games" }))
+    assertion.assert(createAssertNode(assertion, { user: "games" }))
   ).resolves.toBe(false)
 
   // With user present and not running as root
   container.util.runningAsRoot = () => false
   await expect(
-    asserter.assert(createAssertNode(asserter, { user: "games" }))
+    assertion.assert(createAssertNode(assertion, { user: "games" }))
   ).rejects.toThrow(ScriptError)
 })
 
@@ -44,17 +44,17 @@ test("rectify", async () => {
       exec: async () => undefined,
     },
   }
-  const asserter = new UserDeleted(container)
+  const assertion = new UserDeleted(container)
 
-  asserter.expandedName = "blah"
+  assertion.expandedName = "blah"
 
-  await expect(asserter.rectify()).resolves.toBeUndefined()
+  await expect(assertion.rectify()).resolves.toBeUndefined()
 })
 
 test("result", () => {
-  const asserter = new UserDeleted({})
+  const assertion = new UserDeleted({})
 
-  asserter.expandedName = "user"
+  assertion.expandedName = "user"
 
-  expect(asserter.result()).toEqual({ user: asserter.expandedName })
+  expect(assertion.result()).toEqual({ user: assertion.expandedName })
 })

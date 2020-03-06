@@ -84,38 +84,38 @@ test("assert", async () => {
     },
   }
   const testUrl = "http://localhost/somefile.txt"
-  const asserter = new UrlDownloaded(container)
+  const assertion = new UrlDownloaded(container)
 
   // Missing/bad url
-  await expect(asserter.assert(createAssertNode(asserter, {}))).rejects.toThrow(
-    ScriptError
-  )
   await expect(
-    asserter.assert(createAssertNode(asserter, { url: 1 }))
+    assertion.assert(createAssertNode(assertion, {}))
+  ).rejects.toThrow(ScriptError)
+  await expect(
+    assertion.assert(createAssertNode(assertion, { url: 1 }))
   ).rejects.toThrow(ScriptError)
 
   // Missing/bad digest
   await expect(
-    asserter.assert(createAssertNode(asserter, { url: "" }))
+    assertion.assert(createAssertNode(assertion, { url: "" }))
   ).rejects.toThrow(ScriptError)
   await expect(
-    asserter.assert(createAssertNode(asserter, { url: "", digest: 1 }))
+    assertion.assert(createAssertNode(assertion, { url: "", digest: 1 }))
   ).rejects.toThrow(ScriptError)
 
   // Missing/bad file
   await expect(
-    asserter.assert(createAssertNode(asserter, { url: "", digest: "" }))
+    assertion.assert(createAssertNode(assertion, { url: "", digest: "" }))
   ).rejects.toThrow(ScriptError)
   await expect(
-    asserter.assert(
-      createAssertNode(asserter, { url: "", digest: "", file: 1 })
+    assertion.assert(
+      createAssertNode(assertion, { url: "", digest: "", file: 1 })
     )
   ).rejects.toThrow(ScriptError)
 
   // With correct file already in place
   await expect(
-    asserter.assert(
-      createAssertNode(asserter, {
+    assertion.assert(
+      createAssertNode(assertion, {
         url: testUrl,
         digest: "1234567890",
         file: "/dir/somefile",
@@ -125,8 +125,8 @@ test("assert", async () => {
 
   // With no file in place
   await expect(
-    asserter.assert(
-      createAssertNode(asserter, {
+    assertion.assert(
+      createAssertNode(assertion, {
         url: testUrl,
         digest: "1234567890",
         file: "/dir/missingfile",
@@ -136,8 +136,8 @@ test("assert", async () => {
 
   // Bad checksum
   await expect(
-    asserter.assert(
-      createAssertNode(asserter, {
+    assertion.assert(
+      createAssertNode(assertion, {
         url: testUrl,
         digest: "1234567890",
         file: "/dir/badfile",
@@ -147,8 +147,8 @@ test("assert", async () => {
 
   // Bad checksum and no access to target dir
   await expect(
-    asserter.assert(
-      createAssertNode(asserter, {
+    assertion.assert(
+      createAssertNode(assertion, {
         url: testUrl,
         digest: "1234567890",
         file: "/noaccess/badfile",
@@ -162,8 +162,8 @@ test("assert", async () => {
     gid: 1000,
   })
   await expect(
-    asserter.assert(
-      createAssertNode(asserter, {
+    assertion.assert(
+      createAssertNode(assertion, {
         url: testUrl,
         digest: "1234567890",
         file: "/dir/somefile",
@@ -192,36 +192,36 @@ test("rectify", async () => {
     HttpProxyAgent: class {},
     HttpsProxyAgent: class {},
   }
-  const asserter = new UrlDownloaded(container)
+  const assertion = new UrlDownloaded(container)
 
-  asserter.toFileExists = false
-  asserter.expandedFile = "/foo/bar.txt"
-  asserter.expandedUrl = "http://something.com"
-  asserter.owner = { uid: 1, gid: 1 }
-  await expect(asserter.rectify()).resolves.toBeUndefined()
+  assertion.toFileExists = false
+  assertion.expandedFile = "/foo/bar.txt"
+  assertion.expandedUrl = "http://something.com"
+  assertion.owner = { uid: 1, gid: 1 }
+  await expect(assertion.rectify()).resolves.toBeUndefined()
 
-  asserter.expandedUrl = "https://something.com"
-  await expect(asserter.rectify()).resolves.toBeUndefined()
+  assertion.expandedUrl = "https://something.com"
+  await expect(assertion.rectify()).resolves.toBeUndefined()
 
-  asserter.runContext = {
+  assertion.runContext = {
     env: { http_proxy: "http://proxy", https_proxy: "http://proxy" },
   }
-  asserter.expandedUrl = "http://something.com"
-  await expect(asserter.rectify()).resolves.toBeUndefined()
+  assertion.expandedUrl = "http://something.com"
+  await expect(assertion.rectify()).resolves.toBeUndefined()
 
-  asserter.expandedUrl = "https://something.com"
-  await expect(asserter.rectify()).resolves.toBeUndefined()
+  assertion.expandedUrl = "https://something.com"
+  await expect(assertion.rectify()).resolves.toBeUndefined()
 })
 
 test("result", () => {
-  const asserter = new UrlDownloaded({})
+  const assertion = new UrlDownloaded({})
 
-  asserter.expandedFile = "/somedir/somefile.txt"
-  expect(asserter.result()).toEqual({ file: asserter.expandedFile })
+  assertion.expandedFile = "/somedir/somefile.txt"
+  expect(assertion.result()).toEqual({ file: assertion.expandedFile })
 
-  asserter.proxy = "http://proxy"
-  expect(asserter.result()).toEqual({
-    file: asserter.expandedFile,
-    proxy: asserter.proxy,
+  assertion.proxy = "http://proxy"
+  expect(assertion.result()).toEqual({
+    file: assertion.expandedFile,
+    proxy: assertion.proxy,
   })
 })

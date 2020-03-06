@@ -12,12 +12,12 @@ test("assert", async () => {
       runningAsRoot: jest.fn(() => true),
     },
   }
-  const asserter = new SystemPackageInstalled(container)
+  const assertion = new SystemPackageInstalled(container)
 
   // Not supported OS
   container.util.osInfo = jest.fn(async () => ({ platform: "windows" }))
   await expect(
-    asserter.assert(createAssertNode(asserter, { package: "test" }))
+    assertion.assert(createAssertNode(assertion, { package: "test" }))
   ).rejects.toThrow(ScriptError)
 
   // Missing package
@@ -25,9 +25,9 @@ test("assert", async () => {
     platform: "linux",
     id: "ubuntu",
   }))
-  await expect(asserter.assert(createAssertNode(asserter, {}))).rejects.toThrow(
-    ScriptError
-  )
+  await expect(
+    assertion.assert(createAssertNode(assertion, {}))
+  ).rejects.toThrow(ScriptError)
 
   // Bad update type
   container.util.osInfo = jest.fn(async () => ({
@@ -35,14 +35,14 @@ test("assert", async () => {
     id: "ubuntu",
   }))
   await expect(
-    asserter.assert(
-      createAssertNode(asserter, { package: "something", update: 1 })
+    assertion.assert(
+      createAssertNode(assertion, { package: "something", update: 1 })
     )
   ).rejects.toThrow(ScriptError)
 
   // Bad package
   await expect(
-    asserter.assert(createAssertNode(asserter, { package: 1 }))
+    assertion.assert(createAssertNode(assertion, { package: 1 }))
   ).rejects.toThrow(ScriptError)
 
   // Package present on Ubuntu
@@ -51,7 +51,7 @@ test("assert", async () => {
     stderr: "",
   }))
   await expect(
-    asserter.assert(createAssertNode(asserter, { package: "package" }))
+    assertion.assert(createAssertNode(assertion, { package: "package" }))
   ).resolves.toBe(true)
 
   // Package not present and running as root, with update
@@ -59,15 +59,15 @@ test("assert", async () => {
     throw new Error()
   })
   await expect(
-    asserter.assert(
-      createAssertNode(asserter, { package: "notthere", update: true })
+    assertion.assert(
+      createAssertNode(assertion, { package: "notthere", update: true })
     )
   ).resolves.toBe(false)
 
   // Package not present and not running as root
   container.util.runningAsRoot = jest.fn(() => false)
   await expect(
-    asserter.assert(createAssertNode(asserter, { package: "notthere" }))
+    assertion.assert(createAssertNode(assertion, { package: "notthere" }))
   ).rejects.toThrow(ScriptError)
 
   // Package present on CentOS
@@ -80,7 +80,7 @@ test("assert", async () => {
     stderr: "",
   }))
   await expect(
-    asserter.assert(createAssertNode(asserter, { package: "package" }))
+    assertion.assert(createAssertNode(assertion, { package: "package" }))
   ).resolves.toBe(true)
 })
 
@@ -94,21 +94,21 @@ test("rectify", async () => {
     },
   }
 
-  const asserter = new SystemPackageInstalled(container)
+  const assertion = new SystemPackageInstalled(container)
 
-  asserter.installCommand = "something"
+  assertion.installCommand = "something"
 
-  await expect(asserter.rectify()).resolves.toBeUndefined()
+  await expect(assertion.rectify()).resolves.toBeUndefined()
 
-  asserter.updateCommand = "something"
+  assertion.updateCommand = "something"
 
-  await expect(asserter.rectify()).resolves.toBeUndefined()
+  await expect(assertion.rectify()).resolves.toBeUndefined()
 })
 
 test("result", () => {
-  const asserter = new SystemPackageInstalled({})
+  const assertion = new SystemPackageInstalled({})
 
-  asserter.expandedPackageName = "somepackage"
+  assertion.expandedPackageName = "somepackage"
 
-  expect(asserter.result()).toEqual({ package: asserter.expandedPackageName })
+  expect(assertion.result()).toEqual({ package: assertion.expandedPackageName })
 })

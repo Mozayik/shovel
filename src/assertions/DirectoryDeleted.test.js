@@ -41,35 +41,35 @@ test("assert", async () => {
     },
   }
 
-  const asserter = new DirectoryDeleted(container)
+  const assertion = new DirectoryDeleted(container)
 
   // Bad arguments
-  await expect(asserter.assert(createAssertNode(asserter, {}))).rejects.toThrow(
-    ScriptError
-  )
   await expect(
-    asserter.assert(createAssertNode(asserter, { directory: 1 }))
+    assertion.assert(createAssertNode(assertion, {}))
+  ).rejects.toThrow(ScriptError)
+  await expect(
+    assertion.assert(createAssertNode(assertion, { directory: 1 }))
   ).rejects.toThrow(ScriptError)
 
   // Happy path
   await expect(
-    asserter.assert(createAssertNode(asserter, { directory: "/notthere" }))
+    assertion.assert(createAssertNode(assertion, { directory: "/notthere" }))
   ).resolves.toBe(true)
 
   // Directory exists
   await expect(
-    asserter.assert(createAssertNode(asserter, { directory: "/somedir" }))
+    assertion.assert(createAssertNode(assertion, { directory: "/somedir" }))
   ).resolves.toBe(false)
 
   // Directory is file
   await expect(
-    asserter.assert(createAssertNode(asserter, { directory: "/somefile" }))
+    assertion.assert(createAssertNode(assertion, { directory: "/somefile" }))
   ).rejects.toThrow(ScriptError)
 
   // Directory exists and parent not writeable
   await expect(
-    asserter.assert(
-      createAssertNode(asserter, { directory: "/noaccess/somedir" })
+    assertion.assert(
+      createAssertNode(assertion, { directory: "/noaccess/somedir" })
     )
   ).rejects.toThrow(ScriptError)
 })
@@ -80,17 +80,17 @@ test("rectify", async () => {
       remove: jest.fn(async () => null),
     },
   }
-  const asserter = new DirectoryDeleted(container)
+  const assertion = new DirectoryDeleted(container)
 
-  asserter.expandedDirectory = "blah"
+  assertion.expandedDirectory = "blah"
 
-  await expect(asserter.rectify()).resolves.toBeUndefined()
+  await expect(assertion.rectify()).resolves.toBeUndefined()
 })
 
 test("result", () => {
-  const asserter = new DirectoryDeleted({})
+  const assertion = new DirectoryDeleted({})
 
-  asserter.expandedDirectory = "blah"
+  assertion.expandedDirectory = "blah"
 
-  expect(asserter.result()).toEqual({ directory: asserter.expandedDirectory })
+  expect(assertion.result()).toEqual({ directory: assertion.expandedDirectory })
 })

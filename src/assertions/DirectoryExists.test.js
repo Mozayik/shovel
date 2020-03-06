@@ -64,32 +64,32 @@ test("assert", async () => {
     },
   }
 
-  const asserter = new DirectoryExists(container)
+  const assertion = new DirectoryExists(container)
 
   // Bad arguments
-  await expect(asserter.assert(createAssertNode(asserter, {}))).rejects.toThrow(
-    ScriptError
-  )
   await expect(
-    asserter.assert(createAssertNode(asserter, { directory: 1 }))
+    assertion.assert(createAssertNode(assertion, {}))
+  ).rejects.toThrow(ScriptError)
+  await expect(
+    assertion.assert(createAssertNode(assertion, { directory: 1 }))
   ).rejects.toThrow(ScriptError)
 
   // Happy path
   await expect(
-    asserter.assert(
-      createAssertNode(asserter, {
+    assertion.assert(
+      createAssertNode(assertion, {
         directory: "/somedir",
         owner: { user: "user1", group: "group1" },
         mode: { user: "rwx", group: "r-x", other: "r--" },
       })
     )
   ).resolves.toBe(true)
-  expect(asserter.result()).toEqual({ directory: "/somedir" })
+  expect(assertion.result()).toEqual({ directory: "/somedir" })
 
   // Different owners
   await expect(
-    asserter.assert(
-      createAssertNode(asserter, {
+    assertion.assert(
+      createAssertNode(assertion, {
         directory: "/somedir",
         owner: { user: 0, group: "root" },
         mode: { user: "rwx", group: "r-x", other: "r--" },
@@ -99,8 +99,8 @@ test("assert", async () => {
 
   // Different modes
   await expect(
-    asserter.assert(
-      createAssertNode(asserter, {
+    assertion.assert(
+      createAssertNode(assertion, {
         directory: "/somedir",
         owner: { user: "user1", group: "group1" },
         mode: { user: "rw-", group: "r--", other: "---" },
@@ -114,8 +114,8 @@ test("assert", async () => {
     gid: 20,
   }))
   await expect(
-    asserter.assert(
-      createAssertNode(asserter, {
+    assertion.assert(
+      createAssertNode(assertion, {
         directory: "/somedir",
         owner: { user: "root", group: "root" },
         mode: { user: "rwx", group: "r-x", other: "r--" },
@@ -129,8 +129,8 @@ test("assert", async () => {
     gid: 10,
   }))
   await expect(
-    asserter.assert(
-      createAssertNode(asserter, {
+    assertion.assert(
+      createAssertNode(assertion, {
         directory: "/somedir",
         owner: { user: "user1", group: "group1" },
         mode: { user: "rw-", group: "r--", other: "---" },
@@ -144,8 +144,8 @@ test("assert", async () => {
     gid: 20,
   }))
   await expect(
-    asserter.assert(
-      createAssertNode(asserter, {
+    assertion.assert(
+      createAssertNode(assertion, {
         directory: "/somedir",
         owner: { user: "user1", group: "group1" },
         mode: { user: "rw-", group: "r--", other: "---" },
@@ -159,17 +159,19 @@ test("assert", async () => {
     gid: 0,
   }))
   await expect(
-    asserter.assert(createAssertNode(asserter, { directory: "/notthere" }))
+    assertion.assert(createAssertNode(assertion, { directory: "/notthere" }))
   ).resolves.toBe(false)
 
   // File with same name
   await expect(
-    asserter.assert(createAssertNode(asserter, { directory: "/filethere" }))
+    assertion.assert(createAssertNode(assertion, { directory: "/filethere" }))
   ).rejects.toThrow(ScriptError)
 
   // Parent directory not accessible
   await expect(
-    asserter.assert(createAssertNode(asserter, { directory: "/noaccess/file" }))
+    assertion.assert(
+      createAssertNode(assertion, { directory: "/noaccess/file" })
+    )
   ).rejects.toThrow(ScriptError)
 })
 
@@ -182,22 +184,22 @@ test("rectify", async () => {
     },
   }
 
-  const asserter = new DirectoryExists(container)
+  const assertion = new DirectoryExists(container)
 
-  asserter.dirPath = "/somefile"
-  asserter.mode = 0o777
-  asserter.owner = { uid: 10, gid: 20 }
+  assertion.dirPath = "/somefile"
+  assertion.mode = 0o777
+  assertion.owner = { uid: 10, gid: 20 }
 
-  await expect(asserter.rectify()).resolves.toBeUndefined()
+  await expect(assertion.rectify()).resolves.toBeUndefined()
 })
 
 test("result", () => {
-  const asserter = new DirectoryExists({})
+  const assertion = new DirectoryExists({})
 
-  asserter.dirPath = "/somefile"
-  asserter.mode = 0o777
-  asserter.owner = { uid: 10, gid: 20 }
+  assertion.dirPath = "/somefile"
+  assertion.mode = 0o777
+  assertion.owner = { uid: 10, gid: 20 }
 
-  expect(asserter.result(true)).toEqual({ directory: "/somefile" })
-  expect(asserter.result(false)).toEqual({ directory: "/somefile" })
+  expect(assertion.result(true)).toEqual({ directory: "/somefile" })
+  expect(assertion.result(false)).toEqual({ directory: "/somefile" })
 })

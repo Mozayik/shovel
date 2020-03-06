@@ -18,30 +18,30 @@ test("assert", async () => {
     },
   }
 
-  const asserter = new GroupDeleted(container)
+  const assertion = new GroupDeleted(container)
 
   // Bad args
-  await expect(asserter.assert(createAssertNode(asserter, {}))).rejects.toThrow(
-    ScriptError
-  )
   await expect(
-    asserter.assert(createAssertNode(asserter, { group: 1 }))
+    assertion.assert(createAssertNode(assertion, {}))
+  ).rejects.toThrow(ScriptError)
+  await expect(
+    assertion.assert(createAssertNode(assertion, { group: 1 }))
   ).rejects.toThrow(ScriptError)
 
   // With group absent
   await expect(
-    asserter.assert(createAssertNode(asserter, { group: "notthere" }))
+    assertion.assert(createAssertNode(assertion, { group: "notthere" }))
   ).resolves.toBe(true)
 
   // With group present
   await expect(
-    asserter.assert(createAssertNode(asserter, { group: "news" }))
+    assertion.assert(createAssertNode(assertion, { group: "news" }))
   ).resolves.toBe(false)
 
   // With group absent and not root
   container.util.runningAsRoot = () => false
   await expect(
-    asserter.assert(createAssertNode(asserter, { group: "news" }))
+    assertion.assert(createAssertNode(assertion, { group: "news" }))
   ).rejects.toThrow(ScriptError)
 })
 
@@ -51,17 +51,17 @@ test("rectify", async () => {
       exec: async () => undefined,
     },
   }
-  const asserter = new GroupDeleted(container)
+  const assertion = new GroupDeleted(container)
 
-  asserter.expandedGroupName = "blah"
+  assertion.expandedGroupName = "blah"
 
-  await expect(asserter.rectify()).resolves.toBeUndefined()
+  await expect(assertion.rectify()).resolves.toBeUndefined()
 })
 
 test("result", () => {
-  const asserter = new GroupDeleted({})
+  const assertion = new GroupDeleted({})
 
-  asserter.expandedGroupName = "news"
+  assertion.expandedGroupName = "news"
 
-  expect(asserter.result()).toEqual({ group: asserter.expandedGroupName })
+  expect(assertion.result()).toEqual({ group: assertion.expandedGroupName })
 })

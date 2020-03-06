@@ -7,7 +7,7 @@ import vm from "vm"
 import path from "path"
 import JSON5 from "@johnls/json5"
 import autobind from "autobind-decorator"
-import * as asserters from "./asserters"
+import * as assertions from "./assertions"
 import * as actions from "./actions"
 import util from "./util"
 import { ScriptError } from "./ScriptError"
@@ -20,7 +20,7 @@ export class ShovelTool {
     this.fs = container.fs || fs
     this.log = container.log
     this.util = container.util || util
-    this.asserters = container.asserters || asserters
+    this.assertions = container.assertions || assertions
     this.actions = container.actions || actions
     this.process = container.process || process
     this.createSsh = container.createSsh || ((options) => new SSH(options))
@@ -583,34 +583,34 @@ export class ShovelTool {
         let result = {}
 
         if (assertNode) {
-          const Asserter = this.asserters[assertNode.value]
+          const Assertion = this.assertions[assertNode.value]
 
-          if (!Asserter) {
+          if (!Assertion) {
             throw new ScriptError(
-              `${assertNode.value} is not a valid asserter`,
+              `${assertNode.value} is not a valid assertion`,
               statementNode
             )
           }
 
-          const asserter = new Asserter({
+          const assertion = new Assertion({
             interpolator,
             runContext,
           })
 
           this.log.startSpinner(assertNode.value)
 
-          if (!(await asserter.assert(statementNode))) {
+          if (!(await assertion.assert(statementNode))) {
             if (options.assertOnly) {
               result.wouldRectify = assertNode.value
             } else {
-              await asserter.rectify()
+              await assertion.rectify()
               result.rectified = assertNode.value
             }
           } else {
             result.asserted = assertNode.value
           }
 
-          Object.assign(result, asserter.result())
+          Object.assign(result, assertion.result())
         } else {
           const Action = this.actions[actionNode.value]
 
