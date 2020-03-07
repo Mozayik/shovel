@@ -1,5 +1,5 @@
 {
-  includes: ["common.shovel"],
+  includes: ["common.shovel", "../empty.shovel"],
   statements: [
     {
       assert: "FileExists",

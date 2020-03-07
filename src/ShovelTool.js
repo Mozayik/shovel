@@ -12,6 +12,7 @@ import * as actions from "./actions"
 import util from "./util"
 import { ScriptError } from "./ScriptError"
 import semver from "semver"
+import assert from "assert"
 
 @autobind
 export class ShovelTool {
@@ -325,32 +326,38 @@ export class ShovelTool {
   }
 
   async createScriptContext(rootScriptPath) {
-    const rootScriptDirPath = path.dirname(rootScriptPath)
     const scriptNodes = new Map()
     const scriptPaths = []
     let anyScriptHasBecomes = false
 
-    const loadIncludeNode = async (includeNode) => {
-      const scriptPath = includeNode.value
+    assert(path.isAbsolute(rootScriptPath))
 
-      // assert.ok(path.isAbsolute(scriptPath), "include must have absolute path")
+    const loadScriptNode = async (
+      includeNode,
+      scriptDirPath,
+      scriptFilePath
+    ) => {
+      assert(path.isAbsolute(scriptDirPath))
+      assert(!path.isAbsolute(scriptFilePath))
 
-      const relativeScriptPath = path.join(
-        path.relative(rootScriptDirPath, path.dirname(scriptPath)),
-        path.basename(scriptPath)
+      const fromRootScriptFilePath = path.join(
+        path.relative(rootScriptDirPath, scriptDirPath),
+        scriptFilePath
       )
 
-      if (relativeScriptPath.startsWith(".")) {
+      if (includeNode && fromRootScriptFilePath.startsWith(".")) {
         throw new ScriptError(
-          "Cannot include script from a directory below root script",
+          `Cannot include script from a directory below root script directory '${rootScriptDirPath}'`,
           includeNode
         )
       }
 
-      if (!scriptNodes.has(relativeScriptPath)) {
-        const scriptNode = await this.loadScriptFile(scriptPath)
+      if (!scriptNodes.has(fromRootScriptFilePath)) {
+        const scriptNode = await this.loadScriptFile(
+          path.resolve(scriptDirPath, scriptFilePath)
+        )
 
-        scriptNodes.set(relativeScriptPath, scriptNode)
+        scriptNodes.set(fromRootScriptFilePath, scriptNode)
 
         anyScriptHasBecomes =
           anyScriptHasBecomes ||
@@ -359,22 +366,22 @@ export class ShovelTool {
           )
 
         for (var includeNode of scriptNode.value.includes.value) {
-          includeNode.value = path.resolve(rootScriptDirPath, includeNode.value)
+          const includeFilePath = path.join(scriptDirPath, includeNode.value)
 
-          await loadIncludeNode(includeNode)
+          await loadScriptNode(
+            includeNode,
+            path.dirname(includeFilePath),
+            path.basename(includeFilePath)
+          )
         }
       }
 
-      scriptPaths.push(relativeScriptPath)
+      scriptPaths.push(fromRootScriptFilePath)
     }
 
-    await loadIncludeNode({
-      filename: rootScriptPath,
-      line: 0,
-      column: 0,
-      type: "string",
-      value: rootScriptPath,
-    })
+    const rootScriptDirPath = path.dirname(rootScriptPath)
+
+    await loadScriptNode(null, rootScriptDirPath, path.basename(rootScriptPath))
 
     return {
       rootScriptDirPath,
