@@ -429,7 +429,6 @@ export class ShovelTool {
       },
       results: [],
     })
-    // TODO: Interpolator should not strip the {}'s, but just run the string
     // TODO: Create isScriptNode() that checks for string {}'s
     const interpolator = (node) => {
       if (!node.type || node.type !== "string") {

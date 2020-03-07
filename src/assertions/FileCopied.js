@@ -12,56 +12,55 @@ export class FileCopied {
 
   async assert(assertNode) {
     const withNode = assertNode.value.with
-    const { fromFile: fromFileNode, toFile: toFileNode } = withNode.value
+    const { node: fromFileNode, value: fromFilePath } = util.parseNode({
+      withNode,
+      name: "fromFile",
+      type: "string",
+      interpolator: this.interpolator,
+    })
+    const { node: toFileNode, value: toFilePath } = util.parseNode({
+      withNode,
+      name: "toFile",
+      type: "string",
+      interpolator: this.interpolator,
+    })
 
-    // TODO: Make this work: AssertionBase.parseArguments method, interpolate and put vars in this
-    // this.parseArguments(assertNode, {
-    //   fromFile: {type: "string"},
-    //   toFile: {type: "string"},
-    // })
+    this.fromFilePath = fromFilePath
+    this.toFilePath = toFilePath
 
-    if (!fromFileNode || fromFileNode.type !== "string") {
+    const fromPathInfo = await this.util.pathInfo(fromFilePath)
+
+    if (!fromPathInfo.isFile()) {
       throw new ScriptError(
-        "'fromFile' must be supplied and be a string",
-        fromFileNode || withNode
-      )
-    }
-
-    if (!toFileNode || toFileNode.type !== "string") {
-      throw new ScriptError(
-        "'toFile' must be supplied and be a string",
-        toFileNode || withNode
-      )
-    }
-
-    this.toFilePath = this.interpolator(toFileNode)
-    this.fromFilePath = this.interpolator(fromFileNode)
-
-    // TODO: Check for existence separate from access
-    if (
-      !(await this.util.pathInfo(this.fromFilePath)).getAccess().isReadable()
-    ) {
-      throw new ScriptError(
-        `File ${this.fromFilePath} does not exist or is not readable`,
+        `File '${fromFilePath}' does not exist`,
         fromFileNode
       )
     }
 
-    if (!(await this.util.pathInfo(this.toFilePath)).isFile()) {
-      const parentDir = path.dirname(this.toFilePath)
+    if (!fromPathInfo.getAccess().isReadable()) {
+      throw new ScriptError(
+        `File ${fromFilePath} is not readable`,
+        fromFileNode
+      )
+    }
+
+    const toPathInfo = await this.util.pathInfo(toFilePath)
+
+    if (!toPathInfo.isFile()) {
+      const parentDir = path.dirname(toFilePath)
 
       if (!(await this.util.pathInfo(parentDir)).getAccess().isWriteable()) {
-        throw new ScriptError(`Cannot write to '${parentDir}'`, toFileNode)
+        throw new ScriptError(
+          `Cannot write to directory '${parentDir}'`,
+          toFileNode
+        )
       }
 
       return false
     }
 
-    const fromFileDigest = await this.util.generateDigestFromFile(
-      this.fromFilePath
-    )
-
-    const toFileDigest = await this.util.generateDigestFromFile(this.toFilePath)
+    const fromFileDigest = await this.util.generateDigestFromFile(fromFilePath)
+    const toFileDigest = await this.util.generateDigestFromFile(toFilePath)
 
     return fromFileDigest === toFileDigest
   }

@@ -409,6 +409,52 @@ export class Utility {
 
     return mode
   }
+
+  parseNode(options) {
+    // NOTE: withNode, name and type must be supplied
+    const node = options.withNode.value[options.name]
+
+    if (!node) {
+      if (options.defaultValue) {
+        return {
+          node: options.withNode,
+          value: options.defaultValue,
+        }
+      } else {
+        throw new ScriptError(
+          `Argument '${options.name}' is required`,
+          options.withNode
+        )
+      }
+    }
+
+    let value
+    let type = node.type
+
+    if (options.interpolator && node.type === "string") {
+      value = options.interpolator(node)
+      type = typeof value
+
+      if (type === "object") {
+        if (value === null) {
+          type = "null"
+        } else if (Array.isArray(value)) {
+          type = "array"
+        }
+      }
+    } else {
+      value = node.value
+    }
+
+    if (type !== options.type) {
+      throw new ScriptError(
+        `Expected argument '${options.name}' to be of type '${options.type}' and was '${type}'`,
+        node
+      )
+    }
+
+    return { node, value }
+  }
 }
 
 const util = new Utility()
