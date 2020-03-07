@@ -70,7 +70,10 @@ export class FilesDeleted {
 
   result() {
     return {
-      files: this.unlinkFilePaths === 0 ? this.filePaths : this.unlinkFilePaths,
+      files:
+        this.unlinkFilePaths.length === 0
+          ? this.filePaths
+          : this.unlinkFilePaths,
     }
   }
 }

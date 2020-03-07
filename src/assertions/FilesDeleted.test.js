@@ -111,6 +111,7 @@ test("result", () => {
 
   expect(assertion.result(true)).toEqual({ files: assertion.unlinkFilePaths })
 
+  assertion.unlinkFilePaths = []
   assertion.filePaths = ["blah"]
 
   expect(assertion.result(false)).toEqual({ files: assertion.filePaths })
