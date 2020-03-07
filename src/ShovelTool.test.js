@@ -306,10 +306,17 @@ test("loadScriptFile", async () => {
     }`
   await expect(tool.loadScriptFile("test.shovel")).rejects.toThrow(ScriptError)
 
-  // Bad statement name
+  // Bad assert type
   container.fs.readFile = async (path) =>
     `{
       statements: [{ assert: 1 }],
+    }`
+  await expect(tool.loadScriptFile("test.shovel")).rejects.toThrow(ScriptError)
+
+  // Bad action type
+  container.fs.readFile = async (path) =>
+    `{
+      statements: [{ action: 1 }],
     }`
   await expect(tool.loadScriptFile("test.shovel")).rejects.toThrow(ScriptError)
 
@@ -585,6 +592,13 @@ test("runScriptLocally", async () => {
         result() {}
       },
     },
+    actions: {
+      TestAction: class TestAction {
+        constructor() {}
+        async perform() {}
+        result() {}
+      },
+    },
     util: { runningAsRoot: () => true },
     process: {
       seteuid: () => undefined,
@@ -622,6 +636,12 @@ test("runScriptLocally", async () => {
                     assert: true,
                   },
                 },
+                {
+                  action: "TestAction",
+                  with: {
+                    when: "now",
+                  }
+                }
               ],
             }`
           case "/x/b.shovel":
@@ -638,13 +658,22 @@ test("runScriptLocally", async () => {
             }`
           case "/x/c.shovel":
             return `{
-              statements: [
-                {
-                  assert: "UnknownAsert",
-                  with: {}
-                }
-              ]
-            }`
+                statements: [
+                  {
+                    assert: "UnknownAssert",
+                    with: {}
+                  }
+                ]
+              }`
+          case "/x/d.shovel":
+            return `{
+                  statements: [
+                    {
+                      action: "UnknownAction",
+                      with: {}
+                    }
+                  ]
+                }`
           default:
             throw new Error()
         }
@@ -681,6 +710,11 @@ test("runScriptLocally", async () => {
 
   // Bad assertion
   await expect(tool.runScriptLocally("/x/c.shovel")).rejects.toThrow(
+    ScriptError
+  )
+
+  // Bad action
+  await expect(tool.runScriptLocally("/x/d.shovel")).rejects.toThrow(
     ScriptError
   )
 })

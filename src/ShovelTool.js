@@ -291,6 +291,7 @@ export class ShovelTool {
       const {
         description: descriptionNode,
         when: whenNode,
+        action: actionNode,
         assert: assertNode,
         with: withNode,
       } = statementNode.value
@@ -299,8 +300,15 @@ export class ShovelTool {
         if (assertNode.type !== "string") {
           throw new ScriptError("'assert' must be a string", assertNode)
         }
+      } else if (actionNode) {
+        if (actionNode.type !== "string") {
+          throw new ScriptError("'action' must be a string", actionNode)
+        }
       } else {
-        throw new ScriptError("'assert' property is not present", statementNode)
+        throw new ScriptError(
+          "Neither assert' or 'action' property is present",
+          statementNode
+        )
       }
 
       if (descriptionNode && descriptionNode.type !== "string") {
