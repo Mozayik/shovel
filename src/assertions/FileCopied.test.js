@@ -35,20 +35,6 @@ test("assert", async () => {
 
   const assertion = new FileCopied(container)
 
-  // Bad args
-  await expect(
-    assertion.assert(createAssertNode(assertion, {}))
-  ).rejects.toThrow(ScriptError)
-  await expect(
-    assertion.assert(createAssertNode(assertion, { fromFile: 1 }))
-  ).rejects.toThrow(ScriptError)
-  await expect(
-    assertion.assert(createAssertNode(assertion, { fromFile: "" }))
-  ).rejects.toThrow(ScriptError)
-  await expect(
-    assertion.assert(createAssertNode(assertion, { fromFile: "", toFile: 1 }))
-  ).rejects.toThrow(ScriptError)
-
   // With files the same
   await expect(
     assertion.assert(
