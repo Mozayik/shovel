@@ -12,9 +12,8 @@ test("assert", async () => {
           return new PathInfo()
         } else if (path === "/noaccess") {
           return new PathInfo({
-            isFile: () => false,
-            isDirectory: () => true,
-            mode: 0o555,
+            isFile: () => true,
+            mode: 0,
           })
         } else {
           return new PathInfo({
@@ -89,6 +88,16 @@ test("assert", async () => {
       })
     )
   ).resolves.toBe(false)
+
+  // With fromPath not readable
+  await expect(
+    assertion.assert(
+      createAssertNode(assertion, {
+        fromFile: "/noaccess",
+        toFile: "/somefile",
+      })
+    )
+  ).rejects.toThrow(ScriptError)
 
   // With toPath directory not writable
   await expect(
