@@ -1,6 +1,9 @@
 # Shovel: An SSH and Node.js based IT automation tool
 
-Shovel is a tool for performing IT automation tasks.  It's written in Javascript using [NodeJS](https://nodejs.org).  Script files are created in [JSON5](https://json5.org/) format and consist of a sequence of assertions that ensure the state of target system.  Scripts are *idempotent* which means that after one successful run subsequent runs result in no changes to the target. This allows you to confirm the state of a system quickly and safely.
+Shovel is a tool for performing IT automation tasks.  It's written in Javascript using [NodeJS](https://nodejs.org).  Script files are created in [JSON5](https://json5.org/) format and consist of a sequence of statements about the target system.  Statements fall into two categories:
+
+- **Assertions** check that a certain system state is valid. If it is, nothing happens, otherwise the system state is rectified.
+- **Actions** perform some action where checking existing system state is not possible or does not make sense.
 
 ## Installation
 
@@ -60,7 +63,7 @@ Shovel has the following key features:
 
 - Bootstraps itself on a remote system, installing Node.js and itself as needed
 - Cross platform (macOS/Linux) by leveraging NodeJS's inherent cross platform capabilities
-- Comes with a wide range of built-in asserters
+- Comes with a wide range of built-in assertions and actions
 - Able to set script wide variables and safely use Javascript for calculated values
 - Uses an easy-to-read JSON5 script format, allowing multi-line strings and comments
 
@@ -89,7 +92,7 @@ Shovel scripts can have either a `.json5` extension, or if you want to be able t
 1. `metadata`
 2. `vars`
 3. `includes`
-4. `assertions`
+4. `statements`
 
 Scripts are a sequence of assertions executed sequentially. The order of the assertions is important. Later assertions can expect the assertions higher up in the script to have either be true or to have been rectified to be true.  Note that it is fine to write a script where all the assertions are not expected to be true each time the script is run.  For example, you might write a script to stop a service so you can set some configuration files, then start the service again.  The stop/start assertions will always be triggered.  The important thing is that assertions ensure that the script doesn't make changes it doesn't have too.  This is really helpful when restarting a script after an unexpected failure, for example.
 
@@ -105,15 +108,19 @@ The `includes` section is evaluated second.  Any included script is run before t
 
 ### `vars`
 
-### `assertions`
+### `statements`
 
-Assertions are a collections of assertions about a host state.  Assertions are run one at a time, from the top of the script to bottom.  Each assertion makes a statement about some particular type of the host machine state.  If that state is not true, then the asserter tries to rectify the situation and make that assertion true.  There are asserters for files, directories, users, groups, file downsloads, file contents, and so on.
+Statements are a collections of assertions about a host state and/or actions.  Statements are run one at a time, from the top of the script to bottom.
 
-See the full list of built-in [asserters](doc/Asserters.md) in the documentation directory.
+An assertion checks some particular state of the host machine.  If that assertion is not true, then the asserter tries to rectify the situation and make the assertion be true.  There are assertions for files, directories, users, groups, file downsloads, file contents, and so on.
+
+See the full list of built-in [assertions](doc/Statements.md#Asserters) and [actions](doc/Statements.md#Actions) in the documentation directory.
+
+Actions perform an action that cannot be easily checked, e.g. running an autotools build which checks it's own dependencies, or where state does not make sense, e.g. a system reboot.
 
 ## SSH
 
-Shovel uses SSH to run scripts on remote hosts. When run against one or more hosts, Shovel uses SSH to run scripts on those hostes. When run without a remote host, Shovel just runs the script directly on your local system.
+Normally, Shovel uses SSH to run scripts on one or more remote hosts. When run without a host, Shovel just runs the script directly on your local system without SSH.
 
 ## Advanced
 
@@ -121,9 +128,9 @@ Shovel uses SSH to run scripts on remote hosts. When run against one or more hos
 
 Shovel uses an enhanced fork of the [JSON5](https://www.npmjs.com/package/@johnls/json5) library that returns `Node` objects instead of simple Javascript values for each value, array or object in the JSON5. A node object has `type` and `value` fields, plus `line` and `column` fields showing where in the JSON5 file the node comes from.  This allows error messages that contain location information to help the Shovel user to find and fix errors in their script.
 
-### Writing an Asserter
+### Writing an Assertion
 
-The asserter must be a Javascript class.  The `constructor` will be called with a `container` object, which at a minimum contains:
+The assertion must be a Javascript class.  The `constructor` will be called with a `container` object, which at a minimum contains:
 
 Each script assertions runs with a new instance of the specified asserter. `assert` will always be called. `rectify` will only be called if the assertion condition has not been met.
 
@@ -139,7 +146,7 @@ Each script assertions runs with a new instance of the specified asserter. `asse
 The `constructor` should:
 
 1. Save desired `container` object references to `this`.
-2. Grab any global modules that are needed by the asserter if they are not passed in in the `container`.  In this way mock modules can be injected for testing. See existing asserters for examples of making asserters testable.
+2. Grab any global modules that are needed by the asserter if they are not passed in in the `container`.  In this way mock modules can be injected for testing. See existing assertions for examples of making assertions testable.
 3. Do any required setup for the asserter (not common)
 
 The goals for the `assert` method are:
@@ -162,7 +169,7 @@ Finally, the `result()` method will *always* be called to output the result of t
 1. Return an object with information that helps the user understand what the assert checked or modified.
 2. Do not `throw` from this method
 
-Asserter class naming should generally follow these conventions:
+The assertion class naming should generally follow these conventions:
 
 - The name should be a noun and a verb
 - Use a noun that describes the thing being asserted on as closely as possible, e.g. File, ZipFile, Package, etc..
@@ -171,7 +178,7 @@ Asserter class naming should generally follow these conventions:
 - Use a verb that is commonly associated with the noun, e.g. running for services, unzipped for zip files, etc..
 - The naming should hint at what the asserter does internally as an aid to helping people find the right asserter for a given situation.
 
-Asserter argument naming should generally follow these conventions:
+Assertion argument naming should generally follow these conventions:
 
 - The argument should include a noun for the thing it pertains too, e.g. `user`, `directory`, `file`, `group`, etc..
 - If there are multiple arguments with the same noun, add a pronoun to differentiate, e.g. `fromFile` and `toFile`

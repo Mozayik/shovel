@@ -1,6 +1,6 @@
 # Assertions
 
-The `assertions` section is an array of assertions to make about the target host.  It is run in order from top to bottom.
+The `statements` section is an array of `assert`'s and/or `action`'s to run on the target host.  The statements execute in order from top to bottom.
 
 ## Arguments
 
@@ -12,9 +12,13 @@ The `assertions` section is an array of assertions to make about the target host
 | `become`      | `string`              | Name of a user to become before running the asserter.  Currently only `root` is supported. |
 | `when`        | `boolean` or `string` | A boolean or an expression that is evaluated to see if the assertion should be run at all  |
 
-## Built-in Asserters
+## Built-in Actions
 
-Here is an alphabetical list of the current built-in asserters:
+There are currently no built-in actions.
+
+## Built-in Assertions
+
+Here is an alphabetical list of the current built-in assertions:
 
 - [`AutoToolProjectConfigured`](./AutoToolProjectConfigured.md)
 - [`AutoToolProjectMade`](./AutoToolProjectMade.md)

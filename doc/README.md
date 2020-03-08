@@ -5,4 +5,4 @@ Shovel scripts are comprised of four sections; `metadata`, `includes`, `vars`, `
 - [`metadata`](./Metadata.md)
 - [`includes`](./Includes.md)
 - [`vars`](./Variables.md)
-- [`assertions`](./Assertions.md)
+- [`statements`](./Statements.md)
