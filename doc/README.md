@@ -10,12 +10,14 @@ The primary breaking changes are:
 
 ## Writing Scripts
 
-Shovel scripts are comprised of four sections; `metadata`, `includes`, `vars`, `assertions`.  Each section is described in the following pages:
+Shovel scripts are comprised of four sections. Each section is described in the following pages:
 
 - [`metadata`](./Metadata.md)
 - [`includes`](./Includes.md)
 - [`vars`](./Variables.md)
 - [`statements`](./Statements.md)
+
+Statements can be either an assertion or an action.
 
 ## Writing Assertions and Actions
 
