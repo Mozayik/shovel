@@ -728,13 +728,6 @@ export class ShovelTool {
           interpolateOnlyLocalVars: true,
         })
 
-        // Put the includes back to being relative paths
-        for (const includeNode of scriptNode.value.includes.value) {
-          includeNode.value =
-            "." +
-            includeNode.value.substring(scriptContext.rootScriptDirPath.length)
-        }
-
         const newScript = JSON5.simplify(scriptNode)
 
         newScript.vars = runContext.vars
