@@ -558,10 +558,11 @@ export class ShovelTool {
         metadata: metadataNode,
       } = scriptNode.value
 
+      // Show metadata if there is any
       if (Object.keys(metadataNode.value).length > 0) {
         this.log.output(
           JSON5.stringify(
-            JSON5.simplify(metadataNode.value),
+            JSON5.simplify(metadataNode),
             null,
             this.debug ? "  " : null
           )
