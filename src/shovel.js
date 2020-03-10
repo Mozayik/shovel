@@ -21,11 +21,17 @@ class Log {
     this.stopSpinner()
     if (
       line.startsWith("{rectified") ||
+      line.startsWith("{\n  rectified") ||
       line.startsWith("{wouldRectify") ||
-      line.startsWith("{performed")
+      line.startsWith("{\n  wouldRectify") ||
+      line.startsWith("{performed") ||
+      line.startsWith("{\n  performed")
     ) {
       console.log(chalk.yellow(line))
-    } else if (line.startsWith("{asserted")) {
+    } else if (
+      line.startsWith("{asserted") ||
+      line.startsWith("{\n  asserted")
+    ) {
       console.log(chalk.green(line))
     } else {
       console.log(chalk.blueBright(line))

@@ -550,7 +550,8 @@ export class ShovelTool {
       this.updateRunContext(runContext, interpolator, scriptNode)
 
       if (this.debug && Object.keys(runContext.vars).length > 0) {
-        this.log.info(JSON5.stringify(runContext.vars, null, "  "))
+        this.log.debug("Current variables:")
+        this.log.debug(JSON5.stringify(runContext.vars, null, "  "))
       }
 
       const {
@@ -653,7 +654,7 @@ export class ShovelTool {
 
         runContext.results.push(result)
 
-        this.log.output(JSON5.stringify(result))
+        this.log.output(JSON5.stringify(result, null, this.debug ? "  " : null))
       }
 
       if (sudo !== null) {
@@ -741,7 +742,7 @@ export class ShovelTool {
         const scriptContent = JSON5.stringify(
           newScript,
           null,
-          this.debug ? "  " : undefined
+          this.debug ? "  " : null
         )
 
         const remoteScriptPath = path.join(remoteTempDir, scriptPath)
