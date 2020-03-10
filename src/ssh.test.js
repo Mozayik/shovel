@@ -149,12 +149,14 @@ test("connect", async () => {
   await expect(ssh.connect({ host: "host" })).rejects.toThrow("refused")
 
   // Passphrase required
+  ssh.close()
   setImmediate(() => {
     pty.emit("data", "Enter passphrase for xxx")
   })
   await expect(ssh.connect({ host: "host" })).rejects.toThrow("passphrase")
 
   // No prompts
+  ssh.close()
   setImmediate(() => {
     pty.emit("data", "x@y's password:")
   })

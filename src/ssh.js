@@ -138,7 +138,7 @@ export class SSH {
 
     args = args.concat(["-o", "NumberOfPasswordPrompts=1"])
 
-    const pty = this.nodePty.spawn("ssh", args, {
+    this.pty = this.nodePty.spawn("ssh", args, {
       name: "xterm-color",
       cols: 80,
       rows: 30,
@@ -161,7 +161,6 @@ export class SSH {
       }) => {
         if (ready) {
           // Successful connection, PTY stays open
-          this.pty = pty
           this.loginPasswordPrompts = loginPasswordPrompts
           dataEvent.dispose()
           resolve()
@@ -181,7 +180,7 @@ export class SSH {
             dataEvent.dispose()
             reject(new Error("Remote displayed a login prompt"))
           } else if (loginPasswordPrompts.has(loginPasswordPrompt)) {
-            pty.write(loginPasswordPrompts.get(loginPasswordPrompt))
+            this.pty.write(loginPasswordPrompts.get(loginPasswordPrompt))
           } else {
             this.showPrompt(loginPasswordPrompt).then((password) => {
               loginPasswordPrompts.set(loginPasswordPrompt, password + "\n")
@@ -190,17 +189,17 @@ export class SSH {
           }
         } else if (verificationPrompt) {
           this.showPrompt(verificationPrompt).then((code) => {
-            pty.write(code + "\n")
+            this.pty.write(code + "\n")
           })
         } else if (!promptChanged) {
-          pty.write(`PROMPT_COMMAND=\nPS1='${ps1}'\nPS2='${ps2}'\n`)
+          this.pty.write(`PROMPT_COMMAND=\nPS1='${ps1}'\nPS2='${ps2}'\n`)
           promptChanged = true
         }
       }
-      const dataEvent = pty.onData((data) => {
+      const dataEvent = this.pty.onData((data) => {
         dataHandler(this.parseLines(data))
       })
-      const exitEvent = pty.onExit(() => {
+      const exitEvent = this.pty.onExit(() => {
         if (this.promptDisplayed) {
           this.process.stdin.unref() // To free the Node event loop
         }
