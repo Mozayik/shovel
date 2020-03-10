@@ -932,7 +932,7 @@ Arguments:
             sftpDebug: args.sftpDebug,
           })
         } catch (error) {
-          this.log.error(this.debug ? error : error.message)
+          this.log.error(error.message)
           failures += 1
         }
       }

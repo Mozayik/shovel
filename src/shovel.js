@@ -12,9 +12,9 @@ class Log {
     this.spinnerEnabled = false
   }
 
-  info() {
+  info(...args) {
     this.stopSpinner()
-    console.error([...arguments].join(" "))
+    console.error(args.join(" "))
   }
 
   output(line) {
@@ -43,9 +43,9 @@ class Log {
     console.log(chalk.red("remote-" + line))
   }
 
-  warning() {
+  warning(...args) {
     this.stopSpinner()
-    console.error(chalk.yellow("warning:", [...arguments].join(" ")))
+    console.error(chalk.yellow("warning:", args.join(" ")))
   }
 
   debug(line) {
@@ -53,9 +53,9 @@ class Log {
     console.log(chalk.gray(line))
   }
 
-  error() {
+  error(...args) {
     this.stopSpinner()
-    console.error(chalk.red("error:", [...arguments].join(" ")))
+    console.error(chalk.red("error:", args.join(" ")))
   }
 
   enableSpinner() {
@@ -98,10 +98,12 @@ tool
     process.exitCode = 200
 
     if (error) {
-      log.error(error.message || error)
+      let message = error.message ?? ""
 
       if (tool.debug) {
-        console.error(error)
+        message += error.stack.substring(error.stack.indexOf("\n"))
       }
+
+      log.error(message)
     }
   })
