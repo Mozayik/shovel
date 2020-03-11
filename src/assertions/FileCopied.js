@@ -2,52 +2,50 @@ import fs from "fs-extra"
 import util from "../util"
 import path from "path"
 import { ScriptError } from "../ScriptError"
+import { StatementBase } from "../StatementBase"
 
-export class FileCopied {
+export class FileCopied extends StatementBase {
   constructor(container) {
+    super(container.interpolator)
+
     this.fs = container.fs || fs
     this.util = container.util || util
-    this.interpolator = container.interpolator
   }
 
-  async assert(assertNode) {
-    const withNode = assertNode.value.with
-    const { node: fromFileNode, value: fromFilePath } = util.parseNode({
-      withNode,
-      name: "fromFile",
-      type: "string",
-      interpolator: this.interpolator,
-    })
-    const { node: toFileNode, value: toFilePath } = util.parseNode({
-      withNode,
-      name: "toFile",
-      type: "string",
-      interpolator: this.interpolator,
-    })
+  async assert(assertionNode) {
+    const { fromFileNode, toFileNode } = this.parseWithNode(assertionNode, [
+      {
+        name: "fromFile",
+        type: "string",
+        as: "fromFilePath",
+      },
+      {
+        name: "toFile",
+        type: "string",
+        as: "toFilePath",
+      },
+    ])
 
-    this.fromFilePath = fromFilePath
-    this.toFilePath = toFilePath
-
-    const fromPathInfo = await this.util.pathInfo(fromFilePath)
+    const fromPathInfo = await this.util.pathInfo(this.fromFilePath)
 
     if (!fromPathInfo.isFile()) {
       throw new ScriptError(
-        `File '${fromFilePath}' does not exist`,
+        `File '${this.fromFilePath}' does not exist`,
         fromFileNode
       )
     }
 
     if (!fromPathInfo.getAccess().isReadable()) {
       throw new ScriptError(
-        `File ${fromFilePath} is not readable`,
+        `File ${this.fromFilePath} is not readable`,
         fromFileNode
       )
     }
 
-    const toPathInfo = await this.util.pathInfo(toFilePath)
+    const toPathInfo = await this.util.pathInfo(this.toFilePath)
 
     if (!toPathInfo.isFile()) {
-      const parentDir = path.dirname(toFilePath)
+      const parentDir = path.dirname(this.toFilePath)
 
       if (!(await this.util.pathInfo(parentDir)).getAccess().isWriteable()) {
         throw new ScriptError(
@@ -59,8 +57,10 @@ export class FileCopied {
       return false
     }
 
-    const fromFileDigest = await this.util.generateDigestFromFile(fromFilePath)
-    const toFileDigest = await this.util.generateDigestFromFile(toFilePath)
+    const fromFileDigest = await this.util.generateDigestFromFile(
+      this.fromFilePath
+    )
+    const toFileDigest = await this.util.generateDigestFromFile(this.toFilePath)
 
     return fromFileDigest === toFileDigest
   }

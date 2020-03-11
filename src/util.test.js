@@ -402,83 +402,15 @@ test("parseModeNode", async () => {
   expect(util.parseModeNode(createNode("test.json5", {}))).toBe(0o000)
 })
 
-test("parseNode", async () => {
+test("addArg", () => {
   const util = new Utility()
-  const interpolator = (node) => {
-    if (node.value === "{true}") {
-      return true
-    } else if (node.value === "{{}}") {
-      return {}
-    } else if (node.value === "{null}") {
-      return null
-    } else if (node.value === "{[]}") {
-      return []
-    } else {
-      return node.value
-    }
-  }
-  const withNode = createNode("test.json5", {
-    s: "abc",
-    n: 2,
-    b: false,
-    c: "{true}",
-    o: "{{}}",
-    a: "{[]}",
-    v: "{null}",
-  })
 
-  // Happy path
-  expect(util.parseNode({ withNode, name: "s", type: "string" })).toEqual({
-    node: withNode.value.s,
-    value: "abc",
-  })
-
-  // Missing node
-  expect(() => util.parseNode({ withNode, name: "t", type: "string" })).toThrow(
-    ScriptError
-  )
-
-  // Missing node with defaultValue
-  expect(
-    util.parseNode({ withNode, name: "t", type: "string", defaultValue: "xyz" })
-  ).toEqual({ node: withNode, value: "xyz" })
-
-  // Interpolated string to boolean
-  expect(
-    util.parseNode({ withNode, name: "c", type: "boolean", interpolator })
-  ).toEqual({
-    node: withNode.value.c,
-    value: true,
-  })
-
-  // Interpolated string to object
-  expect(
-    util.parseNode({ withNode, name: "o", type: "object", interpolator })
-  ).toEqual({
-    node: withNode.value.o,
-    value: {},
-  })
-
-  // Interpolated string to null
-  expect(
-    util.parseNode({ withNode, name: "v", type: "null", interpolator })
-  ).toEqual({
-    node: withNode.value.v,
-    value: null,
-  })
-
-  // Interpolated string to array
-  expect(
-    util.parseNode({ withNode, name: "a", type: "array", interpolator })
-  ).toEqual({
-    node: withNode.value.a,
-    value: [],
-  })
-
-  // Interpolated string to wrong type
-  expect(() =>
-    util.parseNode({ withNode, name: "c", type: "string", interpolator })
-  ).toThrow(ScriptError)
+  expect(util.addArg()).toBe("")
+  expect(util.addArg("-x")).toBe(" -x")
+  expect(util.addArg("-g", true)).toBe(" -g")
+  expect(util.addArg("-s", "thing")).toBe(" -s thing")
+  expect(util.addArg("-s", "thing with space")).toBe(" -s 'thing with space'")
+  expect(util.addArg("-n", 100)).toBe(" -n 100")
 })
 
 test("osInfo", async () => {

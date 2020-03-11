@@ -24,3 +24,7 @@ Asserts that a file has been downloaded from a URL with HTTP or HTTPS.
   }
 }
 ```
+
+## Notes
+
+On macOS you can generate a SHA256 hash using `shasum -a 256 <file-name>`.

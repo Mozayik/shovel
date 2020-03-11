@@ -18,18 +18,9 @@ test("assert", async () => {
 
   // Bad arguments
   await expect(
-    assertion.assert(createAssertNode(assertion, {}))
-  ).rejects.toThrow(ScriptError)
-  await expect(
-    assertion.assert(createAssertNode(assertion, { group: 1, gid: 10 }))
-  ).rejects.toThrow(ScriptError)
-  await expect(
     assertion.assert(
       createAssertNode(assertion, { group: "mail", gid: 10, system: true })
     )
-  ).rejects.toThrow(ScriptError)
-  await expect(
-    assertion.assert(createAssertNode(assertion, { group: "mail", system: 1 }))
   ).rejects.toThrow(ScriptError)
 
   // Bad gid
@@ -96,7 +87,7 @@ test("rectify", async () => {
   }
   const assertion = new GroupExists(container)
 
-  assertion.expandedGroupName = "name"
+  assertion.groupName = "name"
   assertion.modify = false
   assertion.gid = undefined
 
@@ -117,11 +108,11 @@ test("rectify", async () => {
 test("result", () => {
   const assertion = new GroupExists({})
 
-  assertion.expandedGroupName = "name"
+  assertion.groupName = "name"
   assertion.gid = 12
 
   expect(assertion.result()).toEqual({
-    group: assertion.expandedGroupName,
+    group: assertion.groupName,
     gid: 12,
   })
 })

@@ -2,8 +2,6 @@ import { UserExists } from "./UserExists"
 import { createAssertNode } from "../testUtil"
 import { ScriptError } from "../ScriptError"
 
-let container = null
-
 test("assert", async () => {
   const container = {
     interpolator: (node) => node.value,
@@ -46,45 +44,21 @@ test("assert", async () => {
 
   // Bad args
   await expect(
-    assertion.assert(createAssertNode(assertion, {}))
-  ).rejects.toThrow(ScriptError)
-  await expect(
-    assertion.assert(createAssertNode(assertion, { user: 1 }))
-  ).rejects.toThrow(ScriptError)
-  await expect(
-    assertion.assert(createAssertNode(assertion, { user: "x", uid: "1" }))
-  ).rejects.toThrow(ScriptError)
-  await expect(
-    assertion.assert(createAssertNode(assertion, { user: "x", system: 1 }))
-  ).rejects.toThrow(ScriptError)
-  await expect(
     assertion.assert(
       createAssertNode(assertion, { user: "x", uid: 1000, system: true })
     )
   ).rejects.toThrow(ScriptError)
   await expect(
-    assertion.assert(createAssertNode(assertion, { user: "x", gid: "1" }))
-  ).rejects.toThrow(ScriptError)
-  await expect(
-    assertion.assert(createAssertNode(assertion, { user: "x", group: 1 }))
-  ).rejects.toThrow(ScriptError)
-  await expect(
     assertion.assert(
-      createAssertNode(assertion, { user: "user1", group: "notthere" })
+      createAssertNode(assertion, { user: "x", gid: 1000, group: "group1" })
     )
   ).rejects.toThrow(ScriptError)
   await expect(
-    assertion.assert(createAssertNode(assertion, { user: "x", shell: 1 }))
-  ).rejects.toThrow(ScriptError)
-  await expect(
-    assertion.assert(createAssertNode(assertion, { user: "x", homeDir: 1 }))
-  ).rejects.toThrow(ScriptError)
-  await expect(
-    assertion.assert(createAssertNode(assertion, { user: "x", comment: 1 }))
-  ).rejects.toThrow(ScriptError)
-  await expect(
     assertion.assert(
-      createAssertNode(assertion, { user: "x", passwordDisabled: 1 })
+      createAssertNode(assertion, {
+        user: "user1",
+        group: "badgroup",
+      })
     )
   ).rejects.toThrow(ScriptError)
 
@@ -226,7 +200,7 @@ test("rectify", async () => {
   const assertion = new UserExists(container)
 
   assertion.modify = false
-  assertion.name = "user1"
+  assertion.userName = "user1"
   assertion.system = true
   assertion.user = users[0]
   assertion.passwordDisabled = false
@@ -238,7 +212,7 @@ test("rectify", async () => {
   await expect(assertion.rectify()).resolves.toBeUndefined()
 
   assertion.modify = true
-  assertion.name = "badname"
+  assertion.userName = "badname"
   assertion.user = users[1]
   assertion.passwordDisabled = false
   await expect(assertion.rectify()).rejects.toThrow(Error)
@@ -250,8 +224,8 @@ test("rectify", async () => {
 
 test("result", () => {
   const assertion = new UserExists({})
-  const user = {
-    name: "user1",
+  const result = {
+    user: "user1",
     gid: 12,
     uid: 12,
     shell: "/bin/bash",
@@ -259,7 +233,12 @@ test("result", () => {
     comment: "",
   }
 
-  Object.assign(assertion, user)
+  assertion.userName = result.user
+  assertion.gid = result.gid
+  assertion.uid = result.uid
+  assertion.shell = result.shell
+  assertion.homeDir = result.homeDir
+  assertion.comment = result.comment
 
-  expect(assertion.result()).toEqual(user)
+  expect(assertion.result()).toEqual(result)
 })

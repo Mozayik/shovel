@@ -2,35 +2,35 @@ import fs from "fs-extra"
 import childProcess from "child-process-es6-promise"
 import util from "../util"
 import { ScriptError } from "../ScriptError"
+import { StatementBase } from "../StatementBase"
 
-export class UserExists {
+export class UserExists extends StatementBase {
   constructor(container) {
+    super(container.interpolator)
+
     this.fs = container.fs || fs
     this.util = container.util || util
     this.childProcess = container.childProcess || childProcess
-    this.interpolator = container.interpolator
   }
 
   async assert(assertNode) {
-    const withNode = assertNode.value.with
     const {
-      user: userNode,
-      uid: uidNode,
-      gid: gidNode,
-      system: systemNode,
-      shell: shellNode,
-      homeDir: homeDirNode,
-      comment: commentNode,
-      group: groupNode,
-      passwordDisabled: passwordDisabledNode,
-    } = withNode.value
-
-    if (!userNode || userNode.type !== "string") {
-      throw new ScriptError(
-        "'user' must be supplied and be a string",
-        userNode || withNode
-      )
-    }
+      withNode,
+      uidNode,
+      gidNode,
+      systemNode,
+      groupNode,
+    } = this.parseWithNode(assertNode, [
+      { name: "user", type: "string", as: "userName" },
+      { name: "uid", type: "number", default: undefined },
+      { name: "gid", type: "number", default: undefined },
+      { name: "group", type: "string", as: "groupName", default: undefined },
+      { name: "system", type: "boolean", default: undefined },
+      { name: "shell", type: "string", default: undefined },
+      { name: "homeDir", type: "string", default: undefined },
+      { name: "comment", type: "string", default: undefined },
+      { name: "passwordDisabled", type: "boolean", default: undefined },
+    ])
 
     if (uidNode && systemNode) {
       throw new ScriptError(
@@ -39,85 +39,29 @@ export class UserExists {
       )
     }
 
-    if (uidNode) {
-      if (uidNode.type !== "number") {
-        throw new ScriptError("'uid' must be a number", uidNode)
-      }
-
-      this.uid = uidNode.value
+    if (groupNode && gidNode) {
+      throw new ScriptError(
+        "You cannot specify both 'gid' and 'group'",
+        withNode
+      )
     }
 
-    if (systemNode) {
-      if (systemNode.type !== "boolean") {
-        throw new ScriptError("'system' must be a boolean", systemNode)
-      }
-
-      this.system = systemNode.value
-    }
-
-    if (gidNode) {
-      if (gidNode.type !== "number") {
-        throw new ScriptError("'gid' must be a number", gidNode)
-      }
-
-      this.gid = gidNode.value
-    }
-
-    if (groupNode) {
-      if (groupNode.type !== "string") {
-        throw new ScriptError("'group' must be a string", groupNode)
-      }
-
-      const name = groupNode.value
+    if (this.groupName) {
       const groups = await this.util.getGroups()
-      const group = groups.find((group) => group.name === name)
+      const group = groups.find((group) => group.name === this.groupName)
 
       if (!group) {
-        throw new ScriptError(`Group '${name}' does not exist`, groupNode)
+        throw new ScriptError(
+          `Group '${this.groupName}' does not exist`,
+          groupNode
+        )
       }
 
       this.gid = group.gid
     }
 
-    if (shellNode) {
-      if (shellNode.type !== "string") {
-        throw new ScriptError("'shell' must be a string", shellNode)
-      }
-
-      this.shell = this.interpolator(shellNode)
-    }
-
-    if (homeDirNode) {
-      if (homeDirNode.type !== "string") {
-        throw new ScriptError("'homeDir' must be a string", homeDirNode)
-      }
-
-      this.homeDir = this.interpolator(homeDirNode)
-    }
-
-    if (commentNode) {
-      if (commentNode.type !== "string") {
-        throw new ScriptError("'comment' must be a string", commentNode)
-      }
-
-      this.comment = this.interpolator(commentNode)
-    }
-
-    if (passwordDisabledNode) {
-      if (passwordDisabledNode.type !== "boolean") {
-        throw new ScriptError(
-          "'passwordDisabled' must be a boolean",
-          passwordDisabledNode
-        )
-      }
-
-      this.passwordDisabled = passwordDisabledNode.value
-    }
-
-    this.name = this.interpolator(userNode)
-
     const user = (await this.util.getUsers(this.fs)).find(
-      (user) => user.name === this.name
+      (user) => user.name === this.userName
     )
     const runningAsRoot = this.util.runningAsRoot()
     const loginDefs = await this.util.getLoginDefs()
@@ -167,47 +111,38 @@ export class UserExists {
   }
 
   async rectify() {
-    const addArg = (arg, value) => {
-      switch (typeof value) {
-        case "undefined":
-          return ""
-        case "boolean":
-          return value ? arg : ""
-        case "string":
-          return value.includes(" ") ? "'" + value + "'" : value
-        case "number":
-          return value.toString()
-      }
+    let command = this.modify ? "usermod" : "useradd"
+
+    command += util.addArg("-u", this.uid)
+    command += util.addArg("--system", !!this.system)
+    command += util.addArg("-g", this.gid)
+    command += util.addArg("-s", this.shell)
+    command += util.addArg("-h", this.homeDir)
+    command += util.addArg("-c", this.comment)
+
+    if (this.modify) {
+      command += util.addArg("-L", this.passwordDisabled)
     }
-    const command =
-      (this.modify ? "usermod" : "useradd") +
-      addArg("-u", this.uid) +
-      addArg("--system", !!this.system) +
-      addArg("-g", this.gid) +
-      addArg("-s", this.shell) +
-      addArg("-h", this.homeDir) +
-      addArg("-c", this.comment) +
-      (this.modify ? addArg("-L", this.passwordDisabled) : "") +
-      " " +
-      this.name
+
+    command += util.addArg(this.userName)
 
     await this.childProcess.exec(command)
 
     if (!this.modify && this.passwordDisabled !== undefined) {
       if (this.passwordDisabled) {
-        await this.childProcess.exec(`passwd --lock ${this.name}`)
+        await this.childProcess.exec(`passwd --lock ${this.userName}`)
       } else {
-        await this.childProcess.exec(`passwd --unlock ${this.name}`)
+        await this.childProcess.exec(`passwd --unlock ${this.userName}`)
       }
     }
 
     const user = (await this.util.getUsers()).find(
-      (user) => user.name === this.name
+      (user) => user.name === this.userName
     )
 
     if (!user) {
       throw new Error(
-        `User ${this.name} not present in /etc/passwd after update`
+        `User ${this.userName} not present in /etc/passwd after update`
       )
     }
 
@@ -215,10 +150,10 @@ export class UserExists {
   }
 
   result() {
-    const { name, uid, gid, shell, homeDir, comment } = this
+    const { userName: user, uid, gid, shell, homeDir, comment } = this
 
     return {
-      name,
+      user,
       uid,
       gid,
       shell,

@@ -3,30 +3,27 @@ import childProcess from "child-process-es6-promise"
 import util from "../util"
 import os from "os"
 import { ScriptError } from "../ScriptError"
+import { StatementBase } from "../StatementBase"
 
-export class GroupExists {
+export class GroupExists extends StatementBase {
   constructor(container) {
+    super(container.interpolator)
+
     this.fs = container.fs || fs
     this.util = container.util || util
     this.childProcess = container.childProcess || childProcess
     this.os = container.os || os
-    this.interpolator = container.interpolator
   }
 
-  async assert(assertNode) {
-    const withNode = assertNode.value.with
-    const {
-      group: groupNode,
-      gid: gidNode,
-      system: systemNode,
-    } = withNode.value
-
-    if (!groupNode || groupNode.type !== "string") {
-      throw new ScriptError(
-        "'group' must be supplied and be a string",
-        groupNode || withNode
-      )
-    }
+  async assert(assertionNode) {
+    const { withNode, gidNode, systemNode } = this.parseWithNode(
+      assertionNode,
+      [
+        { name: "group", type: "string", as: "groupName" },
+        { name: "gid", type: "number", default: undefined },
+        { name: "system", type: "boolean", default: undefined },
+      ]
+    )
 
     if (gidNode && systemNode) {
       throw new ScriptError(
@@ -35,26 +32,8 @@ export class GroupExists {
       )
     }
 
-    if (gidNode) {
-      if (gidNode.type !== "number") {
-        throw new ScriptError("'gid' must be a number", gidNode)
-      }
-
-      this.gid = gidNode.value
-    }
-
-    if (systemNode) {
-      if (systemNode.type !== "boolean") {
-        throw new ScriptError("'system' must be a boolean", systemNode)
-      }
-
-      this.system = systemNode.value
-    }
-
-    this.expandedGroupName = this.interpolator(groupNode)
-
     const group = (await this.util.getGroups()).find(
-      (group) => group.name === this.expandedGroupName
+      (group) => group.name === this.groupName
     )
     const runningAsRoot = this.util.runningAsRoot()
     const loginDefs = await this.util.getLoginDefs()
@@ -69,7 +48,7 @@ export class GroupExists {
       if (this.system && (group.gid < gidRange[0] || group.gid > gidRange[1])) {
         throw new ScriptError(
           `Existing GID is outside system range ${gidRange[0]} to ${gidRange[1]}`,
-          assertNode
+          assertionNode
         )
       }
 
@@ -79,7 +58,10 @@ export class GroupExists {
 
       if (this.gid !== group.gid) {
         if (!runningAsRoot) {
-          throw new ScriptError("Only root user can modify groups", assertNode)
+          throw new ScriptError(
+            "Only root user can modify groups",
+            assertionNode
+          )
         }
 
         this.modify = true
@@ -90,7 +72,7 @@ export class GroupExists {
     } else {
       // This group does not exist
       if (!runningAsRoot) {
-        throw new ScriptError("Only root user can add groups", assertNode)
+        throw new ScriptError("Only root user can add groups", assertionNode)
       }
 
       return false
@@ -98,32 +80,21 @@ export class GroupExists {
   }
 
   async rectify() {
-    const addArg = (arg, value) => {
-      switch (typeof value) {
-        case "undefined":
-          return ""
-        case "boolean":
-          return value ? arg : ""
-        case "number":
-          return value.toString()
-      }
-    }
-    const command =
-      (this.modify ? "groupmod" : "groupadd") +
-      addArg("-g", this.gid) +
-      addArg("--system", !!this.system) +
-      " " +
-      this.expandedGroupName
+    let command = this.modify ? "groupmod" : "groupadd"
+
+    command += util.addArg("-g", this.gid)
+    command += util.addArg("--system", !!this.system)
+    command += util.addArg(this.groupName)
 
     await this.childProcess.exec(command)
 
     const group = (await this.util.getGroups()).find(
-      (group) => group.name === this.expandedGroupName
+      (group) => group.name === this.groupName
     )
 
     if (!group) {
       throw new Error(
-        `Group ${this.expandedGroupName} not present in /etc/groups after update`
+        `Group ${this.groupName} not present in /etc/groups after update`
       )
     }
 
@@ -131,6 +102,6 @@ export class GroupExists {
   }
 
   result() {
-    return { group: this.expandedGroupName, gid: this.gid }
+    return { group: this.groupName, gid: this.gid }
   }
 }

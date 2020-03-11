@@ -410,50 +410,23 @@ export class Utility {
     return mode
   }
 
-  parseNode(options) {
-    // NOTE: withNode, name and type must be supplied
-    const node = options.withNode.value[options.name]
-
-    if (!node) {
-      if (options.defaultValue) {
-        return {
-          node: options.withNode,
-          value: options.defaultValue,
-        }
-      } else {
-        throw new ScriptError(
-          `Argument '${options.name}' is required`,
-          options.withNode
-        )
-      }
-    }
-
-    let value
-    let type = node.type
-
-    if (options.interpolator && node.type === "string") {
-      value = options.interpolator(node)
-      type = typeof value
-
-      if (type === "object") {
-        if (value === null) {
-          type = "null"
-        } else if (Array.isArray(value)) {
-          type = "array"
-        }
+  addArg(arg, value) {
+    if (arg) {
+      switch (typeof value) {
+        case "undefined":
+          return " " + arg
+        case "boolean":
+          return value ? " " + arg : ""
+        case "string":
+          return (
+            " " + arg + " " + (value.includes(" ") ? "'" + value + "'" : value)
+          )
+        case "number":
+          return " " + arg + " " + value.toString()
       }
     } else {
-      value = node.value
+      return ""
     }
-
-    if (type !== options.type) {
-      throw new ScriptError(
-        `Expected argument '${options.name}' to be of type '${options.type}' and was '${type}'`,
-        node
-      )
-    }
-
-    return { node, value }
   }
 }
 
