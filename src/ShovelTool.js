@@ -421,7 +421,7 @@ export class ShovelTool {
               return new vm.Script(m).runInContext(runContext).toString()
             } catch (e) {
               throw new Error(
-                `Moustache expression at offset ${offset}. ${e.message}`
+                `Template expression at offset ${offset}. ${e.message}`
               )
             }
           }),

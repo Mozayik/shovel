@@ -63,7 +63,7 @@ test("rectifyHasNode", async () => {
       } else if (command === "node --version") {
         return {
           exitCode: 0,
-          output: [ShovelTool.minNodeVersion],
+          output: [ShovelTool.ltsNodeVersion],
         }
       } else if (command === "bash -c 'echo /$EUID'") {
         return {
@@ -477,6 +477,14 @@ test("createRunContext", async () => {
       )
     )
   ).toBe("Is it that 3 === 3?")
+  expect(
+    result.interpolator(
+      createNode(
+        scriptNode.filename,
+        "{util.template('How now {{{123}}} cow?', '{{{', '}}}')}"
+      )
+    )
+  ).toBe("How now 123 cow?")
   expect(() =>
     result.interpolator(
       createNode(scriptNode.filename, "{util.template('{{_}}')}")
