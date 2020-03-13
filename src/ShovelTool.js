@@ -119,7 +119,7 @@ export class ShovelTool {
       if (
         result.exitCode === 0 &&
         result.output[0] &&
-        semver.gte(semver.clean(result.output[0]), ShovelTool.minNodeVersion)
+        semver.eq(semver.clean(result.output[0]), ShovelTool.ltsNodeVersion)
       ) {
         return
       }
