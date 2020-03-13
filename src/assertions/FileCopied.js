@@ -1,8 +1,6 @@
 import fs from "fs-extra"
-import util from "../util"
 import path from "path"
-import { ScriptError } from "../ScriptError"
-import { StatementBase } from "../StatementBase"
+import util, { ScriptError, StatementBase } from "../utility"
 
 export class FileCopied extends StatementBase {
   constructor(container) {

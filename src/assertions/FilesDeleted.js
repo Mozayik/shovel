@@ -1,8 +1,6 @@
-import util from "../util"
 import fs from "fs-extra"
-import { ScriptError } from "../ScriptError"
 import path from "path"
-import { StatementBase } from "../StatementBase"
+import util, { ScriptError, StatementBase } from "../utility"
 
 export class FilesDeleted extends StatementBase {
   constructor(container) {

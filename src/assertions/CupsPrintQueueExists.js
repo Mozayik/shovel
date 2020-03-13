@@ -1,8 +1,7 @@
 import childProcess from "child-process-es6-promise"
-import { ScriptError } from "../ScriptError"
 import path from "path"
 import fs from "fs-extra"
-import util from "../util"
+import util, { ScriptError } from "../utility"
 import camelCase from "camelcase"
 import Timeout from "await-timeout"
 

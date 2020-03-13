@@ -1,7 +1,5 @@
 import fs from "fs-extra"
-import util from "../util"
-import { SFTP } from "../sftp"
-import { ScriptError } from "../ScriptError"
+import util, { ScriptError, SFTP } from "../utility"
 
 export class FileCopiedToRemote {
   constructor(container) {

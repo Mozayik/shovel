@@ -2,7 +2,6 @@ import stream from "stream"
 import { createNode } from "./testUtil"
 import { ScriptError } from "./ScriptError"
 import { Utility, PathInfo, PathAccess } from "./util"
-import fs from "fs-extra"
 
 const testString = "the quick brown fox jumps over the lazy dog"
 

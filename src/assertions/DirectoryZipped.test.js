@@ -1,8 +1,6 @@
 import { DirectoryZipped } from "./DirectoryZipped"
 import stream from "stream"
-import { createAssertNode } from "../testUtil"
-import { ScriptError } from "../ScriptError"
-import { PathInfo } from "../util"
+import { ScriptError, PathInfo, createAssertNode } from "../utility"
 
 test("assert", async () => {
   let container = {

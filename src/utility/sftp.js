@@ -2,10 +2,10 @@ import * as nodePty from "node-pty"
 import autobind from "autobind-decorator"
 import Timeout from "await-timeout"
 import readlinePassword from "@johnls/readline-password"
-import { ansiEscapeRegex } from "./util"
 import tempy from "tempy"
 import fs from "fs-extra"
 import path from "path"
+import { ansiEscapeRegex } from "./util"
 
 const ps1 = "sftp>"
 

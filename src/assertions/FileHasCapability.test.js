@@ -1,7 +1,5 @@
 import { FileHasCapability } from "./FileHasCapability"
-import { createAssertNode } from "../testUtil"
-import { ScriptError } from "../ScriptError"
-import { PathInfo } from "../util"
+import { PathInfo, ScriptError, createAssertNode } from "../utility"
 
 test("assert", async () => {
   const container = {
@@ -33,27 +31,6 @@ test("assert", async () => {
 
   const assertion = new FileHasCapability(container)
 
-  // Bad args
-  await expect(
-    assertion.assert(createAssertNode(assertion, {}))
-  ).rejects.toThrow(ScriptError)
-  await expect(
-    assertion.assert(createAssertNode(assertion, { file: 1 }))
-  ).rejects.toThrow(ScriptError)
-  await expect(
-    assertion.assert(createAssertNode(assertion, { file: "file" }))
-  ).rejects.toThrow(ScriptError)
-  await expect(
-    assertion.assert(
-      createAssertNode(assertion, { file: "file", capability: 1 })
-    )
-  ).rejects.toThrow(ScriptError)
-  await expect(
-    assertion.assert(
-      createAssertNode(assertion, { file: "file1", capability: "CAP_NOT_REAL" })
-    )
-  ).rejects.toThrow(ScriptError)
-
   // Happy path
   await expect(
     assertion.assert(
@@ -63,6 +40,13 @@ test("assert", async () => {
       })
     )
   ).resolves.toBe(true)
+
+  // Bad args
+  await expect(
+    assertion.assert(
+      createAssertNode(assertion, { file: "file1", capability: "CAP_NOT_REAL" })
+    )
+  ).rejects.toThrow(ScriptError)
 
   // File does not exist
   await expect(

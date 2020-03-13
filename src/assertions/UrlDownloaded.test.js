@@ -1,7 +1,5 @@
 import { UrlDownloaded } from "./UrlDownloaded"
-import { createAssertNode } from "../testUtil"
-import { ScriptError } from "../ScriptError"
-import util, { PathInfo } from "../util"
+import util, { createAssertNode, PathInfo, ScriptError } from "../utility"
 
 test("assert", async () => {
   const container = {

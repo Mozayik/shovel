@@ -1,6 +1,5 @@
 import fs from "fs-extra"
-import util from "../util"
-import { ScriptError } from "../ScriptError"
+import util, { ScriptError } from "../utility"
 
 export class FileContains {
   constructor(container) {
@@ -85,9 +84,7 @@ export class FileContains {
 
     this.contents = this.interpolator(contentsNode)
 
-    if (
-      !(await this.util.pathInfo(this.filePath)).getAccess().isReadWrite()
-    ) {
+    if (!(await this.util.pathInfo(this.filePath)).getAccess().isReadWrite()) {
       throw new ScriptError(
         `${this.filePath} does not exist or is not readable & writable`,
         fileNode
@@ -205,6 +202,11 @@ export class FileContains {
   }
 
   result() {
-    return { file: this.filePath, contents: this.contents, position: this.position, regex: this.regex ?? "" }
+    return {
+      file: this.filePath,
+      contents: this.contents,
+      position: this.position,
+      regex: this.regex ?? "",
+    }
   }
 }

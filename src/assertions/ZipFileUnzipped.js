@@ -1,8 +1,7 @@
 import fs from "fs-extra"
 import yauzl from "yauzl-promise"
-import util from "../util"
 import path from "path"
-import { ScriptError } from "../ScriptError"
+import util, { ScriptError } from "../utility"
 
 export class ZipFileUnzipped {
   constructor(container) {

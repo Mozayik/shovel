@@ -1,7 +1,6 @@
 import fs from "fs-extra"
 import childProcess from "child-process-es6-promise"
-import util from "../util"
-import { ScriptError } from "../ScriptError"
+import util, { ScriptError } from "../utility"
 
 export class UserDeleted {
   constructor(container) {

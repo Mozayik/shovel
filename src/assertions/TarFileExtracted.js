@@ -1,8 +1,7 @@
 import fs from "fs-extra"
 import tar from "tar"
-import util from "../util"
 import path from "path"
-import { ScriptError } from "../ScriptError"
+import util, { ScriptError } from "../utility"
 
 export class TarFileExtracted {
   constructor(container) {

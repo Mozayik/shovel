@@ -1,7 +1,5 @@
 import { FileCopied } from "./FileCopied"
-import { createAssertNode } from "../testUtil"
-import { ScriptError } from "../ScriptError"
-import { PathInfo } from "../util"
+import { createAssertNode, PathInfo, ScriptError } from "../utility"
 
 test("assert", async () => {
   const container = {

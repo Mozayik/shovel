@@ -1,7 +1,7 @@
 import fs from "fs-extra"
 import tempy from "tempy"
 import childProcess from "child-process-es6-promise"
-import { ScriptError } from "../ScriptError"
+import { ScriptError } from "../utility"
 
 const parseTables = (rules) => {
   const parseRawTables = (rules) => {

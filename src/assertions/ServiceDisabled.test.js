@@ -1,6 +1,5 @@
 import { ServiceDisabled } from "./ServiceDisabled"
-import { createAssertNode } from "../testUtil"
-import { ScriptError } from "../ScriptError"
+import { createAssertNode, ScriptError } from "../utility"
 
 let container = null
 

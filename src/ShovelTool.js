@@ -1,7 +1,5 @@
 import parseArgs from "minimist"
 import * as version from "./version"
-import { SSH } from "./ssh"
-import { SFTP } from "./sftp"
 import fs from "fs-extra"
 import vm from "vm"
 import path from "path"
@@ -9,10 +7,8 @@ import JSON5 from "@johnls/json5"
 import autobind from "autobind-decorator"
 import * as assertions from "./assertions"
 import * as actions from "./actions"
-import util from "./util"
-import { ScriptError } from "./ScriptError"
+import util, { SSH, SFTP, ScriptError } from "./utility"
 import semver from "semver"
-import assert from "assert"
 
 @autobind
 export class ShovelTool {
@@ -338,16 +334,11 @@ export class ShovelTool {
     const scriptPaths = []
     let anyScriptHasBecomes = false
 
-    assert(path.isAbsolute(rootScriptPath))
-
     const loadScriptNode = async (
       includeNode,
       scriptDirPath,
       scriptFilePath
     ) => {
-      assert(path.isAbsolute(scriptDirPath))
-      assert(!path.isAbsolute(scriptFilePath))
-
       const fromRootScriptFilePath = path.join(
         path.relative(rootScriptDirPath, scriptDirPath),
         scriptFilePath

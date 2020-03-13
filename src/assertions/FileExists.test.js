@@ -1,7 +1,5 @@
 import { FileExists } from "./FileExists"
-import { createAssertNode } from "../testUtil"
-import { ScriptError } from "../ScriptError"
-import { PathInfo } from "../util"
+import { PathInfo, ScriptError, createAssertNode } from "../utility"
 
 let container = null
 

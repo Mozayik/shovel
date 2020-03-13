@@ -1,7 +1,5 @@
 import { IPTablesContain } from "./IPTablesContain"
-import { createAssertNode } from "../testUtil"
-import { ScriptError } from "../ScriptError"
-import { PathInfo } from "../util"
+import { createAssertNode, ScriptError } from "../utility"
 
 test("assert", async () => {
   const container = {

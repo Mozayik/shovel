@@ -1,8 +1,6 @@
 import fs from "fs-extra"
 import childProcess from "child-process-es6-promise"
-import util from "../util"
-import { ScriptError } from "../ScriptError"
-import { StatementBase } from "../StatementBase"
+import util, { ScriptError, StatementBase } from "../utility"
 
 export class UserExists extends StatementBase {
   constructor(container) {

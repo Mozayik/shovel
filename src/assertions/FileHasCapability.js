@@ -1,6 +1,5 @@
 import childProcess from "child-process-es6-promise"
-import util from "../util"
-import { ScriptError } from "../ScriptError"
+import util, { ScriptError, StatementBase } from "../utility"
 
 export const capabilities = [
   "cap_audit_control",
@@ -42,35 +41,22 @@ export const capabilities = [
   "cap_wake_alarm",
 ]
 
-export class FileHasCapability {
+export class FileHasCapability extends StatementBase {
   constructor(container) {
+    super(container.interpolator)
+
     this.util = container.util || util
     this.childProcess = container.childProcess || childProcess
-    this.interpolator = container.interpolator
     this.stat = null
   }
 
   async assert(assertNode) {
-    const withNode = assertNode.value.with
-    const { file: fileNode, capability: capabilityNode } = withNode.value
+    const { fileNode, capabilityNode } = this.parseWithArgsNode(assertNode, [
+      { name: "file", type: "string", as: "filePath" },
+      { name: "capability", type: "string" },
+    ])
 
-    if (!fileNode || fileNode.type !== "string") {
-      throw new ScriptError(
-        "'file' must be supplied and be a string",
-        fileNode || withNode
-      )
-    }
-
-    this.filePath = this.interpolator(fileNode)
-
-    if (!capabilityNode || capabilityNode.type !== "string") {
-      throw new ScriptError(
-        "'capability' must be supplied and be a string",
-        capabilityNode || withNode
-      )
-    }
-
-    this.capability = this.interpolator(capabilityNode).toLowerCase()
+    this.capability = this.capability.toLowerCase()
 
     if (!capabilities.includes(this.capability)) {
       throw new ScriptError(

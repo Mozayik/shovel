@@ -1,7 +1,5 @@
 import { FileCopiedToRemote } from "./FileCopiedToRemote"
-import { createAssertNode } from "../testUtil"
-import { ScriptError } from "../ScriptError"
-import { PathInfo, PathAccess } from "../util"
+import { createAssertNode, ScriptError, PathInfo, PathAccess } from "../utility"
 
 test("assert", async () => {
   const container = {

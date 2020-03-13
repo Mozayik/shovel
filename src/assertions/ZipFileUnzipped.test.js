@@ -1,9 +1,6 @@
 import { ZipFileUnzipped } from "./ZipFileUnzipped"
 import stream from "stream"
-import { createAssertNode } from "../testUtil"
-import { ScriptError } from "../ScriptError"
-import { PathInfo } from "../util"
-import { Script } from "vm"
+import { createAssertNode, ScriptError, PathInfo } from "../utility"
 
 test("assert", async () => {
   const container = {

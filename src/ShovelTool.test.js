@@ -1,7 +1,6 @@
 import { ShovelTool } from "./ShovelTool"
-import * as testUtil from "./testUtil"
 import * as version from "./version"
-import { ScriptError } from "./ScriptError"
+import { createNode, createScriptNode, ScriptError } from "./utility"
 
 let container = null
 
@@ -408,7 +407,7 @@ test("createRunContext", async () => {
   })
 
   const tool = new ShovelTool(container)
-  const scriptNode = testUtil.createScriptNode("a.shovel")
+  const scriptNode = createScriptNode("a.shovel")
   let result = await tool.createRunContext(scriptNode)
 
   expect(result).not.toBe(null)
@@ -419,64 +418,60 @@ test("createRunContext", async () => {
   // fs functions
   expect(
     result.interpolator(
-      testUtil.createNode(scriptNode.filename, "{fs.readFile('blah')}")
+      createNode(scriptNode.filename, "{fs.readFile('blah')}")
     )
   ).toBe("foobar")
 
   // path functions
   expect(
     result.interpolator(
-      testUtil.createNode(scriptNode.filename, "{path.join('foo', 'bar')}")
+      createNode(scriptNode.filename, "{path.join('foo', 'bar')}")
     )
   ).toBe("foo/bar")
   expect(
     result.interpolator(
-      testUtil.createNode(scriptNode.filename, "{path.dirname('foo/bar')}")
+      createNode(scriptNode.filename, "{path.dirname('foo/bar')}")
     )
   ).toBe("foo")
   expect(
     result.interpolator(
-      testUtil.createNode(scriptNode.filename, "{path.basename('foo/bar.zip')}")
+      createNode(scriptNode.filename, "{path.basename('foo/bar.zip')}")
     )
   ).toBe("bar.zip")
   expect(
     result.interpolator(
-      testUtil.createNode(scriptNode.filename, "{path.extname('foo/bar.zip')}")
+      createNode(scriptNode.filename, "{path.extname('foo/bar.zip')}")
     )
   ).toBe(".zip")
 
   // dateTime functions
   expect(
     result.interpolator(
-      testUtil.createNode(
+      createNode(
         scriptNode.filename,
         "{dateTime.asLocal('2020-02-09T00:28:31.710Z')}"
       )
     )
   ).toBe(new Date("2020-02-09T00:28:31.710Z").toString())
   expect(
-    result.interpolator(
-      testUtil.createNode(scriptNode.filename, "{dateTime.asLocal()}")
-    )
+    result.interpolator(createNode(scriptNode.filename, "{dateTime.asLocal()}"))
   ).not.toBeNull()
   expect(
     result.interpolator(
-      testUtil.createNode(
+      createNode(
         scriptNode.filename,
         "{dateTime.asISO('Sat Feb 08 2020 16:28:31 GMT-0800 (Pacific Standard Time)')}"
       )
     )
   ).toBe("2020-02-09T00:28:31.000Z")
   expect(
-    result.interpolator(
-      testUtil.createNode(scriptNode.filename, "{dateTime.asISO()}")
-    )
+    result.interpolator(createNode(scriptNode.filename, "{dateTime.asISO()}"))
   ).not.toBeNull()
 
   // moustache
   expect(
     result.interpolator(
-      testUtil.createNode(
+      createNode(
         scriptNode.filename,
         "{util.moustache('Is it that {{1 + 2}} === 3?')}"
       )
@@ -484,15 +479,13 @@ test("createRunContext", async () => {
   ).toBe("Is it that 3 === 3?")
   expect(() =>
     result.interpolator(
-      testUtil.createNode(scriptNode.filename, "{util.moustache('{{_}}')}")
+      createNode(scriptNode.filename, "{util.moustache('{{_}}')}")
     )
   ).toThrow(ScriptError)
 
   // results
   expect(
-    result.interpolator(
-      testUtil.createNode(scriptNode.filename, "{results.last()}")
-    )
+    result.interpolator(createNode(scriptNode.filename, "{results.last()}"))
   ).toEqual({ a: 1, b: 2 })
 
   // Interpolation with vars
@@ -501,14 +494,14 @@ test("createRunContext", async () => {
   expect(result).toMatchObject({
     runContext: {},
   })
-  expect(
-    result.interpolator(testUtil.createNode(scriptNode.filename, "test"))
-  ).toBe("test")
+  expect(result.interpolator(createNode(scriptNode.filename, "test"))).toBe(
+    "test"
+  )
+  expect(() => result.interpolator(createNode(scriptNode.filename, 1))).toThrow(
+    Error
+  )
   expect(() =>
-    result.interpolator(testUtil.createNode(scriptNode.filename, 1))
-  ).toThrow(Error)
-  expect(() =>
-    result.interpolator(testUtil.createNode(scriptNode.filename, "{noFunc()}"))
+    result.interpolator(createNode(scriptNode.filename, "{noFunc()}"))
   ).toThrow(ScriptError)
 })
 
@@ -524,7 +517,7 @@ test("updateRunContext", async () => {
     sys: {},
     vars: {},
   }
-  const scriptNode = testUtil.createScriptNode("a.shovel")
+  const scriptNode = createScriptNode("a.shovel")
   const testVars = {
     s: "{2}",
     n: 1,
@@ -539,7 +532,7 @@ test("updateRunContext", async () => {
   }
 
   // Interpolation with vars
-  scriptNode.value.vars = testUtil.createNode(scriptNode.filename, testVars)
+  scriptNode.value.vars = createNode(scriptNode.filename, testVars)
 
   expect(
     tool.updateRunContext(runContext, interpolator, scriptNode, {
@@ -559,7 +552,7 @@ test("updateRunContext", async () => {
     local: { s: "1" },
   })
 
-  scriptNode.value.vars = testUtil.createNode(scriptNode.filename, testVars)
+  scriptNode.value.vars = createNode(scriptNode.filename, testVars)
   expect(
     tool.updateRunContext(runContext, interpolator, scriptNode)
   ).toBeUndefined()

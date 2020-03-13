@@ -1,7 +1,6 @@
-import util from "../util"
 import fs from "fs-extra"
 import path from "path"
-import { ScriptError } from "../ScriptError"
+import util, { ScriptError } from "../utility"
 
 export class DirectoryDeleted {
   constructor(container) {

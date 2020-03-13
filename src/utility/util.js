@@ -429,7 +429,3 @@ export class Utility {
     }
   }
 }
-
-const util = new Utility()
-
-export default util
