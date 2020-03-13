@@ -406,7 +406,8 @@ test("addArg", () => {
   const util = new Utility()
 
   expect(util.addArg()).toBe("")
-  expect(util.addArg("-x")).toBe(" -x")
+  expect(util.addArg("-x")).toBe("")
+  expect(util.addArg("foo")).toBe(" foo")
   expect(util.addArg("-g", true)).toBe(" -g")
   expect(util.addArg("-s", "thing")).toBe(" -s thing")
   expect(util.addArg("-s", "thing with space")).toBe(" -s 'thing with space'")

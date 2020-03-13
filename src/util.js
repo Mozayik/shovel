@@ -414,7 +414,7 @@ export class Utility {
     if (arg) {
       switch (typeof value) {
         case "undefined":
-          return " " + arg
+          return arg.startsWith("-") ? "" : " " + arg
         case "boolean":
           return value ? " " + arg : ""
         case "string":
