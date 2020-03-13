@@ -45,12 +45,6 @@ test("assert", async () => {
 
   // Bad args
   await expect(
-    assertion.assert(createAssertNode(assertion, {}))
-  ).rejects.toThrow(ScriptError)
-  await expect(
-    assertion.assert(createAssertNode(assertion, { files: 1 }))
-  ).rejects.toThrow(ScriptError)
-  await expect(
     assertion.assert(createAssertNode(assertion, { files: [1] }))
   ).rejects.toThrow(ScriptError)
 

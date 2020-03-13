@@ -2,7 +2,7 @@ import { StatementBase } from "./StatementBase"
 import { createAssertNode } from "./testUtil"
 import { ScriptError } from "./ScriptError"
 
-test("parseWithNode", async () => {
+test("parseWithArgsNode", async () => {
   const interpolator = (node) => {
     if (node.value === "{true}") {
       return true
@@ -28,7 +28,7 @@ test("parseWithNode", async () => {
   const assertion = new StatementBase(interpolator)
 
   // Happy path
-  let result = assertion.parseWithNode(assertionNode, [
+  let result = assertion.parseWithArgsNode(assertionNode, [
     { name: "s", type: "string" },
     { name: "t", type: "number", default: 1 },
     { name: "n", type: "number" },
@@ -43,11 +43,18 @@ test("parseWithNode", async () => {
 
   // Missing arg
   expect(() =>
-    assertion.parseWithNode(assertionNode, [{ name: "u", type: "string" }])
+    assertion.parseWithArgsNode(assertionNode, [{ name: "u", type: "string" }])
   ).toThrow(ScriptError)
 
   // Bad type
   expect(() =>
-    assertion.parseWithNode(assertionNode, [{ name: "s", type: "number" }])
+    assertion.parseWithArgsNode(assertionNode, [{ name: "s", type: "number" }])
+  ).toThrow(ScriptError)
+
+  // Bad default type
+  expect(() =>
+    assertion.parseWithArgsNode(assertionNode, [
+      { name: "u", type: "number", default: "abc" },
+    ])
   ).toThrow(ScriptError)
 })

@@ -16,7 +16,7 @@ export class GroupExists extends StatementBase {
   }
 
   async assert(assertionNode) {
-    const { withNode, gidNode, systemNode } = this.parseWithNode(
+    const { withNode, gidNode, systemNode } = this.parseWithArgsNode(
       assertionNode,
       [
         { name: "group", type: "string", as: "groupName" },

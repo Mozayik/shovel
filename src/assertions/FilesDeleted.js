@@ -2,25 +2,24 @@ import util from "../util"
 import fs from "fs-extra"
 import { ScriptError } from "../ScriptError"
 import path from "path"
+import { StatementBase } from "../StatementBase"
 
-export class FilesDeleted {
+export class FilesDeleted extends StatementBase {
   constructor(container) {
+    super(container.interpolator)
+
     this.util = container.util || util
     this.fs = container.fs || fs
-    this.interpolator = container.interpolator
     this.stat = null
   }
 
-  async assert(assertNode) {
-    const withNode = assertNode.value.with
-    const { files: filesNode } = withNode.value
-
-    if (!filesNode || filesNode.type !== "array") {
-      throw new ScriptError(
-        "'files' must be supplied and be an array",
-        filesNode || withNode
-      )
-    }
+  async assert(assertionNode) {
+    const { filesNode } = this.parseWithArgsNode(assertionNode, [
+      {
+        name: "files",
+        type: "array",
+      },
+    ])
 
     this.unlinkFilePaths = []
     this.filePaths = []

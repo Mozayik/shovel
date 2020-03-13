@@ -20,7 +20,7 @@ export class UserExists extends StatementBase {
       gidNode,
       systemNode,
       groupNode,
-    } = this.parseWithNode(assertNode, [
+    } = this.parseWithArgsNode(assertNode, [
       { name: "user", type: "string", as: "userName" },
       { name: "uid", type: "number", default: undefined },
       { name: "gid", type: "number", default: undefined },

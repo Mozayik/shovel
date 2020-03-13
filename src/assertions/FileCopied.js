@@ -13,7 +13,7 @@ export class FileCopied extends StatementBase {
   }
 
   async assert(assertionNode) {
-    const { fromFileNode, toFileNode } = this.parseWithNode(assertionNode, [
+    const { fromFileNode, toFileNode } = this.parseWithArgsNode(assertionNode, [
       {
         name: "fromFile",
         type: "string",
