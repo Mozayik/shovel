@@ -41,6 +41,9 @@ export const capabilities = [
   "cap_wake_alarm",
 ]
 
+const getFlagsString = (effective, permitted, inheritable) =>
+  (effective ? "e" : "") + (permitted ? "p" : "") + (inheritable ? "i" : "")
+
 export class FileHasCapability extends StatementBase {
   constructor(container) {
     super(container.interpolator)
@@ -51,10 +54,14 @@ export class FileHasCapability extends StatementBase {
   }
 
   async assert(assertNode) {
-    const { fileNode, capabilityNode } = this.parseWithArgsNode(assertNode, [
-      { name: "file", type: "string", as: "filePath" },
-      { name: "capability", type: "string" },
-    ])
+    const { fileNode, capabilityNode, flagsNode } = this.parseWithArgsNode(
+      assertNode,
+      [
+        { name: "file", type: "string", as: "filePath" },
+        { name: "capability", type: "string" },
+        { name: "flags", type: "string" },
+      ]
+    )
 
     this.capability = this.capability.toLowerCase()
 
@@ -64,6 +71,24 @@ export class FileHasCapability extends StatementBase {
         capabilityNode
       )
     }
+
+    if (
+      this.flags.length !== 3 ||
+      !(
+        (this.flags[0] === "e" || this.flags[0] === "-") &&
+        (this.flags[1] === "p" || this.flags[1] === "-") &&
+        (this.flags[2] === "i" || this.flags[2] === "-")
+      )
+    ) {
+      throw new ScriptError(
+        "'flags' must be formatted as 3 character string with 'epi' to set corresponding flag, or hyphen if flag not set",
+        flagsNode
+      )
+    }
+
+    this.effective = this.flags[0] === "e" ? true : false
+    this.permitted = this.flags[1] === "p" ? true : false
+    this.inheritable = this.flags[2] === "i" ? true : false
 
     const pathInfo = await this.util.pathInfo(this.filePath)
 
@@ -82,7 +107,11 @@ export class FileHasCapability extends StatementBase {
       )
     }
 
-    const command = `setcap -v ${this.capability} ${this.filePath}`
+    const command = `setcap -v ${this.capability}=${getFlagsString(
+      this.effective,
+      this.permitted,
+      this.inheritable
+    )} ${this.filePath}`
 
     try {
       await this.childProcess.exec(command)
@@ -94,7 +123,11 @@ export class FileHasCapability extends StatementBase {
   }
 
   async rectify() {
-    const command = `setcap ${this.capability} ${this.filePath}`
+    const command = `setcap ${this.capability}=${getFlagsString(
+      this.effective,
+      this.permitted,
+      this.inheritable
+    )} ${this.filePath}`
 
     await this.childProcess.exec(command)
   }

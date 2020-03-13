@@ -37,14 +37,30 @@ test("assert", async () => {
       createAssertNode(assertion, {
         file: "/file1",
         capability: "CAP_NET_BIND_SERVICE",
+        flags: "epi",
       })
     )
   ).resolves.toBe(true)
 
-  // Bad args
+  // Bad capability
   await expect(
     assertion.assert(
-      createAssertNode(assertion, { file: "file1", capability: "CAP_NOT_REAL" })
+      createAssertNode(assertion, {
+        file: "file1",
+        capability: "CAP_NOT_REAL",
+        flags: "epi",
+      })
+    )
+  ).rejects.toThrow(ScriptError)
+
+  // Bad flags
+  await expect(
+    assertion.assert(
+      createAssertNode(assertion, {
+        file: "file1",
+        capability: "cap_audit_control",
+        flags: "xyz",
+      })
     )
   ).rejects.toThrow(ScriptError)
 
@@ -54,6 +70,7 @@ test("assert", async () => {
       createAssertNode(assertion, {
         file: "/file2",
         capability: "cap_audit_control",
+        flags: "e--",
       })
     )
   ).rejects.toThrow(ScriptError)
@@ -64,22 +81,10 @@ test("assert", async () => {
       createAssertNode(assertion, {
         file: "/file3",
         capability: "cap_audit_control",
+        flags: "e--",
       })
     )
   ).rejects.toThrow(ScriptError)
-
-  // Exec fails
-  container.childProcess.exec = async () => {
-    throw new Error()
-  }
-  await expect(
-    assertion.assert(
-      createAssertNode(assertion, {
-        file: "/file1",
-        capability: "cap_audit_control",
-      })
-    )
-  ).resolves.toBe(false)
 
   // Not running as root
   container.util.runningAsRoot = () => false
@@ -88,9 +93,25 @@ test("assert", async () => {
       createAssertNode(assertion, {
         file: "/file1",
         capability: "cap_audit_control",
+        flags: "--i",
       })
     )
   ).rejects.toThrow(ScriptError)
+
+  // Exec fails
+  container.util.runningAsRoot = () => true
+  container.childProcess.exec = async () => {
+    throw new Error()
+  }
+  await expect(
+    assertion.assert(
+      createAssertNode(assertion, {
+        file: "/file1",
+        capability: "cap_audit_control",
+        flags: "---",
+      })
+    )
+  ).resolves.toBe(false)
 })
 
 test("rectify", async () => {
