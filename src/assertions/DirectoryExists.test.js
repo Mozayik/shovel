@@ -64,14 +64,6 @@ test("assert", async () => {
 
   const assertion = new DirectoryExists(container)
 
-  // Bad arguments
-  await expect(
-    assertion.assert(createAssertNode(assertion, {}))
-  ).rejects.toThrow(ScriptError)
-  await expect(
-    assertion.assert(createAssertNode(assertion, { directory: 1 }))
-  ).rejects.toThrow(ScriptError)
-
   // Happy path
   await expect(
     assertion.assert(

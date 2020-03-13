@@ -1,31 +1,27 @@
 import fs from "fs-extra"
 import os from "os"
-import util, { ScriptError } from "../utility"
+import util, { ScriptError, StatementBase } from "../utility"
 import path from "path"
 
-export class DirectoryExists {
+export class DirectoryExists extends StatementBase {
   constructor(container) {
+    super(container.interpolator)
+
     this.util = container.util || util
     this.fs = container.fs || fs
     this.os = container.os || os
     this.util = container.util || util
-    this.interpolator = container.interpolator
   }
 
   async assert(assertNode) {
-    const withNode = assertNode.value.with
-    const {
-      directory: directoryNode,
-      owner: ownerNode,
-      mode: modeNode,
-    } = withNode.value
-
-    if (!directoryNode || directoryNode.type !== "string") {
-      throw new ScriptError(
-        "'directory' must be supplied and be a string",
-        directoryNode || withNode
-      )
-    }
+    const { directoryNode, ownerNode, modeNode } = this.parseWithArgsNode(
+      assertNode,
+      [
+        { name: "directory", type: "string", as: "dirPath" },
+        { name: "mode", type: "object", default: undefined },
+        { name: "owner", type: "object", default: undefined },
+      ]
+    )
 
     const userInfo = this.os.userInfo()
     const users = await this.util.getUsers(this.fs)
@@ -36,7 +32,6 @@ export class DirectoryExists {
       this.util.parseOwnerNode(ownerNode, users, groups)
     )
     this.mode = this.util.parseModeNode(modeNode, 0o777)
-    this.dirPath = this.interpolator(directoryNode)
 
     let pathInfo = await this.util.pathInfo(this.dirPath)
 
@@ -47,7 +42,7 @@ export class DirectoryExists {
         !(await this.util.pathInfo(parentDirPath)).getAccess().isWriteable()
       ) {
         throw new ScriptError(
-          `Cannot write to directory '${this.parentDirPath}'`,
+          `Cannot write to directory '${parentDirPath}'`,
           directoryNode
         )
       }
