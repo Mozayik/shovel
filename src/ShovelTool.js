@@ -415,8 +415,8 @@ export class ShovelTool {
           (dateTime ? new Date(dateTime) : new Date()).toISOString(),
       },
       util: {
-        moustache: (s) =>
-          s.replace(/\{\{.*\}\}/gm, (m, offset) => {
+        template: (s, a = "{{", b = "}}") =>
+          s.replace(new RegExp(a + ".*?" + b, "gm"), (m, offset) => {
             try {
               return new vm.Script(m).runInContext(runContext).toString()
             } catch (e) {

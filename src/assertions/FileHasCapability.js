@@ -136,6 +136,7 @@ export class FileHasCapability extends StatementBase {
     return {
       file: this.filePath,
       capability: this.capability,
+      flags: this.flags,
     }
   }
 }

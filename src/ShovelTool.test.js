@@ -468,18 +468,18 @@ test("createRunContext", async () => {
     result.interpolator(createNode(scriptNode.filename, "{dateTime.asISO()}"))
   ).not.toBeNull()
 
-  // moustache
+  // template
   expect(
     result.interpolator(
       createNode(
         scriptNode.filename,
-        "{util.moustache('Is it that {{1 + 2}} === 3?')}"
+        "{util.template('Is it that {{1 + 2}} === 3?')}"
       )
     )
   ).toBe("Is it that 3 === 3?")
   expect(() =>
     result.interpolator(
-      createNode(scriptNode.filename, "{util.moustache('{{_}}')}")
+      createNode(scriptNode.filename, "{util.template('{{_}}')}")
     )
   ).toThrow(ScriptError)
 

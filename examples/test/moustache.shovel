@@ -1,7 +1,7 @@
 {
   vars: {
     local: {
-      contents: "{util.moustache(fs.readFile(path.join(sys.scriptDir, 'templates/moustache-template.txt')))}",
+      contents: "{util.template(fs.readFile(path.join(sys.scriptDir, 'templates/moustache-template.txt')))}",
     },
   },
   statements: [

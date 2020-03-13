@@ -103,6 +103,6 @@ An array of all the result objects from all the assertions that run.  Can be use
 
 An array of all the result objects from all the assertions that run.  Can be used to conditionally run assertions based on the result of a previous assertion.
 
-| Function            | Description                                                                     |
-| ------------------- | ------------------------------------------------------------------------------- |
-| `moustache(string)` | Takes a string with "moustache" blocks (`{{...}}`). Each block is interpolated. |
+| Function                        | Description                                                                                                                                                                                                                      |
+| ------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `template(string, open, close)` | Takes a string, interpolates the Javascript contained in sections surrounded with the open/close strings, and inserts them into the original string.  Defaults to using "moustache" bracketing (`{{...}}`) but can be overidden. |
