@@ -81,8 +81,11 @@ export class GroupExists extends StatementBase {
     let command = this.modify ? "groupmod" : "groupadd"
 
     command += util.addArg("-g", this.gid)
-    command += util.addArg("--system", !!this.system)
     command += util.addArg(this.groupName)
+
+    if (!this.modify) {
+      command += util.addArg("--system", !!this.system)
+    }
 
     await this.childProcess.exec(command)
 

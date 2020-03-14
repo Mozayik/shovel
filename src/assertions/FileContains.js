@@ -99,66 +99,43 @@ export class FileContains {
 
     switch (this.position) {
       case "before":
-        match = this.regExp.exec(this.fileContents)
-
-        if (!match) {
-          throw new ScriptError(
-            `Match not found for '${regexNode.value}'`,
-            regexNode
-          )
-        }
-
-        if (
-          this.fileContents.substring(
-            match.index - this.contents.length,
-            match.index
-          ) === this.contents
-        ) {
-          // Desired content is after the before regex
-          return true
-        }
-
-        this.firstIndex = match.index
-        this.lastIndex = this.regExp.lastIndex
-        break
       case "after":
-        match = this.regExp.exec(this.fileContents)
-
-        if (!match) {
-          throw new ScriptError(
-            `Match not found for '${regexNode.value}'`,
-            regexNode
-          )
-        }
-
-        if (
-          this.fileContents.substring(
-            this.regExp.lastIndex,
-            this.regExp.lastIndex + this.contents.length
-          ) === this.contents
-        ) {
-          // Desired content is before the regex
-          return true
-        }
-
-        this.firstIndex = match.index
-        this.lastIndex = this.regExp.lastIndex
-        break
       case "over":
-        if (this.fileContents.includes(this.contents)) {
+        if (
+          this.position === "over" &&
+          this.fileContents.includes(this.contents)
+        ) {
           // Desired content is in file
           return true
         }
 
         match = this.regExp.exec(this.fileContents)
 
-        if (match) {
-          this.firstIndex = match.index
-          this.lastIndex = this.regExp.lastIndex
-        } else {
-          this.firstIndex = this.lastIndex = this.fileContents.length
+        if (!match) {
+          throw new ScriptError(
+            `Match not found for '${regexNode.value}'`,
+            regexNode
+          )
         }
 
+        if (
+          (this.position === "before" &&
+            this.fileContents.substring(
+              match.index - this.contents.length,
+              match.index
+            ) === this.contents) ||
+          (this.position === "after" &&
+            this.fileContents.substring(
+              this.regExp.lastIndex,
+              this.regExp.lastIndex + this.contents.length
+            ) === this.contents)
+        ) {
+          // Desired content is before or after the regex
+          return true
+        }
+
+        this.firstIndex = match.index
+        this.lastIndex = this.regExp.lastIndex
         break
       case "all":
         if (this.fileContents === this.contents) {

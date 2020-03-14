@@ -145,7 +145,7 @@ test("assert", async () => {
     )
   ).resolves.toBe(false)
 
-  // With over an no regex match
+  // With over and no regex match
   await expect(
     assertion.assert(
       createAssertNode(assertion, {
@@ -155,7 +155,7 @@ test("assert", async () => {
         contents: "foobar\n",
       })
     )
-  ).resolves.toBe(false)
+  ).rejects.toThrow("not found")
 
   // With 'before', regex match and content before
   await expect(

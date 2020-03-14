@@ -112,7 +112,6 @@ export class UserExists extends StatementBase {
     let command = this.modify ? "usermod" : "useradd"
 
     command += util.addArg("-u", this.uid)
-    command += util.addArg("--system", !!this.system)
     command += util.addArg("-g", this.gid)
     command += util.addArg("-s", this.shell)
     command += util.addArg("-h", this.homeDir)
@@ -120,6 +119,8 @@ export class UserExists extends StatementBase {
 
     if (this.modify) {
       command += util.addArg("-L", this.passwordDisabled)
+    } else {
+      command += util.addArg("--system", !!this.system)
     }
 
     command += util.addArg(this.userName)
