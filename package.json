@@ -1,7 +1,7 @@
 {
   "name": "@brownpapertickets/shovel",
   "private": false,
-  "version": "3.1.0",
+  "version": "3.1.1",
   "description": "An SSH and Node.js based IT automation tool",
   "bin": {
     "shovel": "dist/shovel.js"
