@@ -51,7 +51,7 @@ export class ShovelTool {
         curl -sL https://rpm.nodesource.com/setup_${nodeMajorVersion}.x | bash -
         yum clean all
         yum makecache fast
-        yum install -y -q make
+        yum install -y -q gcc-c++ make
         yum install -y -q nodejs
         ;;
       "(Ubuntu")
