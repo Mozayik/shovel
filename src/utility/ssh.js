@@ -268,12 +268,14 @@ export class SSH {
             }
           }
 
-          if (options.logOutput && jsonLines) {
-            jsonLines.forEach((line) => options.logOutput(line))
-          }
-
+          // Start animation first
           if (options.logStart && startLine) {
             options.logStart(startLine)
+          }
+
+          // Show output next
+          if (options.logOutput && jsonLines) {
+            jsonLines.forEach((line) => options.logOutput(line))
           }
 
           // Show error lines last
