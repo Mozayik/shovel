@@ -269,8 +269,8 @@ export class SSH {
           }
 
           // Start animation first
-          if (options.logStart && startLine) {
-            options.logStart(startLine)
+          if (options.startSpinner && startLine) {
+            options.startSpinner(startLine)
           }
 
           // Show output next
@@ -284,6 +284,9 @@ export class SSH {
           }
 
           if (ready) {
+            if (options.stopSpinner) {
+              options.stopSpinner()
+            }
             dataEvent.dispose()
             return resolve()
           }

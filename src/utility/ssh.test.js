@@ -239,7 +239,8 @@ test("run", async () => {
     ssh.run("something", {
       logError: () => undefined,
       logOutput: () => undefined,
-      logStart: () => undefined,
+      startSpinner: () => undefined,
+      stopSpinner: () => undefined,
       cwd: "/x/y",
       sudo: true,
       timeout: 10000,

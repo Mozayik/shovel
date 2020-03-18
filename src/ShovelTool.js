@@ -770,7 +770,8 @@ export class ShovelTool {
           sudo: scriptContext.anyScriptHasBecomes,
           logOutput: this.log.output,
           logError: this.log.outputError,
-          logStart: this.log.startSpinner,
+          startSpinner: this.log.startSpinner,
+          stopSpinner: this.log.stopSpinner,
           noThrow: true,
         }
       )
