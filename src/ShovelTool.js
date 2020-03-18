@@ -712,6 +712,8 @@ export class ShovelTool {
 
       let { runContext, interpolator } = await this.createRunContext()
 
+      const remoteScriptDirs = new Set()
+
       for (const scriptPath of scriptContext.scriptPaths) {
         const scriptNode = scriptContext.scriptNodes.get(scriptPath)
 
@@ -730,8 +732,13 @@ export class ShovelTool {
         )
 
         const remoteScriptPath = path.join(remoteTempDir, scriptPath)
+        const remoteScriptDir = path.dirname(remoteScriptPath)
 
-        await ssh.run(`mkdir -p ${path.dirname(remoteScriptPath)}`)
+        if (!remoteScriptDirs.has(remoteScriptDir)) {
+          await ssh.run(`mkdir -p ${remoteScriptDir}`)
+          remoteScriptDirs.add(remoteScriptDir)
+        }
+
         await sftp.putContent(scriptContent, remoteScriptPath)
 
         if (this.debug) {
