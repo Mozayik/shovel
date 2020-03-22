@@ -1,8 +1,6 @@
 import { ServiceDisabled } from "./ServiceDisabled"
 import { createAssertNode, ScriptError } from "../utility"
 
-let container = null
-
 test("assert", async () => {
   const container = {
     interpolator: (node) => node.value,
@@ -20,7 +18,6 @@ test("assert", async () => {
       runningAsRoot: jest.fn(() => true),
     },
   }
-
   const assertion = new ServiceDisabled(container)
 
   // Bad args
