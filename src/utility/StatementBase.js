@@ -5,9 +5,9 @@ export class StatementBase {
     this.interpolator = interpolator
   }
 
-  parseWithArgsNode(assertionNode, argDefs) {
+  parseWithArgsNode(statementNode, argDefs) {
     const nodes = {}
-    const { with: withNode } = assertionNode.value
+    const { with: withNode } = statementNode.value
     const getTypeFromValue = (value) => {
       let type = typeof value
 
