@@ -41,14 +41,6 @@ test("assert", async () => {
 
   const assertion = new DirectoryDeleted(container)
 
-  // Bad arguments
-  await expect(
-    assertion.assert(createAssertNode(assertion, {}))
-  ).rejects.toThrow(ScriptError)
-  await expect(
-    assertion.assert(createAssertNode(assertion, { directory: 1 }))
-  ).rejects.toThrow(ScriptError)
-
   // Happy path
   await expect(
     assertion.assert(createAssertNode(assertion, { directory: "/notthere" }))
@@ -80,7 +72,7 @@ test("rectify", async () => {
   }
   const assertion = new DirectoryDeleted(container)
 
-  assertion.expandedDirectory = "blah"
+  assertion.directoryPath = "blah"
 
   await expect(assertion.rectify()).resolves.toBeUndefined()
 })
@@ -88,7 +80,7 @@ test("rectify", async () => {
 test("result", () => {
   const assertion = new DirectoryDeleted({})
 
-  assertion.expandedDirectory = "blah"
+  assertion.directoryPath = "blah"
 
-  expect(assertion.result()).toEqual({ directory: assertion.expandedDirectory })
+  expect(assertion.result()).toEqual({ directory: assertion.directoryPath })
 })

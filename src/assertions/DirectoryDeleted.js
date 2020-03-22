@@ -1,42 +1,36 @@
 import fs from "fs-extra"
 import path from "path"
-import util, { ScriptError } from "../utility"
+import util, { ScriptError, StatementBase } from "../utility"
 
-export class DirectoryDeleted {
+export class DirectoryDeleted extends StatementBase {
   constructor(container) {
+    super(container.interpolator)
+
     this.util = container.util || util
     this.fs = container.fs || fs
-    this.interpolator = container.interpolator
   }
 
-  async assert(assertNode) {
-    const withNode = assertNode.value.with
-    const { directory: directoryNode } = withNode.value
+  async assert(assertionNode) {
+    const { directoryNode } = this.parseWithArgsNode(assertionNode, [
+      { name: "directory", type: "string", as: "directoryPath" },
+    ])
 
-    if (!directoryNode || directoryNode.type !== "string") {
-      throw new ScriptError(
-        "'directory' must be supplied and be a string",
-        directoryNode || withNode
-      )
-    }
-
-    this.expandedDirectory = this.interpolator(directoryNode)
-
-    const pathInfo = await this.util.pathInfo(this.expandedDirectory)
+    const pathInfo = await this.util.pathInfo(this.directoryPath)
 
     if (!pathInfo.isMissing()) {
       if (!pathInfo.isDirectory()) {
         throw new ScriptError(
-          `Non-directory exists with the name '${this.expandedDirectory}'`,
+          `Non-directory exists with the name '${this.directoryPath}'`,
           directoryNode
         )
       }
 
-      const parentDir = path.dirname(this.expandedDirectory)
+      const parentDir = path.dirname(this.directoryPath)
+      const parentDirInfo = await this.util.pathInfo(parentDir)
 
-      if (!(await this.util.pathInfo(parentDir)).getAccess().isWriteable()) {
+      if (!parentDirInfo.getAccess().isWriteable()) {
         throw new ScriptError(
-          `Parent directory ${parentDir} is not writable`,
+          `Parent directory '${parentDir}' is not writable`,
           directoryNode
         )
       }
@@ -48,10 +42,10 @@ export class DirectoryDeleted {
   }
 
   async rectify() {
-    await this.fs.remove(this.expandedDirectory)
+    await this.fs.remove(this.directoryPath)
   }
 
   result() {
-    return { directory: this.expandedDirectory }
+    return { directory: this.directoryPath }
   }
 }

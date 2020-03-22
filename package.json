@@ -19,7 +19,7 @@
     "show-coverage": "open coverage/lcov-report/index.html",
     "test:debug": "babel-node --inspect-brk ./node_modules/jest-cli/bin/jest.js --runInBand",
     "deploy": "npm publish --access public",
-    "lines-of-code": "wc -l $(git ls-files | grep '.*\\.js')"
+    "lines-of-code": "wc -l $(git ls-files | grep '.*\\.js$')"
   },
   "jest": {
     "collectCoverage": true,
