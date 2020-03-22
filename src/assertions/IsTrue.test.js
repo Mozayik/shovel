@@ -10,7 +10,10 @@ test("assert", async () => {
   // Happy path
   await expect(
     assertion.assert(
-      createAssertNode(assertion, { value: true, message: "the thing is true" })
+      createAssertNode(assertion, {
+        expression: true,
+        message: "the thing is true",
+      })
     )
   ).resolves.toBe(true)
 
@@ -18,7 +21,7 @@ test("assert", async () => {
   await expect(
     assertion.assert(
       createAssertNode(assertion, {
-        value: false,
+        expression: false,
         message: "the thing is true",
       })
     )

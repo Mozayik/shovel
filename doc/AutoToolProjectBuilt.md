@@ -1,6 +1,6 @@
 # AutoToolProjectMade
 
-Asserts that a specified target of an [AutoTool](https://www.gnu.org/software/automake/manual/html_node/Autotools-Introduction.html) base project has been made with the `make` command.
+Runs the `make` command on an [AutoTool](https://www.gnu.org/software/automake/manual/html_node/Autotools-Introduction.html).
 
 ## Arguments
 
@@ -9,16 +9,15 @@ Asserts that a specified target of an [AutoTool](https://www.gnu.org/software/au
 | `directory` | `string` |         | The path to the project root directory.        |
 | `args`      | `string` | `""`    | Additional arguments for building the project. |
 
-## Possible Errors
+## Notes
 
-- The `directory` does not exist or the user does not have read/write permission.
-- There is not a `Makefile` in the project root, meaning you probably did not do a [`AutoToolProjectConfigured`](./AutoToolProjectConfigured.md) assert first.
+Will fail if there is not `Makefile` in the directory specified, meaning you probably did not do a [`AutoToolProjectConfigured`](./AutoToolProjectConfigured.md) assertion first.
 
 ## Example
 
 ```json5
 {
-  assert: "AutoToolProjectMade",
+  action: "AutoToolProjectMade",
   with: {
     directory: "/path/to/project",
     args: "-D ARG=xyz",

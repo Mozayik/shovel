@@ -14,14 +14,15 @@ The `statements` section is an array of `assert`'s and/or `action`'s to run on t
 
 ## Built-in Actions
 
-There are currently no built-in actions.
+Here is an alphabetical list of built-in actions:
+
+- [`AutoToolProjectMade`](./AutoToolProjectMade.md)
 
 ## Built-in Assertions
 
 Here is an alphabetical list of the current built-in assertions:
 
 - [`AutoToolProjectConfigured`](./AutoToolProjectConfigured.md)
-- [`AutoToolProjectMade`](./AutoToolProjectMade.md)
 - [`CupsPrintQueueExists`](./CupsPrintQueueExists.md)
 - [`DirectoryDeleted`](./DirectoryDeleted.md)
 - [`DirectoryExists`](./DirectoryExists.md)
@@ -37,6 +38,7 @@ Here is an alphabetical list of the current built-in assertions:
 - [`GroupDeleted`](./GroupDeleted.md)
 - [`GroupExists`](./GroupExists.md)
 - [`IPTablesContain`](./IPTablesContain.md)
+- [`IsTrue`](./IsTrue.md)
 - [`NodePackageInstalled`](./NodePackageInstalled.md)
 - [`SystemPackageInstalled`](./SystemPackageInstalled.md)
 - [`SystemPackageRemoved`](./SystemPackageRemoved.md)

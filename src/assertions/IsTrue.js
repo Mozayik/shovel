@@ -6,13 +6,13 @@ export class IsTrue extends StatementBase {
   }
 
   async assert(assertionNode) {
-    const { valueNode } = this.parseWithArgsNode(assertionNode, [
-      { name: "value", type: "boolean" },
+    const { expressionNode } = this.parseWithArgsNode(assertionNode, [
+      { name: "expression", type: "boolean", as: "value" },
       { name: "message", type: "string" },
     ])
 
     if (!this.value) {
-      throw new ScriptError(this.message, valueNode)
+      throw new ScriptError(this.message, expressionNode)
     }
 
     return true
