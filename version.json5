@@ -7,14 +7,14 @@
   ],
   buildFormat: 'full',
   tags: {
-    major: 3,
-    minor: 2,
+    major: 4,
+    minor: 0,
     patch: 0,
-    build: 20200322,
+    build: 20200404,
     revision: 0,
     tz: 'America/Los_Angeles',
     startYear: '2017',
-    sequence: 70,
+    sequence: 71,
   },
   fileTypes: [
     {
