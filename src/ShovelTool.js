@@ -27,7 +27,7 @@ export class ShovelTool {
 
   static minNodeVersion = "v10.17.0"
   static ltsNodeVersion = "v12.16.1"
-  static npmPackageName = "@brownpapertickets/shovel"
+  static npmPackageName = "@kingstonsoftware/shovel"
 
   async assertHasNode(ssh) {
     let result = await ssh.run("node --version", {
@@ -445,7 +445,7 @@ export class ShovelTool {
       }
     }
 
-    runContext.results.last = function() {
+    runContext.results.last = function () {
       return this[this.length - 1]
     }
 

@@ -10,14 +10,14 @@ Shovel is a tool for performing IT automation tasks.  It's written in Javascript
 Install the package globally:
 
 ```sh
-npm install -g @brownpapertickets/shovel
+npm install -g @kingstonsoftware/shovel
 shovel --help
 ```
 
 Or use `npx` to run the latest version:
 
 ```sh
-npx @brownpapertickets/shovel --help
+npx @kingstonsoftware/shovel --help
 ```
 
 ## Example
@@ -101,4 +101,4 @@ Shovel uses SSH to run scripts on one or more remote hosts. When run without a h
 
 ### documentation
 
-The [official Shovel documentation](https://bitbucket.org/brownpapertickets/shovel/src/master/doc/README.md) contains more information on writing scripts and using the tool.
+The [official Shovel documentation](https://github.com/kingstonsoftware/shovel/src/master/doc/README.md) contains more information on writing scripts and using the tool.

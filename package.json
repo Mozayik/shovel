@@ -32,7 +32,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/jlyonsmith/shovel.git"
+    "url": "git+https://github.com/kingstonsoftware/shovel.git"
   },
   "keywords": [
     "package",
@@ -45,9 +45,9 @@
   "author": "John Lyon-Smith",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/jlyonsmith/shovel/issues"
+    "url": "https://github.com/kingstonsoftware/shovel/issues"
   },
-  "homepage": "https://github.com/jlyonsmith/shovel#readme",
+  "homepage": "https://github.com/kingstonsoftware/shovel#readme",
   "devDependencies": {
     "@babel/cli": "^7.8.4",
     "@babel/core": "^7.9.0",
