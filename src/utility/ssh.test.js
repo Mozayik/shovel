@@ -34,7 +34,7 @@ test("parseLines", async () => {
     outputLines: ["/x/y/z", "v1.2.3"],
     errorLines: ["error:"],
     jsonLines: ["{}"],
-    startLine: "> start",
+    startLine: "start",
     exitCode: 0,
     ready: false,
     permissionDenied: true,

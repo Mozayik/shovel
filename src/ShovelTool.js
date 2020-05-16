@@ -45,6 +45,7 @@ export class ShovelTool {
     let result = null
     const nodeMajorVersion = semver.major(ShovelTool.ltsNodeVersion)
     const installNodeScript = `#!/bin/bash
+    echo "> Installing Node.js"
     VERSION=$(grep -Eo "\\(Red Hat|\\(Ubuntu" /proc/version)
     case $VERSION in
       "(Red Hat")
@@ -102,11 +103,12 @@ export class ShovelTool {
     await sftp.putContent(installNodeScript, remoteTempFilePath)
 
     this.log.info(`Running Node.js install script; this could take a while`)
-    this.log.startSpinner("Installing")
 
     result = await ssh.run(`bash ${remoteTempFilePath}`, {
       sudo: true,
       noThrow: true,
+      startSpinner: this.log.startSpinner,
+      stopSpinner: this.log.stopSpinner,
     })
 
     this.log.stopSpinner()
@@ -144,14 +146,15 @@ export class ShovelTool {
 
   async rectifyHasShovel(ssh) {
     this.log.info("Installing Shovel")
-    this.log.startSpinner("Installing")
 
     // NOTE: See https://github.com/nodejs/node-gyp/issues/454#issuecomment-58792114 for why "--unsafe-perm"
     let result = await ssh.run(
-      `npm install -g --unsafe-perm ${ShovelTool.npmPackageName}`,
+      `bash -c "echo '> Installing Shovel' && npm install --quiet --no-progress --unsafe-perm -g ${ShovelTool.npmPackageName}"`,
       {
         sudo: true,
         noThrow: true,
+        startSpinner: this.log.startSpinner,
+        stopSpinner: this.log.stopSpinner,
       }
     )
 
@@ -840,13 +843,13 @@ Usage: ${this.toolName} [options] <script-file>
 Description:
 
 Runs a Shovel configuration script.If 'host' or 'hostFile' argument
-is given then the script will be run on those hosts using SSH.If not
+is given then the script will be run on those hosts using SSH. If not
 then the script will be run directly on the machine without SSH.
 
 Node.js and Shovel will be installed on the remote hosts if not already
-present.For installation to work the SSH user must have sudo
-permissions on the host.If passwords are required for login or
-sudo the tool will prompt.
+present. For installation to work the SSH user must have sudo
+permissions on the host. If passwords are required for login or
+sudo the tool will prompt for them.
 
 Arguments:
   --help                  Shows this help

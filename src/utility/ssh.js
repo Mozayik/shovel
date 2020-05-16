@@ -72,8 +72,8 @@ export class SSH {
         outputLines.push(line)
       } else if (line.startsWith("/")) {
         outputLines.push(line)
-      } else if (line.startsWith(">")) {
-        startLine = line
+      } else if (line.startsWith("> ")) {
+        startLine = line.substring(2)
       } else if (line.startsWith("[sudo] password for")) {
         sudoPasswordPrompt = line
       } else if (/^.+@.+'s password:/.test(line)) {
@@ -240,22 +240,16 @@ export class SSH {
 
     promises.push(
       new Promise((resolve, reject) => {
-        const dataHandler = ({
-          ready,
-          exitCode,
-          jsonLines,
-          errorLines,
-          outputLines,
-          startLine,
-          sudoPasswordPrompt,
-        }) => {
-          if (exitCode !== null) {
-            savedExitCode = exitCode
-          }
-
-          if (outputLines) {
-            output = output.concat(outputLines)
-          }
+        const dataHandler = (args) => {
+          const {
+            ready,
+            exitCode,
+            jsonLines,
+            errorLines,
+            outputLines,
+            startLine,
+            sudoPasswordPrompt,
+          } = args
 
           if (sudoPasswordPrompt) {
             if (this.sudoPassword) {
@@ -263,9 +257,18 @@ export class SSH {
             } else {
               this.showPrompt(sudoPasswordPrompt).then((password) => {
                 this.sudoPassword = password + "\n"
-                setImmediate(() => dataHandler({ sudoPasswordPrompt }))
+                setImmediate(() => dataHandler(args))
               })
+              return
             }
+          }
+
+          if (exitCode !== null) {
+            savedExitCode = exitCode
+          }
+
+          if (outputLines.length > 0) {
+            output = output.concat(outputLines)
           }
 
           // Start animation first

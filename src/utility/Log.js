@@ -88,7 +88,7 @@ export class Log {
       index = (index + 1) % Log.spinnerChars.length
     }
 
-    this.spinnerTitle = line.startsWith("> ") ? line.substring(2) : line
+    this.spinnerTitle = line
     this.spinnerHandle = this.setInterval(spinnerTick, this.spinnerDelay)
 
     spinnerTick()
