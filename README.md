@@ -99,6 +99,6 @@ See the full list of built-in [assertions](doc/Statements.md#Asserters) and [act
 
 Shovel uses SSH to run scripts on one or more remote hosts. When run without a host, Shovel just runs the script directly on your local system without SSH.
 
-### documentation
+### Documentation
 
-The [official Shovel documentation](https://github.com/kingstonsoftware/shovel/src/master/doc/README.md) contains more information on writing scripts and using the tool.
+The [Shovel documentation](doc/README.md) contains more information on writing scripts and using the tool.
