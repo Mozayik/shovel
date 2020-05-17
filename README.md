@@ -1,9 +1,6 @@
 # Shovel: An SSH and Node.js based IT automation tool
 
-Shovel is a tool for performing IT automation tasks.  It's written in Javascript using [NodeJS](https://nodejs.org).  Script files are created in [JSON5](https://json5.org/) format and consist of a sequence of statements about the target system.  Statements fall into two categories:
-
-- **Assertions** check that a certain system state is valid. If it is, nothing happens, otherwise the system state is rectified.
-- **Actions** perform some action where checking existing system state is not possible or does not make sense.
+Shovel is a tool for performing IT automation tasks.  It's written in Javascript using [NodeJS](https://nodejs.org).  Script files are created in [JSON5](https://json5.org/) format and consist of a sequence of statements about the target system.  When the target system matches the statements in the script, everything turns green.
 
 ## Installation
 
@@ -87,9 +84,14 @@ The *design goals* of Shovel are:
 
 Shovel scripts can have a `.json5` extension, but a `.shovel` extension is recommended. Shovel scripts are made up of metadata, includes, variables and statements.
 
-Statements are a sequence of assertions or actions executed sequentially. The order of the statements is important. Later statements can expect that assertions and actions higher up in the script to have run and set the system state appropriately.
+Statements are a sequence of assertions or actions executed sequentially. Statements are of two types:
 
-Assertions assert that particular state of the host machine is true.  If that assertion is not true, then the asserter tries to rectify the situation and make the assertion be true for next time.  There are assertions for files, directories, users, groups, file downsloads, file contents, and so on.
+- **Assertions** check that a certain system state is valid. If it is, nothing happens, otherwise the system state is *rectified* to make the assertion `true`.  If that is not possible, the script returns an error and stops.
+- **Actions** perform some action where checking existing system state is not possible or does not make sense.  Actions are always run, but may still fail for some reason which will cause the script to stop.
+
+The order of the statements is important. Later statements can expect that assertions and actions higher up in the script to have run and set the system state appropriately.
+
+Assertions ensure the state of the host machine.  If that assertion is not true, then the asserter tries to rectify the situation and make the assertion be true for next time.  There are assertions for files, directories, users, groups, file downsloads, file contents, and so on.
 
 Actions perform an action that cannot be easily checked, e.g. running an autotools build which checks it's own dependencies, or where state does not make sense, e.g. a system reboot.
 
