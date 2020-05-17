@@ -21,7 +21,7 @@ tool
       let message = error.message ?? ""
 
       if (tool.debug) {
-        message += error.stack.substring(error.stack.indexOf("\n"))
+        message += " (" + error.stack.substring(error.stack.indexOf("\n")) + ")"
       }
 
       log.error(message)

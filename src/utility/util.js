@@ -238,22 +238,28 @@ export class Utility {
         }
       })
 
-    if (this.runningAsRoot()) {
-      const shadow = await this.fs.readFile("/etc/shadow", { encoding: "utf8" })
-
-      shadow
-        .split("\n")
-        .map((user) => user.trim())
-        .filter((user) => user.length > 0 && user[0] != "#")
-        .forEach((shadowUser) => {
-          const fields = shadowUser.split(":")
-          const user = users.find((user) => user.name === fields[0])
-
-          if (user) {
-            user.passwordDisabled =
-              fields[1].startsWith("!") || fields[1].startsWith("*")
-          }
+    if (this.runningAsRoot() && this.fs) {
+      try {
+        const shadow = await this.fs.readFile("/etc/shadow", {
+          encoding: "utf8",
         })
+
+        shadow
+          .split("\n")
+          .map((user) => user.trim())
+          .filter((user) => user.length > 0 && user[0] != "#")
+          .forEach((shadowUser) => {
+            const fields = shadowUser.split(":")
+            const user = users.find((user) => user.name === fields[0])
+
+            if (user) {
+              user.passwordDisabled =
+                fields[1].startsWith("!") || fields[1].startsWith("*")
+            }
+          })
+      } catch {
+        // No /etc/shadow file, could be macOS
+      }
     }
 
     return users
