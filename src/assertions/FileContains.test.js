@@ -32,40 +32,23 @@ test("assert", async () => {
 
   const assertion = new FileContains(container)
 
-  // Missing file
-  await expect(
-    assertion.assert(createAssertNode(assertion, { contents: "" }))
-  ).rejects.toThrow(ScriptError)
-
-  // Bad file
-  await expect(
-    assertion.assert(createAssertNode(assertion, { file: 1 }))
-  ).rejects.toThrow(ScriptError)
-
-  // Missing contents
-  await expect(
-    assertion.assert(createAssertNode(assertion, { file: "" }))
-  ).rejects.toThrow(ScriptError)
-
-  // Bad contents
-  await expect(
-    assertion.assert(createAssertNode(assertion, { file: "", contents: 1 }))
-  ).rejects.toThrow(ScriptError)
-
   // Bad position
   await expect(
     assertion.assert(
-      createAssertNode(assertion, { file: "", contents: 1, position: 1 })
+      createAssertNode(assertion, {
+        file: "",
+        contents: "xyz",
+        position: "other",
+      })
     )
   ).rejects.toThrow(ScriptError)
   await expect(
     assertion.assert(
-      createAssertNode(assertion, { file: "", contents: 1, position: "other" })
-    )
-  ).rejects.toThrow(ScriptError)
-  await expect(
-    assertion.assert(
-      createAssertNode(assertion, { file: "", contents: 1, position: "after" })
+      createAssertNode(assertion, {
+        file: "abc.txt",
+        contents: "xyz",
+        position: "after",
+      })
     )
   ).rejects.toThrow(ScriptError)
 
@@ -77,16 +60,6 @@ test("assert", async () => {
         contents: "",
         position: "over",
         regex: "[x",
-      })
-    )
-  ).rejects.toThrow(ScriptError)
-  await expect(
-    assertion.assert(
-      createAssertNode(assertion, {
-        file: "",
-        contents: "",
-        position: "over",
-        regex: 1,
       })
     )
   ).rejects.toThrow(ScriptError)

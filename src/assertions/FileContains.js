@@ -1,38 +1,34 @@
 import fs from "fs-extra"
-import util, { ScriptError } from "../utility"
+import util, { ScriptError, StatementBase } from "../utility"
 
-export class FileContains {
+export class FileContains extends StatementBase {
   constructor(container) {
-    this.fs = container.fs || fs
+    super(container.interpolator)
+
     this.util = container.util || util
-    this.interpolator = container.interpolator
+    this.fs = container.fs || fs
   }
 
-  async assert(assertNode) {
-    const withNode = assertNode.value.with
+  async assert(assertionNode) {
     const {
-      file: fileNode,
-      position: positionNode,
-      regex: regexNode,
-      contents: contentsNode,
-    } = withNode.value
-
-    if (!fileNode || fileNode.type !== "string") {
-      throw new ScriptError(
-        "'file' must be supplied and be a string",
-        fileNode || withNode
-      )
-    }
+      fileNode,
+      positionNode,
+      regexNode,
+      contentsNode,
+    } = this.parseWithArgsNode(assertionNode, [
+      { name: "file", type: "string", as: "filePath" },
+      { name: "position", type: "string", default: "all" },
+      { name: "regex", type: "string", default: "" },
+      { name: "contents", type: "string" },
+    ])
 
     this.filePath = this.interpolator(fileNode)
 
-    if (regexNode) {
-      if (regexNode.type !== "string") {
-        throw new ScriptError("'regex' must be a string", regexNode)
-      }
+    let re = null
 
+    if (regexNode) {
       try {
-        this.regExp = new RegExp(this.interpolator(regexNode), "gm")
+        re = new RegExp(this.regex, "gm")
       } catch (e) {
         throw new ScriptError(
           `Unable to parse regular expression. ${e.message}`,
@@ -42,10 +38,6 @@ export class FileContains {
     }
 
     if (positionNode) {
-      if (positionNode.type !== "string") {
-        throw new ScriptError("'position' node must be a string", positionNode)
-      }
-
       this.position = positionNode.value
 
       if (
@@ -75,13 +67,6 @@ export class FileContains {
       this.position = "all"
     }
 
-    if (!contentsNode || contentsNode.type !== "string") {
-      throw new ScriptError(
-        "'contents' must be supplied and be a string",
-        contentsNode || withNode
-      )
-    }
-
     this.contents = this.interpolator(contentsNode)
 
     if (!(await this.util.pathInfo(this.filePath)).getAccess().isReadWrite()) {
@@ -109,7 +94,7 @@ export class FileContains {
           return true
         }
 
-        match = this.regExp.exec(this.fileContents)
+        match = re.exec(this.fileContents)
 
         if (!match) {
           throw new ScriptError(
@@ -126,8 +111,8 @@ export class FileContains {
             ) === this.contents) ||
           (this.position === "after" &&
             this.fileContents.substring(
-              this.regExp.lastIndex,
-              this.regExp.lastIndex + this.contents.length
+              re.lastIndex,
+              re.lastIndex + this.contents.length
             ) === this.contents)
         ) {
           // Desired content is before or after the regex
@@ -135,7 +120,7 @@ export class FileContains {
         }
 
         this.firstIndex = match.index
-        this.lastIndex = this.regExp.lastIndex
+        this.lastIndex = re.lastIndex
         break
       case "all":
         if (this.fileContents === this.contents) {
