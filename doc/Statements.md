@@ -1,4 +1,4 @@
-# Assertions
+# Assertions & Actions
 
 The `statements` section is an array of `assert`'s and/or `action`'s to run on the target host.  The statements execute in order from top to bottom.
 
@@ -6,8 +6,9 @@ The `statements` section is an array of `assert`'s and/or `action`'s to run on t
 
 | Name          | Type                  | Description                                                                                |
 | ------------- | --------------------- | ------------------------------------------------------------------------------------------ |
-| `description` | `string`              | An optional description explaining the purpose of the assertion                            |
+| `description` | `string`              | An optional description explaining the purpose of the statement                            |
 | `assert`      | `string`              | The asserter to run.  See the section below                                                |
+| `action`      | `string`              | The action to run.  See the section below                                                  |
 | `with`        | `object`              | Arguments to be passed to the asserter.                                                    |
 | `become`      | `string`              | Name of a user to become before running the asserter.  Currently only `root` is supported. |
 | `when`        | `boolean` or `string` | A boolean or an expression that is evaluated to see if the assertion should be run at all  |

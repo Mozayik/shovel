@@ -1,5 +1,7 @@
 import fs from "fs-extra"
 import util, { ScriptError, StatementBase } from "../utility"
+import tempy from "tempy"
+import childProcess from "child-process-es6-promise"
 
 export class FileContains extends StatementBase {
   constructor(container) {
@@ -7,6 +9,8 @@ export class FileContains extends StatementBase {
 
     this.util = container.util || util
     this.fs = container.fs || fs
+    this.tempy = container.tempy || tempy
+    this.childProcess = container.childProcess || childProcess
   }
 
   async assert(assertionNode) {
@@ -14,15 +18,16 @@ export class FileContains extends StatementBase {
       fileNode,
       positionNode,
       regexNode,
-      contentsNode,
+      validationNode,
     } = this.parseWithArgsNode(assertionNode, [
       { name: "file", type: "string", as: "filePath" },
       { name: "position", type: "string", default: "all" },
       { name: "regex", type: "string", default: "" },
       { name: "contents", type: "string" },
+      { name: "validation", type: "string", default: "none" },
     ])
 
-    this.filePath = this.interpolator(fileNode)
+    this.assertionNode = assertionNode // Save for rectify errors
 
     let re = null
 
@@ -67,7 +72,12 @@ export class FileContains extends StatementBase {
       this.position = "all"
     }
 
-    this.contents = this.interpolator(contentsNode)
+    if (this.validation !== "none" && this.validation !== "sudoers") {
+      throw new ScriptError(
+        "'validation' can be 'none' or 'sudoers'",
+        validationNode
+      )
+    }
 
     if (!(await this.util.pathInfo(this.filePath)).getAccess().isReadWrite()) {
       throw new ScriptError(
@@ -158,6 +168,23 @@ export class FileContains extends StatementBase {
       default:
         contents = this.contents
         break
+    }
+
+    if (this.validation !== "none") {
+      const tempFilePath = await this.tempy.write(contents)
+
+      switch (this.validation) {
+        case "sudoers":
+          try {
+            await this.childProcess.exec(`visudo -c -q -f ${tempFilePath}`)
+          } catch (error) {
+            throw new ScriptError(
+              `Modified file would not be valid '${this.validation}' format`,
+              this.assertionNode
+            )
+          }
+          break
+      }
     }
 
     await this.fs.outputFile(this.filePath, contents)

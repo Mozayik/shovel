@@ -48,6 +48,19 @@ test("assert", async () => {
         file: "abc.txt",
         contents: "xyz",
         position: "after",
+        // Missing contents
+      })
+    )
+  ).rejects.toThrow(ScriptError)
+
+  // Bad validation
+  await expect(
+    assertion.assert(
+      createAssertNode(assertion, {
+        file: "",
+        contents: "xyz",
+        position: "all",
+        validation: "bad",
       })
     )
   ).rejects.toThrow(ScriptError)
@@ -208,9 +221,16 @@ test("rectify", async () => {
     fs: {
       outputFile: jest.fn(async () => undefined),
     },
+    tempy: {
+      write: async () => "/tmp/tempfile",
+    },
+    childProcess: {
+      exec: async () => undefined,
+    },
   }
   const assertion = new FileContains(container)
 
+  assertion.validation = "none"
   assertion.filePath = "/somefile.txt"
   assertion.contents = "xyz\n"
   assertion.fileContents = "#start\ncontent\n#end"
@@ -249,6 +269,16 @@ test("rectify", async () => {
     expect(data).toBe("xyz\n")
   }
   await expect(assertion.rectify()).resolves.toBeUndefined()
+
+  // All with good validation
+  assertion.validation = "sudoers"
+  await expect(assertion.rectify()).resolves.toBeUndefined()
+
+  // All bad good validation
+  container.childProcess.exec = async () => {
+    throw new Error()
+  }
+  await expect(assertion.rectify()).rejects.toThrow(Error)
 })
 
 test("result", () => {
